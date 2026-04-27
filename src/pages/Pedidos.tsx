@@ -17,8 +17,19 @@ const Pedidos = () => {
   const [orderMode, setOrderMode] = useState<"delivery" | "takeaway" | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('kiku-cart')
+      if (saved) return JSON.parse(saved) as CartItem[]
+    } catch {}
+    return []
+  });
   const [cartOpen, setCartOpen] = useState(false);
+
+  // Persistir carrito en localStorage
+  useEffect(() => {
+    localStorage.setItem('kiku-cart', JSON.stringify(cart))
+  }, [cart]);
 
   // Checkout flow
   const [step, setStep] = useState<"catalog" | "checkout" | "confirmado">("catalog");
@@ -126,6 +137,7 @@ const Pedidos = () => {
 
       setPedidoNum(pedido.numero ?? null);
       setCart([]);
+      localStorage.removeItem('kiku-cart');
       setCartOpen(false);
       setStep("confirmado");
     } catch (err) {
