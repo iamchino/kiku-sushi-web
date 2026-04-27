@@ -44,7 +44,7 @@ const Navbar = () => {
 
         {/* Cart icon — desktop + mobile */}
         <a
-          href="/pedidos"
+          href="/pedidos#cart"
           className="relative flex items-center justify-center w-9 h-9 rounded-full ml-4 transition-all hover:bg-white/10"
           aria-label="Ver carrito"
         >

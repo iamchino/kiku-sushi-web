@@ -53,6 +53,14 @@ const Pedidos = () => {
       .finally(() => setLoading(false));
   }, []);
 
+  // Auto-open cart when navigated with #cart hash
+  useEffect(() => {
+    if (window.location.hash === '#cart' && cart.length > 0) {
+      setCartOpen(true);
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, []);
+
   // Filter products by search
   const filteredCategories = useMemo(() => {
     if (!searchQuery.trim()) return catalogData;
