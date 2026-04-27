@@ -26,14 +26,16 @@ const Pedidos = () => {
   });
   const [cartOpen, setCartOpen] = useState(false);
 
-  // Persistir carrito en localStorage
+  // Persistir carrito en localStorage + notificar Navbar
   useEffect(() => {
-    localStorage.setItem('kiku-cart', JSON.stringify(cart))
+    localStorage.setItem('kiku-cart', JSON.stringify(cart));
+    window.dispatchEvent(new Event('kiku-cart-update'));
   }, [cart]);
 
   // Checkout flow
   const [step, setStep] = useState<"catalog" | "checkout" | "confirmado">("catalog");
   const [enviando, setEnviando] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [pedidoNum, setPedidoNum] = useState<number | null>(null);
   const [nombre, setNombre] = useState("");
   const [telefono, setTelefono] = useState("");
@@ -124,7 +126,8 @@ const Pedidos = () => {
         .select("id, numero")
         .single();
 
-      if (e1 || !pedido) throw e1;
+      if (e1) throw e1;
+      if (!pedido) throw new Error('Sin respuesta del servidor');
 
       await supabase.from("pedido_items").insert(
         cart.map((i) => ({
@@ -140,9 +143,13 @@ const Pedidos = () => {
       localStorage.removeItem('kiku-cart');
       setCartOpen(false);
       setStep("confirmado");
-    } catch (err) {
-      console.error(err);
-      alert("Hubo un error al enviar el pedido. Intentá de nuevo.");
+    } catch (err: unknown) {
+      console.error('Error Supabase:', err);
+      const msg =
+        (err as { message?: string })?.message ||
+        JSON.stringify(err) ||
+        'Error desconocido';
+      setErrorMsg(msg);
     } finally {
       setEnviando(false);
     }
@@ -542,7 +549,13 @@ const Pedidos = () => {
                   className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary/50 resize-none"
                   placeholder="Sin cebolla, sin tacc, etc." />
               </div>
+              {errorMsg && (
+                <div className="rounded-xl bg-red-500/10 border border-red-500/30 px-4 py-3 text-xs text-red-400 break-all">
+                  ⚠️ {errorMsg}
+                </div>
+              )}
               <button type="submit" disabled={enviando}
+                onClick={() => setErrorMsg(null)}
                 className="w-full inline-flex items-center justify-center gap-2 bg-gradient-neon text-primary-foreground font-semibold uppercase tracking-widest text-sm py-4 rounded-full glow-neon hover:scale-[1.02] transition-transform disabled:opacity-60">
                 {enviando ? <Loader2 className="w-4 h-4 animate-spin" /> : "Enviar pedido"}
               </button>
