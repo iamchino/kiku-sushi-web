@@ -121,16 +121,18 @@ const Pedidos = () => {
       const envio   = orderMode === "delivery" ? 3500 : 0;
       const total   = subtotal + envio;
 
-      const notas = [
-        `Cliente: ${nombre}`,
-        `Tel: ${telefono}`,
-        orderMode === "delivery" ? `Dirección: ${direccion}` : "Retiro en local",
-        notasExtra ? `Notas: ${notasExtra}` : "",
-      ].filter(Boolean).join(" | ");
-
+      // Datos del cliente van en columnas dedicadas; `notas` queda libre
+      // para las notas reales del cliente ("sin cebolla", "timbre roto", etc.).
       const { data: pedido, error: e1 } = await supabase
         .from("pedidos")
-        .insert({ canal: orderMode === "delivery" ? "delivery" : "takeaway", total, notas })
+        .insert({
+          canal:             orderMode === "delivery" ? "delivery" : "takeaway",
+          total,
+          cliente_nombre:    nombre.trim(),
+          cliente_telefono:  telefono.trim(),
+          cliente_direccion: orderMode === "delivery" ? direccion.trim() : null,
+          notas:             notasExtra.trim() || null,
+        })
         .select("id, numero")
         .single();
 
