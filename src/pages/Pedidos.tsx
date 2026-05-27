@@ -14,7 +14,15 @@ interface CartItem {
 
 const Pedidos = () => {
 
-  const [orderMode, setOrderMode] = useState<"delivery" | "takeaway" | null>(null);
+  // Si vienen con ?modo=delivery o ?modo=takeaway (típicamente desde /pedir V2)
+  // arrancamos directo en el catálogo, salteando la pantalla de selección.
+  const initialMode = (() => {
+    if (typeof window === 'undefined') return null
+    const m = new URLSearchParams(window.location.search).get('modo')
+    return m === 'delivery' || m === 'takeaway' ? m : null
+  })() as "delivery" | "takeaway" | null;
+
+  const [orderMode, setOrderMode] = useState<"delivery" | "takeaway" | null>(initialMode);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [cart, setCart] = useState<CartItem[]>(() => {
@@ -243,12 +251,12 @@ const Pedidos = () => {
         <div className="container relative z-10">
           <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
             <div className="flex items-center gap-3">
-              <button
-                onClick={() => setOrderMode(null)}
+              <a
+                href="/pedir"
                 className="text-muted-foreground hover:text-foreground transition-colors text-sm"
               >
                 ← Cambiar
-              </button>
+              </a>
               <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/40 bg-accent/10 text-accent text-[10px] uppercase tracking-[0.3em]">
                 {orderMode === "delivery" ? (
                   <><Truck className="w-3 h-3" /> Delivery</>

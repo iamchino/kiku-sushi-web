@@ -3,8 +3,21 @@ import Navbar from "@/components/kiku/Navbar";
 import { useReveal } from "@/hooks/useReveal";
 import ambiance from "@/assets/ambiance.webp";
 
+// Iconos por codepoint para evitar corrupción de encoding en el bundle
+const _ICON_SUSHI  = String.fromCodePoint(0x1F363); // 🍣
+const _ICON_DATE   = String.fromCodePoint(0x1F4C5); // 📅
+const _ICON_PEOPLE = String.fromCodePoint(0x1F465); // 👥
+
 const WHATSAPP_URL = `https://wa.me/5493412764562?text=${encodeURIComponent(
-  "Hola Kiku Sushi 🍣, quiero reservar *Kiku Libre*.\n\n📅 Fecha deseada: \n👥 Cantidad de personas: \n\n¡Quedo a la espera de su confirmación!"
+  [
+    `Hola Kiku Sushi ${_ICON_SUSHI}`,
+    `Quiero reservar *Kiku Libre*.`,
+    ``,
+    `${_ICON_DATE} Fecha deseada: `,
+    `${_ICON_PEOPLE} Cantidad de personas: `,
+    ``,
+    `¡Quedo a la espera de su confirmación!`,
+  ].join("\n")
 )}`;
 
 const SushiLibre = () => {

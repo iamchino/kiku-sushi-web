@@ -1,0 +1,133 @@
+import { useRef } from "react";
+import { motion, useScroll, useTransform, useInView } from "framer-motion";
+import { ArrowUpRight } from "lucide-react";
+
+interface MenuPanelProps {
+  id: string;
+  number: string;          // "01 / 04"
+  overline: string;        // kanji small overline
+  title: string;           // "Umami"
+  titleAccent: string;     // "del Sur"
+  description: string;
+  ctaLabel: string;
+  ctaHref: string;
+  image: string;
+  imageAlt: string;
+  /** "left" = imagen a la izquierda, "right" = a la derecha */
+  imagePosition: "left" | "right";
+}
+
+/**
+ * Panel zig-zag con scroll-driven parallax + reveal.
+ * - La imagen sube/baja contra el texto en parallax sutil.
+ * - El bloque entero entra con fade + translate cuando aparece.
+ * - El title hace un slide-in con stagger.
+ */
+const MenuPanel = ({
+  id,
+  number,
+  overline,
+  title,
+  titleAccent,
+  description,
+  ctaLabel,
+  ctaHref,
+  image,
+  imageAlt,
+  imagePosition,
+}: MenuPanelProps) => {
+  const ref = useRef<HTMLElement>(null);
+  const inViewRef = useRef<HTMLDivElement>(null);
+  const inView = useInView(inViewRef, { once: true, margin: "-100px" });
+
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
+  const imageY = useTransform(scrollYProgress, [0, 1], ["-8%", "8%"]);
+  const imageScale = useTransform(scrollYProgress, [0, 0.5, 1], [1.05, 1, 1.05]);
+
+  const isLeft = imagePosition === "left";
+
+  return (
+    <section
+      ref={ref}
+      id={id}
+      className="py-32 md:py-44 px-6 md:px-14 max-w-[1440px] mx-auto"
+    >
+      <div ref={inViewRef} className={`grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-24 items-center ${isLeft ? "" : "md:[direction:rtl]"}`}>
+        {/* IMAGEN con parallax */}
+        <div className={`relative overflow-hidden aspect-[4/5] v2-bg-card border border-v2-champagne/10 ${isLeft ? "" : "md:[direction:ltr]"}`}>
+          <motion.div
+            style={{ y: imageY, scale: imageScale }}
+            className="absolute inset-[-10%] w-[120%] h-[120%]"
+          >
+            <img
+              src={image}
+              alt={imageAlt}
+              className="w-full h-full object-cover transition-all duration-[1400ms]"
+              style={{ filter: "saturate(0.9) brightness(0.92)" }}
+              loading="lazy"
+            />
+          </motion.div>
+          <div className="absolute inset-0 bg-gradient-to-t from-v2-bg/45 to-transparent pointer-events-none" />
+        </div>
+
+        {/* TEXTO */}
+        <div className={`max-w-md ${isLeft ? "" : "md:[direction:ltr]"}`}>
+          <motion.div
+            initial={{ opacity: 0, x: isLeft ? 30 : -30 }}
+            animate={inView ? { opacity: 1, x: 0 } : {}}
+            transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+            className="v2-section-num mb-6 block"
+          >
+            {number}
+          </motion.div>
+
+          <motion.span
+            initial={{ opacity: 0 }}
+            animate={inView ? { opacity: 1 } : {}}
+            transition={{ duration: 1, delay: 0.15 }}
+            className="font-jp text-xs tracking-[0.4em] text-v2-champagne mb-7 block"
+          >
+            {overline}
+          </motion.span>
+
+          <motion.h2
+            initial={{ opacity: 0, y: 40 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 1.1, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="font-display font-light leading-[0.95] tracking-[-0.02em] mb-8"
+            style={{ fontSize: "clamp(44px, 5vw, 76px)" }}
+          >
+            {title}
+            <br />
+            <em className="italic font-normal text-v2-champagne">{titleAccent}</em>
+          </motion.h2>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 1, delay: 0.4 }}
+            className="text-base leading-[1.85] v2-text-muted mb-9"
+          >
+            {description}
+          </motion.p>
+
+          <motion.a
+            initial={{ opacity: 0, y: 20 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 1, delay: 0.55 }}
+            href={ctaHref}
+            className="group inline-flex items-center gap-3 text-[11px] uppercase tracking-[0.3em] text-v2-champagne pb-1.5 border-b border-v2-champagne/24 hover:border-v2-champagne transition-all"
+          >
+            {ctaLabel}
+            <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-400" />
+          </motion.a>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default MenuPanel;

@@ -61,18 +61,30 @@ const ReservationForm = ({ variant = "hero" }: Props) => {
     }
 
     // 2) Armar mensaje de WhatsApp (incluye ID si la DB grabó OK)
+    // Iconos por codepoint para evitar corrupción de encoding
+    const _SUSHI  = String.fromCodePoint(0x1F363);
+    const _PERSON = String.fromCodePoint(0x1F464);
+    const _DATE   = String.fromCodePoint(0x1F4C5);
+    const _CLOCK  = String.fromCodePoint(0x1F550);
+    const _PEOPLE = String.fromCodePoint(0x1F465);
+    const _TICKET = String.fromCodePoint(0x1F3AB);
+    const _CHECK  = String.fromCodePoint(0x2713);
+
     const shortId = reservaId ? reservaId.slice(0, 8).toUpperCase() : null;
     const message = [
-      `Hola Kiku Sushi 🍣, quiero confirmar una reserva:`,
+      `Hola Kiku Sushi ${_SUSHI}`,
+      `Quiero confirmar mi reserva:`,
       ``,
-      `🙋 Nombre: ${cleanName}`,
-      `📅 Fecha: ${formattedDate}`,
-      `⏰ Hora: ${time}`,
-      `👥 Personas: ${people}`,
-      shortId ? `\n#${shortId}` : null,
+      `${_DATE} Fecha · ${formattedDate}`,
+      `${_CLOCK} Hora · ${time}`,
+      `${_PEOPLE} Personas · ${people}`,
       ``,
+      `— Datos del cliente —`,
+      `${_PERSON} ${cleanName}`,
+      ``,
+      shortId ? `${_TICKET} Código de reserva · #${shortId}` : null,
       shortId
-        ? `(Ya quedó registrada en el sistema, este mensaje es para confirmar)`
+        ? `${_CHECK} Ya quedó registrada en el sistema. Este mensaje es solo para confirmar.`
         : `Quedo a la espera de su confirmación. ¡Gracias!`,
     ]
       .filter(Boolean)

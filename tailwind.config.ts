@@ -57,6 +57,19 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // ─── V2 paleta neón violeta editorial ────────
+        v2: {
+          bg: "hsl(var(--v2-bg))",
+          card: "hsl(var(--v2-bg-card))",
+          elevated: "hsl(var(--v2-bg-elevated))",
+          primary: "hsl(var(--v2-primary))",
+          accent: "hsl(var(--v2-accent))",
+          champagne: "hsl(var(--v2-champagne))",
+          plasma: "hsl(var(--v2-plasma))",
+          text: "hsl(var(--v2-text))",
+          muted: "hsl(var(--v2-text-muted))",
+          dim: "hsl(var(--v2-text-dim))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
