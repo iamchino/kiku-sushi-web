@@ -9,8 +9,8 @@ import FooterV2 from "@/components/kiku-v2/FooterV2";
 
 /**
  * Página dedicada a reservar (/reservar).
- * Encabezado único + form en modo single-page (fecha + datos visibles juntos,
- * sin wizard de pasos).
+ * Encabezado único + form en modo wizard (3 pasos, uno por pantalla).
+ * El form usa `hideHeader` para no duplicar el título grande.
  */
 const Reservar = () => {
   useLenisScroll();
@@ -67,8 +67,8 @@ const Reservar = () => {
         </div>
       </section>
 
-      {/* Form single-page (fecha + datos juntos) */}
-      <ReservationFormV2 singlePage />
+      {/* Form wizard de 3 pasos (uno por pantalla) */}
+      <ReservationFormV2 hideHeader />
 
       <FooterV2 />
     </div>

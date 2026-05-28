@@ -1,16 +1,15 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Calendar, Clock, Users, User, Loader2, Phone, Mail,
   Salad, Accessibility, MessageSquare, ArrowLeft, ArrowRight, CheckCircle2,
-  Sparkles,
+  Sparkles, AlertTriangle, Info, Plus, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 
 // ─── Iconos para el mensaje de WhatsApp ────────────────────────────────────
-// Construidos con codepoints para evitar corrupción de encoding al bundlear
-// y garantizar que lleguen correctamente al cliente de WhatsApp.
+// Construidos con codepoints para evitar corrupción de encoding al bundlear.
 const ICON = {
   sushi:    String.fromCodePoint(0x1F363),   // 🍣
   date:     String.fromCodePoint(0x1F4C5),   // 📅
@@ -28,21 +27,25 @@ const ICON = {
 };
 
 /**
- * Form de reserva V2.
+ * Form de reserva V2 — flujo wizard por pasos.
  *
- * Modos:
- *  - Wizard (default, 3 pasos): para embedded en la home.
- *      Paso 1: tipo de experiencia
- *      Paso 2: fecha + hora + personas
- *      Paso 3: datos del cliente
- *  - Single page (singlePage=true): 3 bloques verticales en una sola vista.
+ * Siempre se muestra como wizard de 3 pasos (uno por pantalla, el anterior
+ * desaparece). Pensado mobile-first pero idéntico en desktop:
+ *   Paso 1 · Tipo de experiencia (cards verticales grandes)
+ *   Paso 2 · Fecha (scroll horizontal) + Hora (grid de chips) + Personas
+ *   Paso 3 · Resumen + datos del cliente
  *
  * Backend: Supabase RPC `crear_reserva` con tipo_experiencia, restricciones,
  * accesibilidad y datos del cliente. Origen 'web' → dispara notificación
  * realtime en el dashboard. Post-confirmación: abre WhatsApp.
+ *
+ * Props:
+ *   hideHeader: oculta el header interno (kanji 菊 + título "Reservá tu mesa")
+ *               para no duplicarlo cuando la página padre ya tiene su propio
+ *               encabezado (ej: /reservar).
  */
 interface Props {
-  singlePage?: boolean;
+  hideHeader?: boolean;
 }
 
 // ─── Experiencias disponibles ─────────────────────────────────────────────
@@ -88,7 +91,344 @@ const EXPERIENCIAS: Experiencia[] = [
   },
 ];
 
-const ReservationFormV2 = ({ singlePage = false }: Props) => {
+// ─── Horarios disponibles para reserva online ─────────────────────────────
+// Hasta las 22:00 con mesa asignada. 22:30 y 23:00 también se pueden reservar
+// pero quedan registrados como ORDEN DE LLEGADA (sin mesa fija).
+const HORARIOS_WEB = ["20:00", "20:30", "21:00", "21:30", "22:00", "22:30", "23:00"] as const;
+const HORARIOS_ORDEN_LLEGADA = new Set<string>(["22:30", "23:00"]);
+
+// Cantidad de días que se muestran en el strip horizontal de fechas.
+// Para fechas más allá, el chip "Otra fecha" abre el picker nativo.
+const DIAS_VISIBLES = 14;
+
+interface SlotInfo {
+  hora: string;          // "HH:MM:SS" o "HH:MM"
+  cupo_salon: number;
+  cupo_barra: number;
+  hay_omakase: boolean;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// SUB-COMPONENTES PRIMITIVOS (Chips táctiles para wizard mobile-first)
+// ════════════════════════════════════════════════════════════════════════════
+
+const CHIP_BASE =
+  "relative flex items-center justify-center border transition-all duration-200 select-none";
+const CHIP_SELECTED =
+  "bg-v2-champagne text-v2-bg border-v2-champagne shadow-[0_0_28px_rgba(232,212,162,0.22)]";
+const CHIP_IDLE =
+  "bg-v2-bg/40 border-v2-champagne/15 text-v2-text hover:border-v2-champagne/45 hover:bg-v2-bg/70";
+const CHIP_TAP = "active:scale-[0.97]";
+
+// ─── Strip horizontal de fechas (próximos N días + Otra fecha) ────────────
+const ChipsFecha = ({
+  value, onChange, minDate,
+}: {
+  value: string;
+  onChange: (d: string) => void;
+  minDate: string;
+}) => {
+  const hiddenInputRef = useRef<HTMLInputElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const baseDate = new Date(minDate + "T00:00:00");
+  const dias = Array.from({ length: DIAS_VISIBLES }, (_, i) => {
+    const d = new Date(baseDate);
+    d.setDate(baseDate.getDate() + i);
+    return {
+      iso: d.toISOString().split("T")[0],
+      semana: d.toLocaleDateString("es-AR", { weekday: "short" }).replace(".", "").toUpperCase(),
+      num: d.getDate(),
+      mes: d.toLocaleDateString("es-AR", { month: "short" }).replace(".", "").toUpperCase(),
+      esHoy: i === 0,
+    };
+  });
+
+  // Si el valor seleccionado no está dentro de los próximos DIAS_VISIBLES
+  // mostramos un chip extra con la fecha custom para que se vea seleccionada.
+  const customFecha = !dias.find((d) => d.iso === value) && value
+    ? new Date(value + "T00:00:00")
+    : null;
+
+  const abrirPicker = () => {
+    const el = hiddenInputRef.current;
+    if (!el) return;
+    // showPicker es soportado en navegadores modernos
+    try {
+      // @ts-expect-error showPicker no está en lib.dom todavía en algunos TS targets
+      el.showPicker ? el.showPicker() : el.click();
+    } catch {
+      el.click();
+    }
+  };
+
+  // Scroll automático al chip seleccionado cuando cambia el valor
+  useEffect(() => {
+    const node = scrollRef.current?.querySelector<HTMLButtonElement>(`[data-iso="${value}"]`);
+    node?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  }, [value]);
+
+  // ─── Desktop helpers: wheel (vertical → horizontal) + drag con mouse ───
+  // Convertir scroll vertical de la rueda en scroll horizontal del strip.
+  const onWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    // Solo si el usuario está scrolleando vertical (deltaY) y no horizontal.
+    if (e.deltaY === 0) return;
+    e.currentTarget.scrollLeft += e.deltaY;
+  };
+
+  // Drag con mouse (click + arrastrar para mover el strip).
+  const dragState = useRef<{ active: boolean; startX: number; startLeft: number; moved: boolean }>({
+    active: false, startX: 0, startLeft: 0, moved: false,
+  });
+
+  const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    dragState.current = {
+      active: true,
+      startX: e.pageX,
+      startLeft: el.scrollLeft,
+      moved: false,
+    };
+  };
+  const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!dragState.current.active) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    const dx = e.pageX - dragState.current.startX;
+    if (Math.abs(dx) > 4) dragState.current.moved = true;
+    el.scrollLeft = dragState.current.startLeft - dx;
+  };
+  const endDrag = () => { dragState.current.active = false; };
+
+  // Si el usuario arrastró, evitamos que el click sobre un chip lo seleccione.
+  const onChipClickCapture = (e: React.MouseEvent) => {
+    if (dragState.current.moved) {
+      e.preventDefault();
+      e.stopPropagation();
+      dragState.current.moved = false;
+    }
+  };
+
+  const scrollBy = (delta: number) => {
+    scrollRef.current?.scrollBy({ left: delta, behavior: "smooth" });
+  };
+
+  return (
+    <div className="relative">
+      {/* Flechas (solo desktop) */}
+      <button
+        type="button"
+        onClick={() => scrollBy(-200)}
+        aria-label="Días anteriores"
+        className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 w-7 h-7 items-center justify-center bg-v2-card/90 border border-v2-champagne/25 text-v2-text hover:border-v2-champagne hover:text-v2-champagne transition-colors backdrop-blur-sm"
+      >
+        <ChevronLeft className="w-3.5 h-3.5" />
+      </button>
+      <button
+        type="button"
+        onClick={() => scrollBy(200)}
+        aria-label="Días siguientes"
+        className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 w-7 h-7 items-center justify-center bg-v2-card/90 border border-v2-champagne/25 text-v2-text hover:border-v2-champagne hover:text-v2-champagne transition-colors backdrop-blur-sm"
+      >
+        <ChevronRight className="w-3.5 h-3.5" />
+      </button>
+
+      <div
+        ref={scrollRef}
+        onWheel={onWheel}
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={endDrag}
+        onMouseLeave={endDrag}
+        onClickCapture={onChipClickCapture}
+        className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 sm:px-9 snap-x snap-mandatory cursor-grab active:cursor-grabbing select-none"
+        style={{ scrollbarWidth: "none" }}
+      >
+        <style>{`[data-fecha-strip]::-webkit-scrollbar{display:none}`}</style>
+
+        {dias.map((d) => {
+          const selected = d.iso === value;
+          return (
+            <button
+              key={d.iso}
+              type="button"
+              data-iso={d.iso}
+              onClick={() => onChange(d.iso)}
+              className={`${CHIP_BASE} ${CHIP_TAP} flex-shrink-0 snap-start flex-col gap-0.5 w-[62px] h-[74px] ${
+                selected ? CHIP_SELECTED : CHIP_IDLE
+              }`}
+            >
+              <span className={`text-[9px] tracking-[0.22em] font-medium leading-none ${selected ? "opacity-80" : "opacity-65"}`}>
+                {d.esHoy ? "HOY" : d.semana}
+              </span>
+              <span className="font-display text-[22px] leading-none mt-0.5">
+                {d.num}
+              </span>
+              <span className={`text-[8.5px] tracking-[0.18em] leading-none mt-0.5 ${selected ? "opacity-80" : "opacity-55"}`}>
+                {d.mes}
+              </span>
+            </button>
+          );
+        })}
+
+        {customFecha && (
+          <button
+            type="button"
+            data-iso={value}
+            onClick={abrirPicker}
+            className={`${CHIP_BASE} ${CHIP_TAP} flex-shrink-0 snap-start flex-col gap-0.5 w-[62px] h-[74px] ${CHIP_SELECTED}`}
+          >
+            <span className="text-[9px] tracking-[0.22em] font-medium leading-none opacity-80">
+              {customFecha.toLocaleDateString("es-AR", { weekday: "short" }).replace(".", "").toUpperCase()}
+            </span>
+            <span className="font-display text-[22px] leading-none mt-0.5">
+              {customFecha.getDate()}
+            </span>
+            <span className="text-[8.5px] tracking-[0.18em] leading-none mt-0.5 opacity-80">
+              {customFecha.toLocaleDateString("es-AR", { month: "short" }).replace(".", "").toUpperCase()}
+            </span>
+          </button>
+        )}
+
+        <button
+          type="button"
+          onClick={abrirPicker}
+          className={`${CHIP_BASE} ${CHIP_TAP} ${CHIP_IDLE} flex-shrink-0 snap-start flex-col gap-1 w-[62px] h-[74px]`}
+        >
+          <Plus className="w-3.5 h-3.5 text-v2-champagne" strokeWidth={2.5} />
+          <span className="text-[8.5px] tracking-[0.18em] leading-none opacity-75">
+            OTRA<br/>FECHA
+          </span>
+        </button>
+      </div>
+
+      <input
+        ref={hiddenInputRef}
+        type="date"
+        value={value}
+        min={minDate}
+        onChange={(e) => e.target.value && onChange(e.target.value)}
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden
+      />
+    </div>
+  );
+};
+
+// ─── Grid de chips de hora ────────────────────────────────────────────────
+const ChipsHora = ({
+  value, onChange, horarios,
+}: {
+  value: string;
+  onChange: (t: string) => void;
+  horarios: readonly string[];
+}) => {
+  if (horarios.length === 0) {
+    return (
+      <div className="text-center py-7 border border-v2-champagne/15 bg-v2-bg/30">
+        <p className="text-sm v2-text leading-relaxed">Sin cupos para esa fecha</p>
+        <p className="text-[11px] v2-text-muted mt-1">Probá con otra fecha</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+      {horarios.map((t) => {
+        const selected = t === value;
+        const esOrden = HORARIOS_ORDEN_LLEGADA.has(t);
+        return (
+          <button
+            key={t}
+            type="button"
+            onClick={() => onChange(t)}
+            className={`${CHIP_BASE} ${CHIP_TAP} flex-col gap-0.5 h-[60px] ${
+              selected ? CHIP_SELECTED : CHIP_IDLE
+            }`}
+          >
+            <span className="text-[15px] font-medium tracking-wide leading-none">{t}</span>
+            {esOrden && (
+              <span
+                className={`text-[8px] tracking-[0.18em] uppercase leading-none mt-1 ${
+                  selected ? "opacity-75" : "opacity-55"
+                }`}
+              >
+                por llegada
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+// ─── Grid de chips de personas ────────────────────────────────────────────
+const ChipsPersonas = ({
+  value, onChange, max,
+}: {
+  value: string;
+  onChange: (p: string) => void;
+  max: 6 | 10;
+}) => {
+  const opciones = max === 6
+    ? ["1", "2", "3", "4", "5", "6"]
+    : ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10+"];
+  const cols = max === 6 ? "grid-cols-6" : "grid-cols-5";
+
+  return (
+    <div className={`grid ${cols} gap-2`}>
+      {opciones.map((n) => {
+        const selected = n === value;
+        return (
+          <button
+            key={n}
+            type="button"
+            onClick={() => onChange(n)}
+            className={`${CHIP_BASE} ${CHIP_TAP} h-[52px] font-display text-[18px] ${
+              selected ? CHIP_SELECTED : CHIP_IDLE
+            }`}
+          >
+            {n}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+// ─── Etiqueta de sección (icono + texto en caps) ──────────────────────────
+const SectionLabel = ({
+  icon, children, hint,
+}: {
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  hint?: React.ReactNode;
+}) => (
+  <div className="flex items-center justify-between mb-3">
+    <div className="flex items-center gap-2 text-[10px] tracking-[0.3em] uppercase v2-text-muted">
+      <span className="text-v2-champagne">{icon}</span>
+      {children}
+    </div>
+    {hint && <span className="text-[10px] tracking-[0.2em] uppercase v2-text-dim">{hint}</span>}
+  </div>
+);
+
+// ─── Pill read-only para el resumen del paso 3 ────────────────────────────
+const SummaryPill = ({ icon, label }: { icon: React.ReactNode; label: string }) => (
+  <span className="inline-flex items-center gap-1.5 text-[11px] tracking-wide px-2.5 py-1.5 border border-v2-champagne/25 bg-v2-bg/50 text-v2-text">
+    <span className="text-v2-champagne">{icon}</span>
+    {label}
+  </span>
+);
+
+// ════════════════════════════════════════════════════════════════════════════
+// COMPONENTE PRINCIPAL
+// ════════════════════════════════════════════════════════════════════════════
+
+const ReservationFormV2 = ({ hideHeader = false }: Props) => {
   const today = new Date().toISOString().split("T")[0];
 
   // Experiencia
@@ -111,9 +451,80 @@ const ReservationFormV2 = ({ singlePage = false }: Props) => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [submitting, setSubmitting] = useState(false);
 
+  // Cupos por slot (refetch cada vez que cambia la fecha)
+  const [slots, setSlots] = useState<SlotInfo[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+
   const ref = useRef<HTMLElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
 
+  // ─── Fetch de cupos al cambiar la fecha ─────────────────────────────────
+  useEffect(() => {
+    if (!date) return;
+    let cancelled = false;
+    setLoadingSlots(true);
+    supabase
+      .rpc("slots_disponibles", { p_fecha: date })
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) {
+          console.warn("[slots_disponibles] error:", error.message);
+          setSlots([]);
+        } else {
+          setSlots((data || []) as SlotInfo[]);
+        }
+        setLoadingSlots(false);
+      });
+    return () => { cancelled = true; };
+  }, [date]);
+
+  // ─── Derivados ─────────────────────────────────────────────────────────
+  const peopleInt = parseInt(people, 10) || 2;
+  const isOmakase = tipo === "omakase";
+  const requiereSeña = tipo !== "" && tipo !== "carta_abierta";
+
+  // Si se elige omakase y el cliente tenía más de 6 personas, lo bajamos a 6
+  useEffect(() => {
+    if (isOmakase && (people === "10+" || peopleInt > 6)) {
+      setPeople("6");
+    }
+  }, [isOmakase, people, peopleInt]);
+
+  // Helpers de cupo (definidos ANTES de horariosDisponibles para evitar TDZ)
+  const slotByHora = (h: string): SlotInfo | undefined =>
+    slots.find((s) => (s.hora || "").slice(0, 5) === h);
+
+  const cupoLibreEnSlot = (h: string): number => {
+    const s = slotByHora(h);
+    if (!s) return isOmakase ? 6 : 28;
+    return isOmakase ? s.cupo_barra : s.cupo_salon;
+  };
+
+  const slotDisponible = (h: string): boolean => cupoLibreEnSlot(h) >= peopleInt;
+
+  const omakaseBloqueado =
+    isOmakase && slots.length > 0 && slots[0]?.hay_omakase === true;
+
+  const horariosDisponibles = HORARIOS_WEB.filter((t) =>
+    isOmakase ? !omakaseBloqueado : cupoLibreEnSlot(t) >= peopleInt
+  );
+
+  const sinCupoEnFecha = horariosDisponibles.length === 0;
+
+  // Auto-ajuste de hora si el slot actual ya no está disponible
+  const horariosKey = horariosDisponibles.join("|");
+  useEffect(() => {
+    if (horariosDisponibles.length === 0) {
+      if (time !== "") setTime("");
+      return;
+    }
+    if (!horariosDisponibles.includes(time as typeof HORARIOS_WEB[number])) {
+      setTime(horariosDisponibles[0]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [horariosKey, time]);
+
+  // ─── Navegación entre pasos ─────────────────────────────────────────────
   const goToStep2 = () => {
     if (!tipo) {
       toast.error("Elegí una experiencia para continuar");
@@ -127,21 +538,53 @@ const ReservationFormV2 = ({ singlePage = false }: Props) => {
       toast.error("Completá fecha, hora y personas");
       return;
     }
+    if (isOmakase && omakaseBloqueado) {
+      toast.error("Ya hay un omakase reservado para esa fecha", {
+        description: "Probá con otra fecha o elegí otra experiencia.",
+      });
+      return;
+    }
     setStep(3);
   };
 
+  // ─── Submit ────────────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
 
     if (!tipo) {
       toast.error("Elegí una experiencia");
-      if (!singlePage) setStep(1);
+      setStep(1);
+      return;
+    }
+    if (!date || !time || !people) {
+      toast.error("Completá fecha, hora y personas");
+      setStep(2);
       return;
     }
 
-    if (!date || !time || !people) {
-      toast.error("Completá fecha, hora y personas");
+    // Validación de cupo (lado cliente, defensa rápida — backend revalida)
+    if (isOmakase) {
+      if (peopleInt > 6) {
+        toast.error("El omakase es para un máximo de 6 personas");
+        setStep(2);
+        return;
+      }
+      if (omakaseBloqueado) {
+        toast.error("Ya hay un omakase reservado para ese día", {
+          description: "Elegí otra fecha para vivir la experiencia en la barra.",
+        });
+        setStep(2);
+        return;
+      }
+    } else if (!slotDisponible(time)) {
+      const libre = cupoLibreEnSlot(time);
+      toast.error("Ese horario ya no tiene cupo suficiente", {
+        description: libre > 0
+          ? `Quedan ${libre} lugares libres en ese turno. Probá con menos personas u otro horario.`
+          : "Probá con otro horario.",
+      });
+      setStep(2);
       return;
     }
 
@@ -167,7 +610,6 @@ const ReservationFormV2 = ({ singlePage = false }: Props) => {
       month: "long",
     });
 
-    const peopleInt = parseInt(people, 10) || 2;
     let reservaId: string | null = null;
     let dbError: string | null = null;
 
@@ -194,9 +636,6 @@ const ReservationFormV2 = ({ singlePage = false }: Props) => {
     }
 
     // ─── Mensaje WhatsApp ─────────────────────────────────────────────
-    // Formato ordenado en 3 secciones: Reserva / Cliente / Notas.
-    // Solo incluye las líneas opcionales si tienen contenido (para que el
-    // mensaje quede compacto cuando no hay extras).
     const shortId = reservaId ? reservaId.slice(0, 8).toUpperCase() : null;
 
     const bloqueReserva = [
@@ -218,6 +657,12 @@ const ReservationFormV2 = ({ singlePage = false }: Props) => {
       notas.trim()         ? `${ICON.memo} ${notas.trim()}` : null,
     ].filter(Boolean);
 
+    const lineaCierre = shortId
+      ? (requiereSeña
+          ? `${ICON.check} Mesa reservada. Quiero coordinar la seña.`
+          : `${ICON.check} Ya quedó registrada en el sistema.`)
+      : `Quedo a la espera de su confirmación. ¡Gracias!`;
+
     const message = [
       `Hola Kiku Sushi ${ICON.sushi}`,
       `Quiero confirmar mi reserva:`,
@@ -230,12 +675,8 @@ const ReservationFormV2 = ({ singlePage = false }: Props) => {
         ? [``, `— Notas y preferencias —`, bloqueNotasLines.join("\n")]
         : []),
       ``,
-      shortId
-        ? `${ICON.ticket} Código de reserva · #${shortId}`
-        : null,
-      shortId
-        ? `${ICON.check} Ya quedó registrada en el sistema. Este mensaje es solo para confirmar.`
-        : `Quedo a la espera de su confirmación. ¡Gracias!`,
+      shortId ? `${ICON.ticket} Código de reserva · #${shortId}` : null,
+      lineaCierre,
     ]
       .filter((line) => line !== null && line !== undefined)
       .join("\n");
@@ -244,9 +685,12 @@ const ReservationFormV2 = ({ singlePage = false }: Props) => {
     window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, "_blank");
 
     if (reservaId) {
-      toast.success("¡Reserva registrada!", {
-        description: "Te abrimos WhatsApp para que confirmes con el local.",
+      toast.success("¡Reserva confirmada!", {
+        description: requiereSeña
+          ? "Te abrimos WhatsApp para coordinar la seña."
+          : "Te abrimos WhatsApp para avisar al local.",
       });
+      // Reset
       setTipo("");
       setName("");
       setTelefono("");
@@ -254,7 +698,7 @@ const ReservationFormV2 = ({ singlePage = false }: Props) => {
       setRestricciones("");
       setAccesibilidad("");
       setNotas("");
-      if (!singlePage) setStep(1);
+      setStep(1);
     } else {
       toast.warning("Te abrimos WhatsApp para confirmar", {
         description: dbError
@@ -267,8 +711,34 @@ const ReservationFormV2 = ({ singlePage = false }: Props) => {
   };
 
   // ─── Bloques reusables ────────────────────────────────────────────────
+
+  // Aviso breve que explica cómo funciona la confirmación
+  const renderAvisoConfirmacion = () => {
+    if (requiereSeña) {
+      return (
+        <div className="mt-5 flex items-start gap-2.5 px-3.5 py-3 border border-v2-accent/40 bg-v2-accent/10 text-[11.5px] v2-text leading-relaxed">
+          <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-v2-accent" />
+          <span>
+            Te bloqueamos la mesa al enviar. Coordinamos la{" "}
+            <strong className="text-v2-text">seña por WhatsApp</strong> para asegurar el cupo.
+          </span>
+        </div>
+      );
+    }
+    return (
+      <div className="mt-5 flex items-start gap-2.5 px-3.5 py-3 border border-v2-champagne/20 bg-v2-bg/50 text-[11.5px] v2-text-muted leading-relaxed">
+        <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-v2-champagne" />
+        <span>
+          Los menús con precio fijo se aseguran con una{" "}
+          <strong className="text-v2-text">seña</strong> que coordinamos por WhatsApp.
+        </span>
+      </div>
+    );
+  };
+
+  // Cards verticales de tipo de experiencia
   const renderExperienciaCards = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {EXPERIENCIAS.map((exp) => {
         const selected = tipo === exp.id;
         return (
@@ -276,13 +746,12 @@ const ReservationFormV2 = ({ singlePage = false }: Props) => {
             key={exp.id}
             type="button"
             onClick={() => setTipo(exp.id)}
-            className={`group relative text-left p-4 md:p-5 border transition-all duration-300 overflow-hidden ${
+            className={`group relative text-left p-5 border transition-all duration-300 overflow-hidden active:scale-[0.99] ${
               selected
-                ? "bg-v2-champagne/10 border-v2-champagne"
+                ? "bg-v2-champagne/10 border-v2-champagne shadow-[0_0_32px_rgba(232,212,162,0.10)]"
                 : "bg-v2-bg/40 border-v2-champagne/15 hover:border-v2-champagne/50 hover:bg-v2-bg/60"
             }`}
           >
-            {/* Glow al seleccionar */}
             {selected && (
               <div
                 className="absolute -top-12 -right-12 w-40 h-40 blur-3xl pointer-events-none"
@@ -291,7 +760,6 @@ const ReservationFormV2 = ({ singlePage = false }: Props) => {
             )}
 
             <div className="relative flex items-start gap-3">
-              {/* Indicator (radio) */}
               <span
                 className={`mt-1 w-3.5 h-3.5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors ${
                   selected ? "border-v2-champagne" : "border-v2-champagne/30"
@@ -331,49 +799,57 @@ const ReservationFormV2 = ({ singlePage = false }: Props) => {
     </div>
   );
 
-  const renderDateFields = () => (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-      <Field icon={<Calendar className="w-4 h-4" />} label="Fecha">
-        <input
-          type="date"
-          value={date}
-          min={today}
-          onChange={(e) => setDate(e.target.value)}
-          style={{ colorScheme: "dark" }}
-          className="w-full bg-transparent outline-none text-sm font-normal v2-text"
-        />
-      </Field>
+  // Bloque fecha + hora + personas con chips (paso 2 del wizard y bloque del singlePage)
+  const renderDateBlock = () => (
+    <div className="space-y-7">
+      {/* Aviso si omakase ya está ocupado ese día */}
+      {omakaseBloqueado && (
+        <div className="flex items-start gap-2.5 px-3 py-2.5 border border-v2-accent/40 bg-v2-accent/10 text-[11.5px] v2-text">
+          <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-v2-accent" />
+          <span>
+            <strong>Omakase ya reservado para esta fecha.</strong> El itamae ofrece un solo
+            omakase por día. Elegí otra fecha o reservá otra experiencia.
+          </span>
+        </div>
+      )}
 
-      <Field icon={<Clock className="w-4 h-4" />} label="Hora">
-        <select
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-          style={{ colorScheme: "dark" }}
-          className="w-full bg-transparent outline-none text-sm font-normal v2-text appearance-none cursor-pointer"
-        >
-          {["13:00","13:30","14:00","14:30","15:00","20:00","20:30","21:00","21:30","22:00","22:30"].map((t) => (
-            <option key={t} value={t} className="bg-v2-card">{t}</option>
-          ))}
-        </select>
-      </Field>
+      <div>
+        <SectionLabel icon={<Calendar className="w-3 h-3" />}>Fecha</SectionLabel>
+        <ChipsFecha value={date} onChange={setDate} minDate={today} />
+      </div>
 
-      <Field icon={<Users className="w-4 h-4" />} label="Personas">
-        <select
-          value={people}
-          onChange={(e) => setPeople(e.target.value)}
-          style={{ colorScheme: "dark" }}
-          className="w-full bg-transparent outline-none text-sm font-normal v2-text appearance-none cursor-pointer"
+      <div>
+        <SectionLabel
+          icon={<Clock className="w-3 h-3" />}
+          hint={loadingSlots ? <Loader2 className="w-3 h-3 animate-spin opacity-60 inline" /> : undefined}
         >
-          {["1","2","3","4","5","6","7","8","9","10+"].map((n) => (
-            <option key={n} value={n} className="bg-v2-card">
-              {n} {n === "1" ? "persona" : "personas"}
-            </option>
-          ))}
-        </select>
-      </Field>
+          Hora
+        </SectionLabel>
+        <ChipsHora value={time} onChange={setTime} horarios={horariosDisponibles} />
+        {!sinCupoEnFecha && HORARIOS_ORDEN_LLEGADA.has(time) && (
+          <div className="mt-3 flex items-start gap-2 text-[10.5px] v2-text-muted leading-relaxed">
+            <Info className="w-3 h-3 flex-shrink-0 mt-0.5 text-v2-champagne/70" />
+            <span>
+              A partir de las 22:30 te tomamos la reserva pero te atendemos por{" "}
+              <strong className="text-v2-text">orden de llegada</strong> (sin mesa fija).
+            </span>
+          </div>
+        )}
+      </div>
+
+      <div>
+        <SectionLabel
+          icon={<Users className="w-3 h-3" />}
+          hint={isOmakase ? "MÁX 6" : undefined}
+        >
+          Personas
+        </SectionLabel>
+        <ChipsPersonas value={people} onChange={setPeople} max={isOmakase ? 6 : 10} />
+      </div>
     </div>
   );
 
+  // Form de datos del cliente
   const renderClientFields = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
       <Field icon={<User className="w-4 h-4" />} label="Nombre completo *">
@@ -440,43 +916,81 @@ const ReservationFormV2 = ({ singlePage = false }: Props) => {
     </div>
   );
 
+  const tipoLabel = EXPERIENCIAS.find((x) => x.id === tipo)?.label || "";
+  const fechaShort = date
+    ? new Date(date + "T00:00:00").toLocaleDateString("es-AR", { day: "numeric", month: "short" })
+    : "";
+
+  // Pills de resumen para el step 3
+  const renderResumen = () => (
+    <div className="flex flex-wrap gap-1.5 mb-6 pb-5 border-b border-v2-champagne/10">
+      {tipoLabel && <SummaryPill icon={<Sparkles size={11} />} label={tipoLabel} />}
+      {fechaShort && <SummaryPill icon={<Calendar size={11} />} label={fechaShort} />}
+      {time && <SummaryPill icon={<Clock size={11} />} label={time} />}
+      {people && <SummaryPill icon={<Users size={11} />} label={`${people} ${people === "1" ? "persona" : "personas"}`} />}
+    </div>
+  );
+
+  // Botón submit (re-usado en wizard y singlePage)
   const submitButton = (
     <button
       type="submit"
       disabled={submitting}
-      className="bg-v2-champagne text-v2-bg font-semibold tracking-[0.28em] uppercase text-[11px] px-7 py-3.5 hover:bg-v2-text hover:-translate-y-px transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+      className="bg-v2-champagne text-v2-bg font-semibold tracking-[0.28em] uppercase text-[11px] px-7 py-3.5 hover:bg-v2-text hover:-translate-y-px transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98]"
     >
       {submitting ? (
         <><Loader2 className="w-4 h-4 animate-spin" /> Registrando</>
       ) : (
-        <>Confirmar Reserva <CheckCircle2 className="w-4 h-4" /></>
+        <>Confirmar reserva <CheckCircle2 className="w-4 h-4" /></>
       )}
     </button>
   );
 
-  const tipoLabel = EXPERIENCIAS.find((x) => x.id === tipo)?.label || "";
+  // Botón continuar full-width (wizard mobile)
+  const continueButton = (onClick: () => void) => (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full bg-v2-champagne text-v2-bg font-semibold tracking-[0.28em] uppercase text-[11px] px-6 py-3.5 hover:bg-v2-text hover:-translate-y-px transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
+    >
+      Continuar <ArrowRight className="w-4 h-4" />
+    </button>
+  );
+
+  // Botón atrás (link sutil)
+  const backButton = (onClick: () => void, disabled = false) => (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="text-[11px] tracking-[0.28em] uppercase v2-text-muted hover:text-v2-champagne transition-colors flex items-center gap-2 self-start disabled:opacity-50"
+    >
+      <ArrowLeft className="w-4 h-4" /> Atrás
+    </button>
+  );
 
   // ─── Render ───────────────────────────────────────────────────────────
   return (
     <section
       ref={ref}
       id="reservar"
-      className={`${singlePage ? "py-12 md:py-16" : "py-32 md:py-44"} px-6 md:px-14 ${singlePage ? "" : "border-t border-v2-champagne/10"} relative overflow-hidden ${singlePage ? "text-left" : "text-center"}`}
+      className={`${hideHeader ? "py-10 md:py-14" : "py-24 md:py-44"} px-4 md:px-14 ${hideHeader ? "" : "border-t border-v2-champagne/10"} relative overflow-hidden text-center`}
     >
       <div
         className="absolute inset-0 pointer-events-none"
         style={{ background: "radial-gradient(ellipse at center, hsla(270, 50%, 50%, 0.10), transparent 65%)" }}
       />
 
-      <div className="max-w-3xl mx-auto relative">
-        {/* Header solo en modo wizard (la página /reservar provee el suyo) */}
-        {!singlePage && (
+      <div className="max-w-2xl mx-auto relative">
+        {/* Header interno (kanji + título grande) — se oculta cuando la página
+            padre ya tiene su propio título (ej: /reservar). */}
+        {!hideHeader && (
           <>
             <motion.span
               initial={{ opacity: 0, y: 20 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.8 }}
-              className="font-jp text-5xl text-v2-champagne block mb-6 opacity-90 text-center"
+              className="font-jp text-4xl md:text-5xl text-v2-champagne block mb-5 opacity-90 text-center"
             >
               菊
             </motion.span>
@@ -485,7 +999,7 @@ const ReservationFormV2 = ({ singlePage = false }: Props) => {
               initial={{ opacity: 0 }}
               animate={inView ? { opacity: 1 } : {}}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="font-jp text-xs tracking-[0.4em] text-v2-champagne mb-6 block text-center"
+              className="font-jp text-xs tracking-[0.4em] text-v2-champagne mb-5 block text-center"
             >
               — ご予約 —
             </motion.span>
@@ -494,183 +1008,114 @@ const ReservationFormV2 = ({ singlePage = false }: Props) => {
               initial={{ opacity: 0, y: 30 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 1.1, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="font-display font-light tracking-[-0.02em] mb-10 leading-none text-center"
-              style={{ fontSize: "clamp(48px, 6vw, 80px)" }}
+              className="font-display font-light tracking-[-0.02em] mb-8 leading-none text-center"
+              style={{ fontSize: "clamp(40px, 6vw, 80px)" }}
             >
               Reservá tu <em className="italic font-normal text-v2-champagne">mesa</em>
             </motion.h2>
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={inView ? { opacity: 1 } : {}}
-              transition={{ duration: 0.8, delay: 0.45 }}
-              className="flex items-center justify-center gap-3 mb-8 text-[10px] tracking-[0.3em] uppercase"
-            >
-              <StepDot active={step >= 1} done={step > 1} label="Experiencia" />
-              <span className="w-6 h-px bg-v2-champagne/20" />
-              <StepDot active={step >= 2} done={step > 2} label="Fecha" />
-              <span className="w-6 h-px bg-v2-champagne/20" />
-              <StepDot active={step >= 3} done={false} label="Datos" />
-            </motion.div>
           </>
         )}
 
+        {/* Step dots: progreso del wizard. Siempre visibles, también cuando
+            hideHeader=true (son parte del wizard, no del header decorativo). */}
         <motion.div
-          initial={singlePage ? false : { opacity: 0, y: 30 }}
-          animate={singlePage ? false : (inView ? { opacity: 1, y: 0 } : {})}
-          transition={{ duration: 1, delay: 0.55 }}
-          className="bg-v2-card/60 border border-v2-champagne/24 p-7 md:p-9 backdrop-blur-xl text-left"
+          initial={{ opacity: 0 }}
+          animate={inView ? { opacity: 1 } : {}}
+          transition={{ duration: 0.8, delay: hideHeader ? 0 : 0.45 }}
+          className="flex items-center justify-center gap-3 mb-7 text-[10px] tracking-[0.3em] uppercase"
         >
-          {/* ─── MODO SINGLE PAGE: todo junto ───────────────────────── */}
-          {singlePage ? (
-            <form onSubmit={handleSubmit}>
-              {/* Bloque experiencia */}
-              <div className="flex items-center gap-2.5 mb-4 text-[10px] tracking-[0.3em] uppercase v2-text-muted">
-                <Sparkles className="w-3 h-3 text-v2-champagne" />
-                ¿Qué experiencia querés?
-              </div>
-              {renderExperienciaCards()}
+          <StepDot active={step >= 1} done={step > 1} label="Experiencia" />
+          <span className="w-6 h-px bg-v2-champagne/20" />
+          <StepDot active={step >= 2} done={step > 2} label="Fecha" />
+          <span className="w-6 h-px bg-v2-champagne/20" />
+          <StepDot active={step >= 3} done={false} label="Datos" />
+        </motion.div>
 
-              {/* Separador */}
-              <div className="my-8 border-t border-v2-champagne/10" />
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 1, delay: hideHeader ? 0.1 : 0.55 }}
+          className="bg-v2-card/60 border border-v2-champagne/24 p-5 sm:p-7 md:p-9 backdrop-blur-xl text-left overflow-hidden"
+        >
+          {/* ─── Wizard: un paso por pantalla ─────────────────────────── */}
+          <AnimatePresence mode="wait" initial={false}>
+            {step === 1 && (
+              <motion.div
+                key="step1"
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -30 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <SectionLabel icon={<Sparkles className="w-3 h-3" />}>
+                  ¿Qué experiencia querés vivir?
+                </SectionLabel>
 
-              {/* Bloque fecha */}
-              <div className="flex items-center gap-2.5 mb-4 text-[10px] tracking-[0.3em] uppercase v2-text-muted">
-                <span className="w-1.5 h-1.5 rounded-full bg-v2-accent animate-pulse-glow" />
-                ¿Cuándo querés venir?
-              </div>
-              {renderDateFields()}
+                {renderExperienciaCards()}
+                {renderAvisoConfirmacion()}
 
-              {/* Separador */}
-              <div className="my-8 border-t border-v2-champagne/10" />
+                <div className="mt-7">{continueButton(goToStep2)}</div>
+              </motion.div>
+            )}
 
-              {/* Bloque datos */}
-              <div className="flex items-center gap-2.5 mb-4 text-[10px] tracking-[0.3em] uppercase v2-text-muted">
-                <span className="w-1.5 h-1.5 rounded-full bg-v2-accent animate-pulse-glow" />
-                Completá tus datos
-              </div>
-              {renderClientFields()}
-
-              {/* Submit */}
-              <div className="flex items-center justify-end mt-7">
-                {submitButton}
-              </div>
-
-              <p className="text-[11px] v2-text-muted mt-4 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-v2-accent animate-pulse-glow" />
-                Confirmación inmediata por WhatsApp · La reserva queda registrada automáticamente en el sistema
-              </p>
-            </form>
-          ) : (
-            /* ─── MODO WIZARD: 3 pasos animados ──────────────────── */
-            <AnimatePresence mode="wait" initial={false}>
-              {step === 1 && (
-                <motion.div
-                  key="step1"
-                  initial={{ opacity: 0, x: 30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -30 }}
-                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  <div className="flex items-center gap-2.5 mb-6 text-[10px] tracking-[0.3em] uppercase v2-text-muted">
-                    <Sparkles className="w-3 h-3 text-v2-champagne" />
-                    ¿Qué experiencia querés vivir?
-                  </div>
-
-                  {renderExperienciaCards()}
-
-                  <button
-                    type="button"
-                    onClick={goToStep2}
-                    className="mt-6 w-full bg-v2-champagne text-v2-bg font-semibold tracking-[0.28em] uppercase text-[11px] px-6 py-3.5 hover:bg-v2-text hover:-translate-y-px transition-all flex items-center justify-center gap-2"
-                  >
-                    Continuar <ArrowRight className="w-4 h-4" />
-                  </button>
-
-                  <p className="text-[11px] v2-text-muted mt-4 flex items-center gap-2">
+            {step === 2 && (
+              <motion.div
+                key="step2"
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -30 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
+                  <div className="text-[10px] tracking-[0.3em] uppercase v2-text-muted flex items-center gap-2.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-v2-accent animate-pulse-glow" />
-                    Confirmación inmediata por WhatsApp
-                  </p>
-                </motion.div>
-              )}
-
-              {step === 2 && (
-                <motion.div
-                  key="step2"
-                  initial={{ opacity: 0, x: 30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -30 }}
-                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="text-[10px] tracking-[0.3em] uppercase v2-text-muted flex items-center gap-2.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-v2-accent animate-pulse-glow" />
-                      Elegí cuándo querés venir
-                    </div>
-                    <div className="text-[10px] tracking-[0.2em] uppercase v2-text-dim">
-                      {tipoLabel}
-                    </div>
+                    Elegí cuándo querés venir
                   </div>
-
-                  {renderDateFields()}
-
-                  <div className="flex flex-col-reverse md:flex-row md:items-center md:justify-between gap-3 mt-7">
-                    <button
-                      type="button"
-                      onClick={() => setStep(1)}
-                      className="text-[11px] tracking-[0.28em] uppercase v2-text-muted hover:text-v2-champagne transition-colors flex items-center gap-2 self-start"
-                    >
-                      <ArrowLeft className="w-4 h-4" /> Atrás
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={goToStep3}
-                      className="bg-v2-champagne text-v2-bg font-semibold tracking-[0.28em] uppercase text-[11px] px-7 py-3.5 hover:bg-v2-text hover:-translate-y-px transition-all flex items-center justify-center gap-2"
-                    >
-                      Continuar <ArrowRight className="w-4 h-4" />
-                    </button>
+                  <div className="text-[10px] tracking-[0.2em] uppercase v2-text-dim">
+                    {tipoLabel}
                   </div>
-                </motion.div>
-              )}
+                </div>
 
-              {step === 3 && (
-                <motion.form
-                  key="step3"
-                  onSubmit={handleSubmit}
-                  initial={{ opacity: 0, x: 30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -30 }}
-                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
-                    <div className="text-[10px] tracking-[0.3em] uppercase v2-text-muted flex items-center gap-2.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-v2-accent animate-pulse-glow" />
-                      Completá tus datos
-                    </div>
-                    <div className="text-[10px] tracking-[0.2em] uppercase v2-text-dim">
-                      {tipoLabel} · {new Date(date + "T00:00:00").toLocaleDateString("es-ES", { day: "numeric", month: "short" })} · {time} · {people}p
-                    </div>
-                  </div>
+                {renderDateBlock()}
 
-                  {renderClientFields()}
+                <div className="flex flex-col-reverse md:flex-row md:items-center md:justify-between gap-4 mt-8">
+                  {backButton(() => setStep(1))}
+                  <div className="w-full md:w-auto">{continueButton(goToStep3)}</div>
+                </div>
+              </motion.div>
+            )}
 
-                  <div className="flex flex-col-reverse md:flex-row md:items-center md:justify-between gap-3 mt-7">
-                    <button
-                      type="button"
-                      onClick={() => setStep(2)}
-                      disabled={submitting}
-                      className="text-[11px] tracking-[0.28em] uppercase v2-text-muted hover:text-v2-champagne transition-colors flex items-center gap-2 self-start disabled:opacity-50"
-                    >
-                      <ArrowLeft className="w-4 h-4" /> Atrás
-                    </button>
+            {step === 3 && (
+              <motion.form
+                key="step3"
+                onSubmit={handleSubmit}
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -30 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              >
+                {/* Resumen visual de la reserva */}
+                {renderResumen()}
 
-                    {submitButton}
-                  </div>
-                </motion.form>
-              )}
-            </AnimatePresence>
-          )}
+                <SectionLabel icon={<User className="w-3 h-3" />}>
+                  Completá tus datos
+                </SectionLabel>
+                {renderClientFields()}
+
+                <p className="text-[11px] v2-text-muted mt-5 flex items-start gap-2 leading-relaxed">
+                  <span className="w-1.5 h-1.5 rounded-full bg-v2-accent animate-pulse-glow mt-1.5 flex-shrink-0" />
+                  <span>
+                    Mesa <strong className="text-v2-text">confirmada</strong> al enviar · seguimos por WhatsApp.
+                  </span>
+                </p>
+
+                <div className="flex flex-col-reverse md:flex-row md:items-center md:justify-between gap-4 mt-7">
+                  {backButton(() => setStep(2), submitting)}
+                  <div className="w-full md:w-auto">{submitButton}</div>
+                </div>
+              </motion.form>
+            )}
+          </AnimatePresence>
         </motion.div>
       </div>
     </section>
