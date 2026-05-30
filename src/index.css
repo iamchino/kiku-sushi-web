@@ -80,11 +80,15 @@
   }
   html {
     scroll-behavior: smooth;
+    overflow-x: hidden;
   }
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
     background-image:
       radial-gradient(ellipse at top, hsl(263 35% 18% / 0.15), transparent 60%),
       radial-gradient(ellipse at bottom right, hsl(270 56% 33% / 0.1), transparent 60%);

@@ -190,7 +190,7 @@ const Pedidos = () => {
     return (
       <div className="min-h-screen">
         <Navbar />
-        <section className="relative min-h-screen flex items-center justify-center pt-24 pb-16">
+        <section className="relative min-h-screen flex items-center justify-center pt-24 pb-16 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background" />
           <div className="absolute -top-32 -left-32 w-[40rem] h-[40rem] bg-glow opacity-70 blur-3xl pointer-events-none" />
 
@@ -258,7 +258,7 @@ const Pedidos = () => {
       <Navbar />
 
       {/* Header bar */}
-      <section className="pt-24 pb-6 relative">
+      <section className="pt-24 pb-6 relative overflow-hidden">
         <div className="absolute -top-32 -left-32 w-[40rem] h-[40rem] bg-glow opacity-50 blur-3xl pointer-events-none" />
         <div className="container relative z-10">
           <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
@@ -675,6 +675,10 @@ const Pedidos = () => {
         </div>
       )}
     </div>
+  );
+};
+
+export default Pedidos;
   );
 };
 

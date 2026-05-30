@@ -21,7 +21,11 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
+          {/* V2 es ahora la web principal */}
+          <Route path="/" element={<IndexV2 />} />
+          {/* Version original (V1) conservada */}
+          <Route path="/v1" element={<Index />} />
+          {/* Alias previo de la V2, se mantiene por compatibilidad */}
           <Route path="/preview" element={<IndexV2 />} />
           <Route path="/pedidos" element={<Pedidos />} />
           <Route path="/carta" element={<Carta />} />
