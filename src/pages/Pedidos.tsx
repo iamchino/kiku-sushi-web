@@ -1,13 +1,13 @@
-import { useState, useMemo, useEffect } from "react";
+﻿import { useState, useMemo, useEffect } from "react";
 import { ShoppingBag, Search, Truck, Store, Plus, Minus, Trash2, X, Loader2, CheckCircle2, ChevronRight } from "lucide-react";
 import Navbar from "@/components/kiku/Navbar";
 import { fallbackData, fetchCatalogFromSheet, type CatalogProduct, type CatalogCategory } from "@/data/catalog";
 import { supabase } from "@/lib/supabase";
 
-// Parsea precios en formato argentino: "$3.500" → 3500
+// Parsea precios en formato argentino: "$3.500" â†’ 3500
 const parsePrice = (s: string) => parseInt(s.replace(/[$. ]/g, ''), 10) || 0;
 
-// Formatea un precio (string o número) al formato argentino: 22000 → "$22.000"
+// Formatea un precio (string o nÃºmero) al formato argentino: 22000 â†’ "$22.000"
 const formatPrice = (s: string) => `$${parsePrice(s).toLocaleString("es-AR")}`;
 
 interface CartItem {
@@ -17,8 +17,8 @@ interface CartItem {
 
 const Pedidos = () => {
 
-  // Si vienen con ?modo=delivery o ?modo=takeaway (típicamente desde /pedir V2)
-  // arrancamos directo en el catálogo, salteando la pantalla de selección.
+  // Si vienen con ?modo=delivery o ?modo=takeaway (tÃ­picamente desde /pedir V2)
+  // arrancamos directo en el catÃ¡logo, salteando la pantalla de selecciÃ³n.
   const initialMode = (() => {
     if (typeof window === 'undefined') return null
     const m = new URLSearchParams(window.location.search).get('modo')
@@ -62,7 +62,7 @@ const Pedidos = () => {
   const [direccion, setDireccion] = useState("");
   const [notasExtra, setNotasExtra] = useState("");
 
-  // ─── Fetch catalog from Google Sheets ─────────────────────────────────────
+  // â”€â”€â”€ Fetch catalog from Google Sheets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [catalogData, setCatalogData] = useState<CatalogCategory[]>(fallbackData);
   const [loading, setLoading] = useState(true);
 
@@ -130,7 +130,7 @@ const Pedidos = () => {
 
   const cartCount = cart.reduce((sum, i) => sum + i.quantity, 0);
 
-  // Confirmar pedido → Supabase
+  // Confirmar pedido â†’ Supabase
   const confirmarPedido = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nombre.trim() || !telefono.trim()) return;
@@ -185,7 +185,7 @@ const Pedidos = () => {
     }
   };
 
-  // ─── Mode selection screen ──────────────────────────────────────────────────
+  // â”€â”€â”€ Mode selection screen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (!orderMode) {
     return (
       <div className="min-h-screen">
@@ -195,12 +195,12 @@ const Pedidos = () => {
           <div className="absolute -top-32 -left-32 w-[40rem] h-[40rem] bg-glow opacity-70 blur-3xl pointer-events-none" />
 
           <div className="container relative z-10 text-center max-w-2xl">
-            <span className="font-jp text-accent text-sm tracking-widest">— ご注文 —</span>
+            <span className="font-jp text-accent text-sm tracking-widest">â€” ã”æ³¨æ–‡ â€”</span>
             <h1 className="font-display text-5xl sm:text-7xl mt-4 mb-4 glow-text-soft">
               Pedidos
             </h1>
             <p className="text-muted-foreground mb-12">
-              Realizá tu pedido para delivery o takeaway
+              RealizÃ¡ tu pedido para delivery o takeaway
             </p>
 
             <div className="grid sm:grid-cols-2 gap-5">
@@ -215,7 +215,7 @@ const Pedidos = () => {
                   </div>
                   <h3 className="font-display text-2xl mb-2">Delivery</h3>
                   <p className="text-sm text-muted-foreground mb-1">Lo enviamos a tu domicilio</p>
-                  <p className="text-xs text-accent">Costo de envío: $3.500</p>
+                  <p className="text-xs text-accent">Costo de envÃ­o: $3.500</p>
                 </div>
               </button>
 
@@ -229,8 +229,8 @@ const Pedidos = () => {
                     <Store className="w-6 h-6 text-accent" />
                   </div>
                   <h3 className="font-display text-2xl mb-2">Retiro en local</h3>
-                  <p className="text-sm text-muted-foreground mb-1">Pasás a buscarlo al local</p>
-                  <p className="text-xs text-accent">Sin costo de envío</p>
+                  <p className="text-sm text-muted-foreground mb-1">PasÃ¡s a buscarlo al local</p>
+                  <p className="text-xs text-accent">Sin costo de envÃ­o</p>
                 </div>
               </button>
             </div>
@@ -239,7 +239,7 @@ const Pedidos = () => {
               href="/"
               className="inline-flex items-center gap-1 text-sm text-muted-foreground mt-10 hover:text-foreground transition-colors"
             >
-              ← Volver al inicio
+              â† Volver al inicio
             </a>
           </div>
         </section>
@@ -247,7 +247,7 @@ const Pedidos = () => {
     );
   }
 
-  // ─── Catalog view ───────────────────────────────────────────────────────────
+  // â”€â”€â”€ Catalog view â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const categories = filteredCategories;
   const visibleCategories = activeCategory
     ? categories.filter((c) => c.name === activeCategory)
@@ -267,7 +267,7 @@ const Pedidos = () => {
                 href="/pedir"
                 className="text-muted-foreground hover:text-foreground transition-colors text-sm"
               >
-                ← Cambiar
+                â† Cambiar
               </a>
               <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/40 bg-accent/10 text-accent text-[10px] uppercase tracking-[0.3em]">
                 {orderMode === "delivery" ? (
@@ -296,7 +296,7 @@ const Pedidos = () => {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Buscar en el menú..."
+              placeholder="Buscar en el menÃº..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-card/60 border border-border rounded-xl pl-11 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 transition-colors"
@@ -338,7 +338,7 @@ const Pedidos = () => {
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-4">
               <Loader2 className="w-8 h-8 text-accent animate-spin" />
-              <p className="text-muted-foreground text-sm">Cargando menú...</p>
+              <p className="text-muted-foreground text-sm">Cargando menÃº...</p>
             </div>
           ) : visibleCategories.length === 0 ? (
             <div className="text-center py-20">
@@ -366,7 +366,7 @@ const Pedidos = () => {
                     >
                       <div className="absolute -top-20 -right-20 w-32 h-32 bg-glow opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-700" />
                       <div className="relative flex flex-col h-full">
-                        {/* Image placeholder — ready for real images from sheet/db */}
+                        {/* Image placeholder â€” ready for real images from sheet/db */}
                         {product.image ? (
                           <button
                             type="button"
@@ -383,7 +383,7 @@ const Pedidos = () => {
                           </button>
                         ) : (
                           <div className="w-full h-40 rounded-xl mb-4 bg-gradient-to-br from-primary/10 to-accent/10 border border-border/50 flex items-center justify-center">
-                            <span className="font-jp text-3xl text-primary/30">菊</span>
+                            <span className="font-jp text-3xl text-primary/30">èŠ</span>
                           </div>
                         )}
 
@@ -448,7 +448,7 @@ const Pedidos = () => {
           className="md:hidden fixed bottom-4 left-4 right-4 z-50 bg-gradient-neon text-primary-foreground text-center font-semibold tracking-wider uppercase py-4 rounded-2xl glow-neon-strong animate-pulse-glow text-sm flex items-center justify-center gap-2"
         >
           <ShoppingBag className="w-4 h-4" />
-          Ver pedido · {cartCount} {cartCount === 1 ? "item" : "items"}
+          Ver pedido Â· {cartCount} {cartCount === 1 ? "item" : "items"}
         </button>
       )}
 
@@ -474,7 +474,7 @@ const Pedidos = () => {
               {cart.length === 0 ? (
                 <div className="text-center py-10">
                   <ShoppingBag className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-muted-foreground">Tu pedido está vacío</p>
+                  <p className="text-muted-foreground">Tu pedido estÃ¡ vacÃ­o</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -528,7 +528,7 @@ const Pedidos = () => {
                 </div>
                 {orderMode === "delivery" && (
                   <div className="flex items-center justify-between mb-2 text-sm">
-                    <span className="text-muted-foreground">Envío</span>
+                    <span className="text-muted-foreground">EnvÃ­o</span>
                     <span className="font-semibold">$3.500</span>
                   </div>
                 )}
@@ -548,7 +548,7 @@ const Pedidos = () => {
         </div>
       )}
 
-      {/* ── Checkout overlay ── */}
+      {/* â”€â”€ Checkout overlay â”€â”€ */}
       {step === "checkout" && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-background/90 backdrop-blur-sm" onClick={() => setStep("catalog")} />
@@ -567,17 +567,17 @@ const Pedidos = () => {
                   placeholder="Tu nombre" />
               </div>
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Teléfono *</label>
+                <label className="text-xs text-muted-foreground mb-1 block">TelÃ©fono *</label>
                 <input value={telefono} onChange={e => setTelefono(e.target.value)} required type="tel"
                   className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary/50"
                   placeholder="+54 9 341 000 0000" />
               </div>
               {orderMode === "delivery" && (
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Dirección de entrega *</label>
+                  <label className="text-xs text-muted-foreground mb-1 block">DirecciÃ³n de entrega *</label>
                   <input value={direccion} onChange={e => setDireccion(e.target.value)} required
                     className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary/50"
-                    placeholder="Calle y número, piso/depto" />
+                    placeholder="Calle y nÃºmero, piso/depto" />
                 </div>
               )}
               <div>
@@ -588,7 +588,7 @@ const Pedidos = () => {
               </div>
               {errorMsg && (
                 <div className="rounded-xl bg-red-500/10 border border-red-500/30 px-4 py-3 text-xs text-red-400 break-all">
-                  ⚠️ {errorMsg}
+                  âš ï¸ {errorMsg}
                 </div>
               )}
               <button type="submit" disabled={enviando}
@@ -601,7 +601,7 @@ const Pedidos = () => {
         </div>
       )}
 
-      {/* ── Pedido confirmado ── */}
+      {/* â”€â”€ Pedido confirmado â”€â”€ */}
       {step === "confirmado" && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-background/95 backdrop-blur-md">
           <div className="text-center space-y-6 max-w-sm">
@@ -609,10 +609,10 @@ const Pedidos = () => {
               <CheckCircle2 className="w-10 h-10 text-green-400" />
             </div>
             <div>
-              <p className="font-jp text-accent text-sm tracking-widest mb-2">— ありがとう —</p>
-              <h2 className="font-display text-4xl mb-2">¡Pedido recibido!</h2>
+              <p className="font-jp text-accent text-sm tracking-widest mb-2">â€” ã‚ã‚ŠãŒã¨ã† â€”</p>
+              <h2 className="font-display text-4xl mb-2">Â¡Pedido recibido!</h2>
               {pedidoNum && <p className="text-muted-foreground text-sm">Pedido <span className="text-accent font-bold">#{pedidoNum}</span></p>}
-              <p className="text-muted-foreground text-sm mt-2">Nos ponemos a prepararlo. Te contactamos a la brevedad al número que indicaste.</p>
+              <p className="text-muted-foreground text-sm mt-2">Nos ponemos a prepararlo. Te contactamos a la brevedad al nÃºmero que indicaste.</p>
             </div>
             <button onClick={() => { setStep("catalog"); setOrderMode(null); }}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-border text-sm hover:border-primary/40 hover:text-accent transition-colors">
@@ -622,7 +622,7 @@ const Pedidos = () => {
         </div>
       )}
 
-      {/* ── Imagen ampliada del producto ── */}
+      {/* â”€â”€ Imagen ampliada del producto â”€â”€ */}
       {zoomProduct && (
         <div
           className="fixed inset-0 z-[80] flex items-center justify-center p-4"
@@ -675,10 +675,6 @@ const Pedidos = () => {
         </div>
       )}
     </div>
-  );
-};
-
-export default Pedidos;
   );
 };
 
