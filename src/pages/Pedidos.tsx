@@ -7,6 +7,9 @@ import { supabase } from "@/lib/supabase";
 // Parsea precios en formato argentino: "$3.500" → 3500
 const parsePrice = (s: string) => parseInt(s.replace(/[$. ]/g, ''), 10) || 0;
 
+// Formatea un precio (string o número) al formato argentino: 22000 → "$22.000"
+const formatPrice = (s: string) => `$${parsePrice(s).toLocaleString("es-AR")}`;
+
 interface CartItem {
   product: CatalogProduct;
   quantity: number;
@@ -33,6 +36,15 @@ const Pedidos = () => {
     return []
   });
   const [cartOpen, setCartOpen] = useState(false);
+  const [zoomProduct, setZoomProduct] = useState<CatalogProduct | null>(null);
+
+  // Cerrar la imagen ampliada con Escape
+  useEffect(() => {
+    if (!zoomProduct) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setZoomProduct(null); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [zoomProduct]);
 
   // Persistir carrito en localStorage + notificar Navbar
   useEffect(() => {
@@ -356,12 +368,19 @@ const Pedidos = () => {
                       <div className="relative flex flex-col h-full">
                         {/* Image placeholder — ready for real images from sheet/db */}
                         {product.image ? (
-                          <img
-                            src={product.image}
-                            alt={product.name}
-                            className="w-full h-40 object-cover rounded-xl mb-4"
-                            loading="lazy"
-                          />
+                          <button
+                            type="button"
+                            onClick={() => setZoomProduct(product)}
+                            className="block w-full mb-4 rounded-xl overflow-hidden cursor-zoom-in"
+                            aria-label={`Ampliar imagen de ${product.name}`}
+                          >
+                            <img
+                              src={product.image}
+                              alt={product.name}
+                              className="w-full h-40 object-cover transition-transform duration-500 group-hover:scale-105"
+                              loading="lazy"
+                            />
+                          </button>
                         ) : (
                           <div className="w-full h-40 rounded-xl mb-4 bg-gradient-to-br from-primary/10 to-accent/10 border border-border/50 flex items-center justify-center">
                             <span className="font-jp text-3xl text-primary/30">菊</span>
@@ -381,7 +400,7 @@ const Pedidos = () => {
 
                         <div className="flex items-center justify-between mt-auto">
                           <span className="text-sm font-semibold text-gradient-neon">
-                            {product.price}
+                            {formatPrice(product.price)}
                           </span>
 
                           {inCart ? (
@@ -466,7 +485,7 @@ const Pedidos = () => {
                     >
                       <div className="flex-1 min-w-0">
                         <h4 className="font-display text-base truncate">{item.product.name}</h4>
-                        <p className="text-xs text-muted-foreground">{item.product.price}</p>
+                        <p className="text-xs text-muted-foreground">{formatPrice(item.product.price)}</p>
                         <div className="flex items-center gap-2 mt-2">
                           <button
                             onClick={() => updateQuantity(item.product.id, -1)}
@@ -599,6 +618,59 @@ const Pedidos = () => {
               className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-border text-sm hover:border-primary/40 hover:text-accent transition-colors">
               Volver al inicio
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Imagen ampliada del producto ── */}
+      {zoomProduct && (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center p-4"
+          onClick={() => setZoomProduct(null)}
+        >
+          <div className="absolute inset-0 bg-background/90 backdrop-blur-md" />
+          <div
+            className="relative w-full max-w-lg bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-fade-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setZoomProduct(null)}
+              className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-background/70 border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Cerrar"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {zoomProduct.image && (
+              <img
+                src={zoomProduct.image}
+                alt={zoomProduct.name}
+                className="w-full max-h-[55vh] object-contain bg-black/20"
+              />
+            )}
+
+            <div className="p-6">
+              {zoomProduct.badge && (
+                <span className="inline-block mb-2 px-2.5 py-0.5 rounded-full bg-accent/20 border border-accent/40 text-accent text-[10px] uppercase tracking-wider font-semibold">
+                  {zoomProduct.badge}
+                </span>
+              )}
+              <h3 className="font-display text-2xl mb-2">{zoomProduct.name}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                {zoomProduct.description}
+              </p>
+              <div className="flex items-center justify-between">
+                <span className="text-lg font-semibold text-gradient-neon">
+                  {formatPrice(zoomProduct.price)}
+                </span>
+                <button
+                  onClick={() => { addToCart(zoomProduct); setZoomProduct(null); }}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-neon text-primary-foreground text-xs font-semibold uppercase tracking-widest hover:scale-105 transition-transform glow-neon"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Agregar
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
