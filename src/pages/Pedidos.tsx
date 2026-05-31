@@ -1,13 +1,14 @@
-﻿import { useState, useMemo, useEffect } from "react";
-import { ShoppingBag, Search, Truck, Store, Plus, Minus, Trash2, X, Loader2, CheckCircle2, ChevronRight } from "lucide-react";
-import Navbar from "@/components/kiku/Navbar";
+import { useState, useMemo, useEffect } from "react";
+import { ShoppingBag, Search, Truck, Store, Plus, Minus, Trash2, X, Loader2, CheckCircle2, ChevronRight, ArrowLeft } from "lucide-react";
+import { Link } from "react-router-dom";
+import NavbarV2 from "@/components/kiku-v2/NavbarV2";
 import { fallbackData, fetchCatalogFromSheet, type CatalogProduct, type CatalogCategory } from "@/data/catalog";
 import { supabase } from "@/lib/supabase";
 
-// Parsea precios en formato argentino: "$3.500" â†’ 3500
+// Parsea precios en formato argentino: "$3.500" → 3500
 const parsePrice = (s: string) => parseInt(s.replace(/[$. ]/g, ''), 10) || 0;
 
-// Formatea un precio (string o nÃºmero) al formato argentino: 22000 â†’ "$22.000"
+// Formatea un precio (string o número) al formato argentino: 22000 → "$22.000"
 const formatPrice = (s: string) => `$${parsePrice(s).toLocaleString("es-AR")}`;
 
 interface CartItem {
@@ -17,12 +18,21 @@ interface CartItem {
 
 const Pedidos = () => {
 
-  // Si vienen con ?modo=delivery o ?modo=takeaway (tÃ­picamente desde /pedir V2)
-  // arrancamos directo en el catÃ¡logo, salteando la pantalla de selecciÃ³n.
+  // Aplicar la estética v2 mientras esta página está montada
+  useEffect(() => {
+    document.body.classList.add("v2-root");
+    return () => { document.body.classList.remove("v2-root"); };
+  }, []);
+
+  // Modo inicial: 1) ?modo= de la URL (viene de /pedir), 2) último modo guardado.
+  // Persistir el modo permite que la bolsita del navbar (/pedidos#cart) reabra
+  // el carrito real en vez de volver a la pantalla de selección.
   const initialMode = (() => {
     if (typeof window === 'undefined') return null
     const m = new URLSearchParams(window.location.search).get('modo')
-    return m === 'delivery' || m === 'takeaway' ? m : null
+    if (m === 'delivery' || m === 'takeaway') return m
+    const saved = localStorage.getItem('kiku-order-mode')
+    return saved === 'delivery' || saved === 'takeaway' ? saved : null
   })() as "delivery" | "takeaway" | null;
 
   const [orderMode, setOrderMode] = useState<"delivery" | "takeaway" | null>(initialMode);
@@ -52,6 +62,12 @@ const Pedidos = () => {
     window.dispatchEvent(new Event('kiku-cart-update'));
   }, [cart]);
 
+  // Persistir el modo de pedido (delivery / takeaway)
+  useEffect(() => {
+    if (orderMode) localStorage.setItem('kiku-order-mode', orderMode);
+    else localStorage.removeItem('kiku-order-mode');
+  }, [orderMode]);
+
   // Checkout flow
   const [step, setStep] = useState<"catalog" | "checkout" | "confirmado">("catalog");
   const [enviando, setEnviando] = useState(false);
@@ -62,7 +78,7 @@ const Pedidos = () => {
   const [direccion, setDireccion] = useState("");
   const [notasExtra, setNotasExtra] = useState("");
 
-  // â”€â”€â”€ Fetch catalog from Google Sheets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Fetch catálogo (Supabase, tipo delivery) ──────────────────────────────
   const [catalogData, setCatalogData] = useState<CatalogCategory[]>(fallbackData);
   const [loading, setLoading] = useState(true);
 
@@ -73,7 +89,7 @@ const Pedidos = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  // Auto-open cart when navigated with #cart hash
+  // Abrir el carrito automáticamente al llegar con #cart
   useEffect(() => {
     if (window.location.hash === '#cart' && cart.length > 0) {
       setCartOpen(true);
@@ -130,7 +146,7 @@ const Pedidos = () => {
 
   const cartCount = cart.reduce((sum, i) => sum + i.quantity, 0);
 
-  // Confirmar pedido â†’ Supabase
+  // Confirmar pedido → Supabase
   const confirmarPedido = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nombre.trim() || !telefono.trim()) return;
@@ -141,8 +157,6 @@ const Pedidos = () => {
       const envio   = orderMode === "delivery" ? 3500 : 0;
       const total   = subtotal + envio;
 
-      // Datos del cliente van en columnas dedicadas; `notas` queda libre
-      // para las notas reales del cliente ("sin cebolla", "timbre roto", etc.).
       const { data: pedido, error: e1 } = await supabase
         .from("pedidos")
         .insert({
@@ -186,91 +200,85 @@ const Pedidos = () => {
     }
   };
 
-  // â”€â”€â”€ Mode selection screen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Pantalla de selección de modo ──────────────────────────────────────────
   if (!orderMode) {
     return (
-      <div className="min-h-screen">
-        <Navbar />
-        <section className="relative min-h-screen flex items-center justify-center pt-24 pb-16 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background" />
-          <div className="absolute -top-32 -left-32 w-[40rem] h-[40rem] bg-glow opacity-70 blur-3xl pointer-events-none" />
-
-          <div className="container relative z-10 text-center max-w-2xl">
-            <span className="font-jp text-accent text-sm tracking-widest">â€” ã”æ³¨æ–‡ â€”</span>
-            <h1 className="font-display text-5xl sm:text-7xl mt-4 mb-4 glow-text-soft">
+      <div className="v2-root min-h-screen overflow-x-hidden v2-bg-base">
+        <NavbarV2 />
+        <section className="relative min-h-screen flex items-center justify-center pt-28 pb-16 px-6 md:px-14 overflow-hidden text-center">
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: "radial-gradient(ellipse at top, hsla(270, 50%, 50%, 0.12), transparent 60%)" }}
+          />
+          <div className="relative z-10 max-w-2xl w-full">
+            <span className="font-jp text-xs tracking-[0.4em] text-v2-champagne mb-4 block">— ご注文 —</span>
+            <h1 className="font-display font-light text-5xl sm:text-7xl text-v2-text leading-none mb-4">
               Pedidos
             </h1>
-            <p className="text-muted-foreground mb-12">
-              RealizÃ¡ tu pedido para delivery o takeaway
+            <p className="v2-text-muted mb-12">
+              Realizá tu pedido para delivery o retiro en el local
             </p>
 
-            <div className="grid sm:grid-cols-2 gap-5">
+            <div className="grid sm:grid-cols-2 gap-5 text-left">
               <button
                 onClick={() => setOrderMode("delivery")}
-                className="group relative bg-gradient-card border border-border rounded-2xl p-8 text-left hover:border-primary/50 transition-all duration-500 overflow-hidden"
+                className="group relative v2-bg-card border border-v2-champagne/15 rounded-2xl p-8 hover:border-v2-champagne/50 hover:-translate-y-0.5 transition-all duration-500 overflow-hidden"
               >
-                <div className="absolute -top-20 -right-20 w-40 h-40 bg-glow opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-700" />
-                <div className="relative">
-                  <div className="w-14 h-14 rounded-2xl bg-accent/15 border border-accent/40 flex items-center justify-center mb-5">
-                    <Truck className="w-6 h-6 text-accent" />
-                  </div>
-                  <h3 className="font-display text-2xl mb-2">Delivery</h3>
-                  <p className="text-sm text-muted-foreground mb-1">Lo enviamos a tu domicilio</p>
-                  <p className="text-xs text-accent">Costo de envÃ­o: $3.500</p>
+                <div className="w-14 h-14 rounded-2xl border border-v2-champagne/30 flex items-center justify-center mb-5">
+                  <Truck className="w-6 h-6 text-v2-champagne" />
                 </div>
+                <h3 className="font-display text-2xl text-v2-text mb-2">Delivery</h3>
+                <p className="text-sm v2-text-muted mb-1">Lo enviamos a tu domicilio</p>
+                <p className="text-xs text-v2-champagne">Costo de envío: $3.500</p>
               </button>
 
               <button
                 onClick={() => setOrderMode("takeaway")}
-                className="group relative bg-gradient-card border border-border rounded-2xl p-8 text-left hover:border-primary/50 transition-all duration-500 overflow-hidden"
+                className="group relative v2-bg-card border border-v2-champagne/15 rounded-2xl p-8 hover:border-v2-champagne/50 hover:-translate-y-0.5 transition-all duration-500 overflow-hidden"
               >
-                <div className="absolute -top-20 -right-20 w-40 h-40 bg-glow opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-700" />
-                <div className="relative">
-                  <div className="w-14 h-14 rounded-2xl bg-accent/15 border border-accent/40 flex items-center justify-center mb-5">
-                    <Store className="w-6 h-6 text-accent" />
-                  </div>
-                  <h3 className="font-display text-2xl mb-2">Retiro en local</h3>
-                  <p className="text-sm text-muted-foreground mb-1">PasÃ¡s a buscarlo al local</p>
-                  <p className="text-xs text-accent">Sin costo de envÃ­o</p>
+                <div className="w-14 h-14 rounded-2xl border border-v2-champagne/30 flex items-center justify-center mb-5">
+                  <Store className="w-6 h-6 text-v2-champagne" />
                 </div>
+                <h3 className="font-display text-2xl text-v2-text mb-2">Retiro en local</h3>
+                <p className="text-sm v2-text-muted mb-1">Pasás a buscarlo al local</p>
+                <p className="text-xs text-v2-champagne">Sin costo de envío</p>
               </button>
             </div>
 
-            <a
-              href="/"
-              className="inline-flex items-center gap-1 text-sm text-muted-foreground mt-10 hover:text-foreground transition-colors"
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.24em] v2-text-muted mt-10 hover:text-v2-champagne transition-colors"
             >
-              â† Volver al inicio
-            </a>
+              <ArrowLeft className="w-3.5 h-3.5" /> Volver al inicio
+            </Link>
           </div>
         </section>
       </div>
     );
   }
 
-  // â”€â”€â”€ Catalog view â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Vista del catálogo ─────────────────────────────────────────────────────
   const categories = filteredCategories;
   const visibleCategories = activeCategory
     ? categories.filter((c) => c.name === activeCategory)
     : categories;
 
   return (
-    <div className="min-h-screen">
-      <Navbar />
+    <div className="v2-root min-h-screen overflow-x-hidden v2-bg-base">
+      <NavbarV2 />
 
       {/* Header bar */}
-      <section className="pt-24 pb-6 relative overflow-hidden">
-        <div className="absolute -top-32 -left-32 w-[40rem] h-[40rem] bg-glow opacity-50 blur-3xl pointer-events-none" />
-        <div className="container relative z-10">
+      <section className="pt-28 md:pt-32 pb-6 px-6 md:px-14">
+        <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
             <div className="flex items-center gap-3">
-              <a
-                href="/pedir"
-                className="text-muted-foreground hover:text-foreground transition-colors text-sm"
+              <Link
+                to="/pedir"
+                className="inline-flex items-center gap-1.5 v2-text-muted hover:text-v2-champagne transition-colors text-[11px] uppercase tracking-[0.24em]"
               >
-                â† Cambiar
-              </a>
-              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/40 bg-accent/10 text-accent text-[10px] uppercase tracking-[0.3em]">
+                <ArrowLeft className="w-3.5 h-3.5" /> Cambiar
+              </Link>
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-v2-champagne/30 text-v2-champagne text-[10px] uppercase tracking-[0.24em]">
                 {orderMode === "delivery" ? (
                   <><Truck className="w-3 h-3" /> Delivery</>
                 ) : (
@@ -280,12 +288,12 @@ const Pedidos = () => {
             </div>
             <button
               onClick={() => setCartOpen(true)}
-              className="relative inline-flex items-center gap-2 bg-gradient-neon text-primary-foreground text-xs font-semibold uppercase tracking-widest px-5 py-2.5 rounded-full hover:scale-105 transition-transform glow-neon"
+              className="relative inline-flex items-center gap-2 bg-v2-champagne text-v2-bg text-[11px] font-medium uppercase tracking-[0.24em] px-5 py-2.5 hover:bg-v2-text transition-colors"
             >
               <ShoppingBag className="w-4 h-4" />
               Pedido
               {cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 w-5 h-5 bg-accent text-white text-[10px] rounded-full flex items-center justify-center font-bold">
+                <span className="absolute -top-2 -right-2 min-w-[20px] h-5 px-1 bg-v2-text text-v2-bg text-[10px] rounded-full flex items-center justify-center font-bold">
                   {cartCount}
                 </span>
               )}
@@ -294,13 +302,13 @@ const Pedidos = () => {
 
           {/* Search */}
           <div className="relative max-w-xl">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-v2-champagne/60" />
             <input
               type="text"
-              placeholder="Buscar en el menÃº..."
+              placeholder="Buscar en el menú..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-card/60 border border-border rounded-xl pl-11 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 transition-colors"
+              className="w-full v2-bg-card border border-v2-champagne/15 rounded-full pl-11 pr-4 py-3 text-sm text-v2-text placeholder:text-v2-text-dim outline-none focus:border-v2-champagne/50 transition-colors"
             />
           </div>
 
@@ -308,10 +316,10 @@ const Pedidos = () => {
           <div className="flex gap-2 mt-5 overflow-x-auto pb-2 scrollbar-hide">
             <button
               onClick={() => setActiveCategory(null)}
-              className={`shrink-0 px-4 py-2 rounded-full text-xs uppercase tracking-wider border transition-all ${
+              className={`shrink-0 px-4 py-2 rounded-full text-[11px] uppercase tracking-[0.18em] border transition-all ${
                 !activeCategory
-                  ? "bg-gradient-neon text-primary-foreground border-transparent"
-                  : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                  ? "bg-v2-champagne text-v2-bg border-transparent"
+                  : "border-v2-champagne/20 text-v2-text-muted hover:border-v2-champagne/50 hover:text-v2-text"
               }`}
             >
               Todos
@@ -320,10 +328,10 @@ const Pedidos = () => {
               <button
                 key={cat.name}
                 onClick={() => setActiveCategory(cat.name === activeCategory ? null : cat.name)}
-                className={`shrink-0 px-4 py-2 rounded-full text-xs uppercase tracking-wider border transition-all ${
+                className={`shrink-0 px-4 py-2 rounded-full text-[11px] uppercase tracking-[0.18em] border transition-all whitespace-nowrap ${
                   activeCategory === cat.name
-                    ? "bg-gradient-neon text-primary-foreground border-transparent"
-                    : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                    ? "bg-v2-champagne text-v2-bg border-transparent"
+                    : "border-v2-champagne/20 text-v2-text-muted hover:border-v2-champagne/50 hover:text-v2-text"
                 }`}
               >
                 {cat.name}
@@ -334,26 +342,26 @@ const Pedidos = () => {
       </section>
 
       {/* Product grid */}
-      <section className="pb-32">
-        <div className="container">
+      <section className="pb-32 px-6 md:px-14">
+        <div className="max-w-6xl mx-auto">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-4">
-              <Loader2 className="w-8 h-8 text-accent animate-spin" />
-              <p className="text-muted-foreground text-sm">Cargando menÃº...</p>
+              <Loader2 className="w-8 h-8 text-v2-champagne animate-spin" />
+              <p className="v2-text-muted text-sm">Cargando menú...</p>
             </div>
           ) : visibleCategories.length === 0 ? (
             <div className="text-center py-20">
-              <p className="text-muted-foreground text-lg">
+              <p className="v2-text-muted text-lg">
                 No se encontraron productos para "{searchQuery}"
               </p>
             </div>
           ) : (
           visibleCategories.map((cat) => (
             <div key={cat.name} className="mb-14">
-              <div className="mb-6 animate-fade-up">
-                <h2 className="font-display text-3xl md:text-4xl">{cat.name}</h2>
+              <div className="mb-6">
+                <h2 className="font-display font-light text-3xl md:text-4xl text-v2-text">{cat.name}</h2>
                 {cat.subtitle && (
-                  <p className="text-sm text-muted-foreground mt-1">{cat.subtitle}</p>
+                  <p className="text-xs uppercase tracking-[0.2em] text-v2-champagne/70 mt-1.5">{cat.subtitle}</p>
                 )}
               </div>
 
@@ -363,11 +371,9 @@ const Pedidos = () => {
                   return (
                     <article
                       key={product.id}
-                      className="group relative bg-gradient-card border border-border rounded-2xl p-5 hover:border-primary/40 transition-all duration-500 overflow-hidden animate-fade-up"
+                      className="group relative v2-bg-card border border-v2-champagne/12 rounded-2xl p-5 hover:border-v2-champagne/40 transition-all duration-500 overflow-hidden"
                     >
-                      <div className="absolute -top-20 -right-20 w-32 h-32 bg-glow opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-700" />
                       <div className="relative flex flex-col h-full">
-                        {/* Image placeholder â€” ready for real images from sheet/db */}
                         {product.image ? (
                           <button
                             type="button"
@@ -383,24 +389,24 @@ const Pedidos = () => {
                             />
                           </button>
                         ) : (
-                          <div className="w-full h-40 rounded-xl mb-4 bg-gradient-to-br from-primary/10 to-accent/10 border border-border/50 flex items-center justify-center">
-                            <span className="font-jp text-3xl text-primary/30">èŠ</span>
+                          <div className="w-full h-40 rounded-xl mb-4 v2-bg-base border border-v2-champagne/10 flex items-center justify-center">
+                            <span className="font-jp text-3xl text-v2-champagne/25">菊</span>
                           </div>
                         )}
 
                         {product.badge && (
-                          <span className="absolute top-3 right-3 px-2.5 py-0.5 rounded-full bg-accent/20 border border-accent/40 text-accent text-[10px] uppercase tracking-wider font-semibold">
+                          <span className="absolute top-3 right-3 px-2.5 py-0.5 rounded-full border border-v2-champagne/30 text-v2-champagne text-[10px] uppercase tracking-wider font-semibold bg-v2-bg/60">
                             {product.badge}
                           </span>
                         )}
 
-                        <h3 className="font-display text-xl mb-1">{product.name}</h3>
-                        <p className="text-xs text-muted-foreground leading-relaxed mb-4 flex-1">
+                        <h3 className="font-display text-xl text-v2-text mb-1">{product.name}</h3>
+                        <p className="text-xs v2-text-muted leading-relaxed mb-4 flex-1">
                           {product.description}
                         </p>
 
                         <div className="flex items-center justify-between mt-auto">
-                          <span className="text-sm font-semibold text-gradient-neon">
+                          <span className="text-base font-display text-v2-champagne">
                             {formatPrice(product.price)}
                           </span>
 
@@ -408,16 +414,16 @@ const Pedidos = () => {
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() => updateQuantity(product.id, -1)}
-                                className="w-7 h-7 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors"
+                                className="w-7 h-7 rounded-full border border-v2-champagne/25 flex items-center justify-center text-v2-text-muted hover:text-v2-text hover:border-v2-champagne/50 transition-colors"
                               >
                                 <Minus className="w-3 h-3" />
                               </button>
-                              <span className="text-sm font-semibold w-5 text-center">
+                              <span className="text-sm font-semibold w-5 text-center text-v2-text">
                                 {inCart.quantity}
                               </span>
                               <button
                                 onClick={() => addToCart(product)}
-                                className="w-7 h-7 rounded-full bg-gradient-neon flex items-center justify-center text-primary-foreground hover:scale-110 transition-transform"
+                                className="w-7 h-7 rounded-full bg-v2-champagne flex items-center justify-center text-v2-bg hover:bg-v2-text transition-colors"
                               >
                                 <Plus className="w-3 h-3" />
                               </button>
@@ -425,7 +431,7 @@ const Pedidos = () => {
                           ) : (
                             <button
                               onClick={() => addToCart(product)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-primary/40 text-xs text-accent hover:bg-gradient-neon hover:text-primary-foreground hover:border-transparent transition-all"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-v2-champagne/40 text-xs text-v2-champagne hover:bg-v2-champagne hover:text-v2-bg hover:border-transparent transition-all"
                             >
                               <Plus className="w-3 h-3" /> Agregar
                             </button>
@@ -446,10 +452,10 @@ const Pedidos = () => {
       {cartCount > 0 && !cartOpen && (
         <button
           onClick={() => setCartOpen(true)}
-          className="md:hidden fixed bottom-4 left-4 right-4 z-50 bg-gradient-neon text-primary-foreground text-center font-semibold tracking-wider uppercase py-4 rounded-2xl glow-neon-strong animate-pulse-glow text-sm flex items-center justify-center gap-2"
+          className="md:hidden fixed bottom-4 left-4 right-4 z-50 bg-v2-champagne text-v2-bg text-center font-medium tracking-[0.2em] uppercase py-4 rounded-xl text-sm flex items-center justify-center gap-2 shadow-2xl"
         >
           <ShoppingBag className="w-4 h-4" />
-          Ver pedido Â· {cartCount} {cartCount === 1 ? "item" : "items"}
+          Ver pedido · {cartCount} {cartCount === 1 ? "item" : "items"}
         </button>
       )}
 
@@ -457,15 +463,15 @@ const Pedidos = () => {
       {cartOpen && (
         <div className="fixed inset-0 z-[60]">
           <div
-            className="absolute inset-0 bg-background/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-v2-bg/80 backdrop-blur-sm"
             onClick={() => setCartOpen(false)}
           />
-          <div className="absolute right-0 top-0 bottom-0 w-full max-w-md bg-card border-l border-border shadow-2xl flex flex-col animate-fade-up">
-            <div className="flex items-center justify-between p-6 border-b border-border">
-              <h3 className="font-display text-2xl">Tu pedido</h3>
+          <div className="absolute right-0 top-0 bottom-0 w-full max-w-md v2-bg-card border-l border-v2-champagne/15 shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-v2-champagne/12">
+              <h3 className="font-display text-2xl text-v2-text">Tu pedido</h3>
               <button
                 onClick={() => setCartOpen(false)}
-                className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                className="w-8 h-8 rounded-full border border-v2-champagne/25 flex items-center justify-center text-v2-text-muted hover:text-v2-text transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -474,32 +480,40 @@ const Pedidos = () => {
             <div className="flex-1 overflow-y-auto p-6">
               {cart.length === 0 ? (
                 <div className="text-center py-10">
-                  <ShoppingBag className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-muted-foreground">Tu pedido estÃ¡ vacÃ­o</p>
+                  <ShoppingBag className="w-10 h-10 text-v2-text-dim mx-auto mb-3" />
+                  <p className="v2-text-muted">Tu pedido está vacío</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {cart.map((item) => (
                     <div
                       key={item.product.id}
-                      className="flex items-start gap-3 bg-background/40 rounded-xl p-4 border border-border/60"
+                      className="flex items-start gap-3 v2-bg-base rounded-xl p-4 border border-v2-champagne/10"
                     >
+                      {item.product.image && (
+                        <img
+                          src={item.product.image}
+                          alt={item.product.name}
+                          className="w-14 h-14 rounded-lg object-cover shrink-0 border border-v2-champagne/15"
+                          loading="lazy"
+                        />
+                      )}
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-display text-base truncate">{item.product.name}</h4>
-                        <p className="text-xs text-muted-foreground">{formatPrice(item.product.price)}</p>
+                        <h4 className="font-display text-base text-v2-text truncate">{item.product.name}</h4>
+                        <p className="text-xs text-v2-champagne">{formatPrice(item.product.price)}</p>
                         <div className="flex items-center gap-2 mt-2">
                           <button
                             onClick={() => updateQuantity(item.product.id, -1)}
-                            className="w-6 h-6 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                            className="w-6 h-6 rounded-full border border-v2-champagne/25 flex items-center justify-center text-v2-text-muted hover:text-v2-text transition-colors"
                           >
                             <Minus className="w-3 h-3" />
                           </button>
-                          <span className="text-sm font-semibold w-5 text-center">
+                          <span className="text-sm font-semibold w-5 text-center text-v2-text">
                             {item.quantity}
                           </span>
                           <button
                             onClick={() => addToCart(item.product)}
-                            className="w-6 h-6 rounded-full bg-gradient-neon flex items-center justify-center text-primary-foreground"
+                            className="w-6 h-6 rounded-full bg-v2-champagne flex items-center justify-center text-v2-bg hover:bg-v2-text transition-colors"
                           >
                             <Plus className="w-3 h-3" />
                           </button>
@@ -507,7 +521,8 @@ const Pedidos = () => {
                       </div>
                       <button
                         onClick={() => removeFromCart(item.product.id)}
-                        className="text-muted-foreground hover:text-destructive transition-colors mt-1"
+                        className="text-v2-text-dim hover:text-red-400 transition-colors mt-1"
+                        aria-label={`Quitar ${item.product.name}`}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -518,28 +533,28 @@ const Pedidos = () => {
             </div>
 
             {cart.length > 0 && (
-              <div className="p-6 border-t border-border">
+              <div className="p-6 border-t border-v2-champagne/12">
                 <div className="flex items-center justify-between mb-2 text-sm">
-                  <span className="text-muted-foreground">Modo</span>
-                  <span className="font-semibold">{orderMode === "delivery" ? "Delivery (+$3.500)" : "Retiro en local"}</span>
+                  <span className="v2-text-muted">Modo</span>
+                  <span className="font-semibold text-v2-text">{orderMode === "delivery" ? "Delivery (+$3.500)" : "Retiro en local"}</span>
                 </div>
                 <div className="flex items-center justify-between mb-2 text-sm">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span className="font-semibold">${cart.reduce((s,i) => s + parsePrice(i.product.price)*i.quantity,0).toLocaleString("es-AR")}</span>
+                  <span className="v2-text-muted">Subtotal</span>
+                  <span className="font-semibold text-v2-text">${cart.reduce((s,i) => s + parsePrice(i.product.price)*i.quantity,0).toLocaleString("es-AR")}</span>
                 </div>
                 {orderMode === "delivery" && (
                   <div className="flex items-center justify-between mb-2 text-sm">
-                    <span className="text-muted-foreground">EnvÃ­o</span>
-                    <span className="font-semibold">$3.500</span>
+                    <span className="v2-text-muted">Envío</span>
+                    <span className="font-semibold text-v2-text">$3.500</span>
                   </div>
                 )}
                 <div className="flex items-center justify-between mb-5 text-sm font-bold">
-                  <span>Total</span>
-                  <span className="text-accent">${(cart.reduce((s,i) => s + parsePrice(i.product.price)*i.quantity,0) + (orderMode==="delivery"?3500:0)).toLocaleString("es-AR")}</span>
+                  <span className="text-v2-text">Total</span>
+                  <span className="text-v2-champagne">${(cart.reduce((s,i) => s + parsePrice(i.product.price)*i.quantity,0) + (orderMode==="delivery"?3500:0)).toLocaleString("es-AR")}</span>
                 </div>
                 <button
                   onClick={() => { setCartOpen(false); setStep("checkout"); }}
-                  className="w-full inline-flex items-center justify-center gap-2 bg-gradient-neon text-primary-foreground font-semibold uppercase tracking-widest text-sm py-4 rounded-full glow-neon hover:scale-[1.02] transition-transform"
+                  className="w-full inline-flex items-center justify-center gap-2 bg-v2-champagne text-v2-bg font-medium uppercase tracking-[0.2em] text-sm py-4 rounded-xl hover:bg-v2-text transition-colors"
                 >
                   Confirmar pedido <ChevronRight className="w-4 h-4" />
                 </button>
@@ -549,52 +564,52 @@ const Pedidos = () => {
         </div>
       )}
 
-      {/* â”€â”€ Checkout overlay â”€â”€ */}
+      {/* ── Checkout overlay ── */}
       {step === "checkout" && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-background/90 backdrop-blur-sm" onClick={() => setStep("catalog")} />
-          <div className="relative w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-border">
-              <h3 className="font-display text-2xl">Datos de contacto</h3>
-              <button onClick={() => setStep("catalog")} className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground">
+          <div className="absolute inset-0 bg-v2-bg/90 backdrop-blur-sm" onClick={() => setStep("catalog")} />
+          <div className="relative w-full max-w-md v2-bg-card border border-v2-champagne/15 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-v2-champagne/12">
+              <h3 className="font-display text-2xl text-v2-text">Datos de contacto</h3>
+              <button onClick={() => setStep("catalog")} className="w-8 h-8 rounded-full border border-v2-champagne/25 flex items-center justify-center text-v2-text-muted hover:text-v2-text">
                 <X className="w-4 h-4" />
               </button>
             </div>
             <form onSubmit={confirmarPedido} className="p-6 space-y-4">
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Nombre completo *</label>
+                <label className="text-xs v2-text-muted mb-1 block">Nombre completo *</label>
                 <input value={nombre} onChange={e => setNombre(e.target.value)} required
-                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary/50"
+                  className="w-full v2-bg-base border border-v2-champagne/15 rounded-xl px-4 py-3 text-sm text-v2-text outline-none focus:border-v2-champagne/50"
                   placeholder="Tu nombre" />
               </div>
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">TelÃ©fono *</label>
+                <label className="text-xs v2-text-muted mb-1 block">Teléfono *</label>
                 <input value={telefono} onChange={e => setTelefono(e.target.value)} required type="tel"
-                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary/50"
+                  className="w-full v2-bg-base border border-v2-champagne/15 rounded-xl px-4 py-3 text-sm text-v2-text outline-none focus:border-v2-champagne/50"
                   placeholder="+54 9 341 000 0000" />
               </div>
               {orderMode === "delivery" && (
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">DirecciÃ³n de entrega *</label>
+                  <label className="text-xs v2-text-muted mb-1 block">Dirección de entrega *</label>
                   <input value={direccion} onChange={e => setDireccion(e.target.value)} required
-                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary/50"
-                    placeholder="Calle y nÃºmero, piso/depto" />
+                    className="w-full v2-bg-base border border-v2-champagne/15 rounded-xl px-4 py-3 text-sm text-v2-text outline-none focus:border-v2-champagne/50"
+                    placeholder="Calle y número, piso/depto" />
                 </div>
               )}
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Notas (opcional)</label>
+                <label className="text-xs v2-text-muted mb-1 block">Notas (opcional)</label>
                 <textarea value={notasExtra} onChange={e => setNotasExtra(e.target.value)} rows={2}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary/50 resize-none"
+                  className="w-full v2-bg-base border border-v2-champagne/15 rounded-xl px-4 py-3 text-sm text-v2-text outline-none focus:border-v2-champagne/50 resize-none"
                   placeholder="Sin cebolla, sin tacc, etc." />
               </div>
               {errorMsg && (
                 <div className="rounded-xl bg-red-500/10 border border-red-500/30 px-4 py-3 text-xs text-red-400 break-all">
-                  âš ï¸ {errorMsg}
+                  ⚠️ {errorMsg}
                 </div>
               )}
               <button type="submit" disabled={enviando}
                 onClick={() => setErrorMsg(null)}
-                className="w-full inline-flex items-center justify-center gap-2 bg-gradient-neon text-primary-foreground font-semibold uppercase tracking-widest text-sm py-4 rounded-full glow-neon hover:scale-[1.02] transition-transform disabled:opacity-60">
+                className="w-full inline-flex items-center justify-center gap-2 bg-v2-champagne text-v2-bg font-medium uppercase tracking-[0.2em] text-sm py-4 rounded-xl hover:bg-v2-text transition-colors disabled:opacity-60">
                 {enviando ? <Loader2 className="w-4 h-4 animate-spin" /> : "Enviar pedido"}
               </button>
             </form>
@@ -602,41 +617,41 @@ const Pedidos = () => {
         </div>
       )}
 
-      {/* â”€â”€ Pedido confirmado â”€â”€ */}
+      {/* ── Pedido confirmado ── */}
       {step === "confirmado" && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-background/95 backdrop-blur-md">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-v2-bg/95 backdrop-blur-md">
           <div className="text-center space-y-6 max-w-sm">
             <div className="w-20 h-20 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-10 h-10 text-green-400" />
             </div>
             <div>
-              <p className="font-jp text-accent text-sm tracking-widest mb-2">â€” ã‚ã‚ŠãŒã¨ã† â€”</p>
-              <h2 className="font-display text-4xl mb-2">Â¡Pedido recibido!</h2>
-              {pedidoNum && <p className="text-muted-foreground text-sm">Pedido <span className="text-accent font-bold">#{pedidoNum}</span></p>}
-              <p className="text-muted-foreground text-sm mt-2">Nos ponemos a prepararlo. Te contactamos a la brevedad al nÃºmero que indicaste.</p>
+              <p className="font-jp text-v2-champagne text-sm tracking-widest mb-2">— ありがとう —</p>
+              <h2 className="font-display text-4xl text-v2-text mb-2">¡Pedido recibido!</h2>
+              {pedidoNum && <p className="v2-text-muted text-sm">Pedido <span className="text-v2-champagne font-bold">#{pedidoNum}</span></p>}
+              <p className="v2-text-muted text-sm mt-2">Nos ponemos a prepararlo. Te contactamos a la brevedad al número que indicaste.</p>
             </div>
             <button onClick={() => { setStep("catalog"); setOrderMode(null); }}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-border text-sm hover:border-primary/40 hover:text-accent transition-colors">
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-v2-champagne/30 text-sm text-v2-text hover:border-v2-champagne/60 hover:text-v2-champagne transition-colors">
               Volver al inicio
             </button>
           </div>
         </div>
       )}
 
-      {/* â”€â”€ Imagen ampliada del producto â”€â”€ */}
+      {/* ── Imagen ampliada del producto ── */}
       {zoomProduct && (
         <div
           className="fixed inset-0 z-[80] flex items-center justify-center p-4"
           onClick={() => setZoomProduct(null)}
         >
-          <div className="absolute inset-0 bg-background/90 backdrop-blur-md" />
+          <div className="absolute inset-0 bg-v2-bg/90 backdrop-blur-md" />
           <div
-            className="relative w-full max-w-lg bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-fade-up"
+            className="relative w-full max-w-lg v2-bg-card border border-v2-champagne/15 rounded-2xl shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setZoomProduct(null)}
-              className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-background/70 border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+              className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-v2-bg/70 border border-v2-champagne/25 flex items-center justify-center text-v2-text-muted hover:text-v2-text transition-colors"
               aria-label="Cerrar"
             >
               <X className="w-4 h-4" />
@@ -646,27 +661,27 @@ const Pedidos = () => {
               <img
                 src={zoomProduct.image}
                 alt={zoomProduct.name}
-                className="w-full max-h-[55vh] object-contain bg-black/20"
+                className="w-full max-h-[55vh] object-contain bg-black/30"
               />
             )}
 
             <div className="p-6">
               {zoomProduct.badge && (
-                <span className="inline-block mb-2 px-2.5 py-0.5 rounded-full bg-accent/20 border border-accent/40 text-accent text-[10px] uppercase tracking-wider font-semibold">
+                <span className="inline-block mb-2 px-2.5 py-0.5 rounded-full border border-v2-champagne/30 text-v2-champagne text-[10px] uppercase tracking-wider font-semibold">
                   {zoomProduct.badge}
                 </span>
               )}
-              <h3 className="font-display text-2xl mb-2">{zoomProduct.name}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+              <h3 className="font-display text-2xl text-v2-text mb-2">{zoomProduct.name}</h3>
+              <p className="text-sm v2-text-muted leading-relaxed mb-4">
                 {zoomProduct.description}
               </p>
               <div className="flex items-center justify-between">
-                <span className="text-lg font-semibold text-gradient-neon">
+                <span className="text-lg font-display text-v2-champagne">
                   {formatPrice(zoomProduct.price)}
                 </span>
                 <button
                   onClick={() => { addToCart(zoomProduct); setZoomProduct(null); }}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-neon text-primary-foreground text-xs font-semibold uppercase tracking-widest hover:scale-105 transition-transform glow-neon"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-v2-champagne text-v2-bg text-xs font-medium uppercase tracking-[0.2em] hover:bg-v2-text transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5" /> Agregar
                 </button>

@@ -1,15 +1,16 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Search, Loader2, UtensilsCrossed } from "lucide-react";
+import { Search, Loader2, UtensilsCrossed, X } from "lucide-react";
 import NavbarV2 from "@/components/kiku-v2/NavbarV2";
 import FooterV2 from "@/components/kiku-v2/FooterV2";
-import { fallbackCartaData, fetchCartaFromSheet, type CartaSection } from "@/data/cartaSalon";
+import { fallbackCartaData, fetchCartaFromSheet, type CartaSection, type CartaItem } from "@/data/cartaSalon";
 
 const Carta = () => {
   const [sections, setSections] = useState<CartaSection[]>(fallbackCartaData);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [zoomItem, setZoomItem] = useState<CartaItem | null>(null);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
 
   // Aplicar la estética v2 mientras esta página está montada
@@ -17,6 +18,14 @@ const Carta = () => {
     document.body.classList.add("v2-root");
     return () => { document.body.classList.remove("v2-root"); };
   }, []);
+
+  // Cerrar la imagen ampliada con Escape
+  useEffect(() => {
+    if (!zoomItem) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setZoomItem(null); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [zoomItem]);
 
   useEffect(() => {
     fetchCartaFromSheet()
@@ -161,12 +170,19 @@ const Carta = () => {
                     >
                       {/* Thumbnail */}
                       {item.image ? (
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-20 h-20 md:w-24 md:h-24 rounded-lg object-cover shrink-0 border border-v2-champagne/15"
-                          loading="lazy"
-                        />
+                        <button
+                          type="button"
+                          onClick={() => setZoomItem(item)}
+                          className="shrink-0 rounded-lg overflow-hidden cursor-zoom-in"
+                          aria-label={`Ampliar imagen de ${item.name}`}
+                        >
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="w-20 h-20 md:w-24 md:h-24 object-cover border border-v2-champagne/15 transition-transform duration-500 hover:scale-105"
+                            loading="lazy"
+                          />
+                        </button>
                       ) : (
                         <div className="w-20 h-20 md:w-24 md:h-24 rounded-lg shrink-0 v2-bg-card border border-v2-champagne/10 flex items-center justify-center">
                           <span className="font-jp text-2xl text-v2-champagne/25">菊</span>
@@ -223,6 +239,53 @@ const Carta = () => {
           Reservá tu mesa
         </Link>
       </section>
+
+      {/* ── Imagen ampliada ── */}
+      {zoomItem && zoomItem.image && (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center p-4"
+          onClick={() => setZoomItem(null)}
+        >
+          <div className="absolute inset-0 bg-v2-bg/90 backdrop-blur-md" />
+          <div
+            className="relative w-full max-w-lg v2-bg-card border border-v2-champagne/15 rounded-2xl shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setZoomItem(null)}
+              className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-v2-bg/70 border border-v2-champagne/25 flex items-center justify-center text-v2-text-muted hover:text-v2-text transition-colors"
+              aria-label="Cerrar"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <img
+              src={zoomItem.image}
+              alt={zoomItem.name}
+              className="w-full max-h-[55vh] object-contain bg-black/30"
+            />
+
+            <div className="p-6">
+              {zoomItem.badge && (
+                <span className="inline-block mb-2 px-2.5 py-0.5 rounded-full border border-v2-champagne/30 text-v2-champagne text-[10px] uppercase tracking-wider font-semibold">
+                  {zoomItem.badge}
+                </span>
+              )}
+              <h3 className="font-display text-2xl text-v2-text mb-2">{zoomItem.name}</h3>
+              {zoomItem.description && (
+                <p className="text-sm v2-text-muted leading-relaxed mb-4">
+                  {zoomItem.description}
+                </p>
+              )}
+              {zoomItem.price && (
+                <span className="text-lg font-display text-v2-champagne">
+                  {zoomItem.price}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <FooterV2 />
     </div>
