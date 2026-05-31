@@ -39,6 +39,8 @@ interface Experiencia {
   overline: string;     // kanji o tagline en japonés
   description: string;  // micro descripción
   badge?: string;       // opcional: nota al pie tipo precio
+  dias: number[];       // días disponibles (0=Dom .. 6=Sáb)
+  diasLabel: string;    // texto corto de días para mostrar en la card
 }
 
 const EXPERIENCIAS: Experiencia[] = [
@@ -47,12 +49,16 @@ const EXPERIENCIAS: Experiencia[] = [
     label: "Carta abierta",
     overline: "Sin menú fijo",
     description: "Reservás la mesa y elegís de la carta al llegar al salón.",
+    dias: [2, 3, 4, 5, 6],
+    diasLabel: "Martes a sábado",
   },
   {
     id: "omakase",
     label: "Omakase",
     overline: "おまかせ",
     description: "Diez pasos de cocina en vivo en la barra del itamae.",
+    dias: [5, 6],
+    diasLabel: "Viernes y sábado",
   },
   {
     id: "kiku_libre",
@@ -60,20 +66,45 @@ const EXPERIENCIAS: Experiencia[] = [
     overline: "食べ放題",
     description: "Sushi ilimitado. Repetí todas las rondas que quieras.",
     badge: "$53.500 p/p",
+    dias: [3, 4],
+    diasLabel: "Miércoles y jueves",
   },
   {
     id: "umami_del_sur",
     label: "Umami del Sur",
     overline: "南の旨味",
     description: "Cortes argentinos con técnica japonesa.",
+    dias: [2],
+    diasLabel: "Martes",
   },
   {
     id: "pacifico_y_patagonia",
     label: "Pacífico y Patagonia",
     overline: "太平洋",
     description: "Sashimis y nigiris de pescado fresco.",
+    dias: [2],
+    diasLabel: "Martes",
   },
 ];
+
+// Local abierto martes a sábado (0=Dom .. 6=Sáb). Domingo y Lunes cerrado.
+const DIAS_ABIERTOS = [2, 3, 4, 5, 6];
+
+// Weekday (0=Dom..6=Sáb) de una fecha "YYYY-MM-DD" evitando líos de timezone.
+const weekdayOf = (iso: string) => new Date(iso + "T12:00:00").getDay();
+
+// Primera fecha (>= hoy) cuyo weekday esté permitido. Busca hasta 60 días.
+const primeraFechaValida = (desdeIso: string, permitidos: number[]): string => {
+  const base = new Date(desdeIso + "T12:00:00");
+  for (let i = 0; i < 60; i++) {
+    const d = new Date(base);
+    d.setDate(base.getDate() + i);
+    if (permitidos.includes(d.getDay())) {
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    }
+  }
+  return desdeIso;
+};
 
 // ─── Horarios disponibles para reserva online ─────────────────────────────
 // Hasta las 22:00 con mesa asignada. 22:30 y 23:00 también se pueden reservar
@@ -106,27 +137,33 @@ const CHIP_TAP = "active:scale-[0.97]";
 
 // ─── Strip horizontal de fechas (próximos N días + Otra fecha) ────────────
 const ChipsFecha = ({
-  value, onChange, minDate,
+  value, onChange, minDate, allowedWeekdays,
 }: {
   value: string;
   onChange: (d: string) => void;
   minDate: string;
+  allowedWeekdays: number[];
 }) => {
   const hiddenInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Generamos días candidatos y dejamos solo los weekdays permitidos para la
+  // experiencia elegida, hasta completar DIAS_VISIBLES chips válidos.
   const baseDate = new Date(minDate + "T00:00:00");
-  const dias = Array.from({ length: DIAS_VISIBLES }, (_, i) => {
+  const dias: Array<{ iso: string; semana: string; num: number; mes: string; esHoy: boolean }> = [];
+  for (let i = 0; i < 60 && dias.length < DIAS_VISIBLES; i++) {
     const d = new Date(baseDate);
     d.setDate(baseDate.getDate() + i);
-    return {
-      iso: d.toISOString().split("T")[0],
+    if (!allowedWeekdays.includes(d.getDay())) continue;
+    const iso = d.toISOString().split("T")[0];
+    dias.push({
+      iso,
       semana: d.toLocaleDateString("es-AR", { weekday: "short" }).replace(".", "").toUpperCase(),
       num: d.getDate(),
       mes: d.toLocaleDateString("es-AR", { month: "short" }).replace(".", "").toUpperCase(),
-      esHoy: i === 0,
-    };
-  });
+      esHoy: iso === minDate,
+    });
+  }
 
   // Si el valor seleccionado no está dentro de los próximos DIAS_VISIBLES
   // mostramos un chip extra con la fecha custom para que se vea seleccionada.
@@ -292,7 +329,15 @@ const ChipsFecha = ({
         type="date"
         value={value}
         min={minDate}
-        onChange={(e) => e.target.value && onChange(e.target.value)}
+        onChange={(e) => {
+          const v = e.target.value;
+          if (!v) return;
+          if (!allowedWeekdays.includes(weekdayOf(v))) {
+            toast.error("Ese día no está disponible para esta experiencia");
+            return;
+          }
+          onChange(v);
+        }}
         className="sr-only"
         tabIndex={-1}
         aria-hidden
@@ -466,6 +511,20 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
   const peopleInt = parseInt(people, 10) || 2;
   const isOmakase = tipo === "omakase";
   const requiereSeña = tipo !== "" && tipo !== "carta_abierta";
+
+  // Días en los que se puede reservar la experiencia elegida.
+  // Si todavía no eligió, usamos los días que el local abre (mar–sáb).
+  const allowedWeekdays =
+    EXPERIENCIAS.find((x) => x.id === tipo)?.dias ?? DIAS_ABIERTOS;
+
+  // Si la fecha actual no es un día válido para la experiencia (o es dom/lun),
+  // la corregimos automáticamente a la primera fecha válida.
+  useEffect(() => {
+    if (!allowedWeekdays.includes(weekdayOf(date))) {
+      setDate(primeraFechaValida(today, allowedWeekdays));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tipo]);
 
   // Si se elige omakase y el cliente tenía más de 6 personas, lo bajamos a 6
   useEffect(() => {
@@ -723,11 +782,23 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
                 <p className="text-[12px] v2-text-muted leading-relaxed">
                   {exp.description}
                 </p>
+                <p className="mt-2 inline-flex items-center gap-1.5 text-[10px] tracking-[0.12em] uppercase text-v2-champagne/75">
+                  <Calendar className="w-3 h-3" /> {exp.diasLabel}
+                </p>
               </div>
             </div>
           </button>
         );
       })}
+
+      {/* Especial de temporada — solo informativo */}
+      <div className="sm:col-span-2 flex items-start gap-2.5 px-4 py-3 border border-v2-accent/30 bg-v2-accent/5 text-[11.5px] v2-text-muted leading-relaxed">
+        <Sparkles className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-v2-accent" />
+        <span>
+          <strong className="text-v2-text">Especial Otoño — “Pasta Nikkei del Atlántico”.</strong>{" "}
+          Disponible solo los sábados. Consultanos al confirmar tu reserva.
+        </span>
+      </div>
     </div>
   );
 
@@ -747,7 +818,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
 
       <div>
         <SectionLabel icon={<Calendar className="w-3 h-3" />}>Fecha</SectionLabel>
-        <ChipsFecha value={date} onChange={setDate} minDate={today} />
+        <ChipsFecha value={date} onChange={setDate} minDate={today} allowedWeekdays={allowedWeekdays} />
       </div>
 
       <div>

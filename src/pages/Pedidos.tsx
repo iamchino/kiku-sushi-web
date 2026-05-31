@@ -11,6 +11,29 @@ const parsePrice = (s: string) => parseInt(s.replace(/[$. ]/g, ''), 10) || 0;
 // Formatea un precio (string o número) al formato argentino: 22000 → "$22.000"
 const formatPrice = (s: string) => `$${parsePrice(s).toLocaleString("es-AR")}`;
 
+// ─── Horario de atención de pedidos (hora Argentina) ───
+//   Martes a jueves: 19:30 → 00:00 (medianoche)
+//   Viernes y sábado: 19:30 → 01:00 (esa madrugada cae en sábado y domingo)
+// Domingo (salvo 00:00–01:00) y lunes: cerrado.
+// Se calcula siempre en hora de Argentina, sin importar la zona del dispositivo.
+const kikuAbierto = (): { abierto: boolean; motivo: string } => {
+  const arg = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "America/Argentina/Buenos_Aires" })
+  );
+  const dow = arg.getDay();                       // 0=Dom .. 6=Sáb
+  const mins = arg.getHours() * 60 + arg.getMinutes();
+
+  const noche = [2, 3, 4, 5, 6].includes(dow) && mins >= 19 * 60 + 30;  // 19:30 en adelante
+  const madrugada = [6, 0].includes(dow) && mins <= 60;                 // hasta 01:00 (sáb y dom)
+
+  if (noche || madrugada) return { abierto: true, motivo: "" };
+  if (dow === 1) return { abierto: false, motivo: "Hoy (lunes) estamos cerrados." };
+  return {
+    abierto: false,
+    motivo: "Por ahora estamos cerrados. Tomamos pedidos de martes a jueves de 19:30 a 00:00, y viernes y sábado de 19:30 a 01:00.",
+  };
+};
+
 interface CartItem {
   product: CatalogProduct;
   quantity: number;
@@ -47,6 +70,13 @@ const Pedidos = () => {
   });
   const [cartOpen, setCartOpen] = useState(false);
   const [zoomProduct, setZoomProduct] = useState<CatalogProduct | null>(null);
+
+  // Estado de apertura del local (se refresca cada 30s para abrir/cerrar solo).
+  const [estadoLocal, setEstadoLocal] = useState(kikuAbierto);
+  useEffect(() => {
+    const id = setInterval(() => setEstadoLocal(kikuAbierto()), 30000);
+    return () => clearInterval(id);
+  }, []);
 
   // Cerrar la imagen ampliada con Escape
   useEffect(() => {
@@ -149,6 +179,8 @@ const Pedidos = () => {
   // Confirmar pedido → Supabase
   const confirmarPedido = async (e: React.FormEvent) => {
     e.preventDefault();
+    const est = kikuAbierto();
+    if (!est.abierto) { setErrorMsg(est.motivo); return; }
     if (!nombre.trim() || !telefono.trim()) return;
     if (orderMode === "delivery" && !direccion.trim()) return;
     setEnviando(true);
@@ -201,6 +233,32 @@ const Pedidos = () => {
   };
 
   // ─── Pantalla de selección de modo ──────────────────────────────────────────
+  // Local cerrado (día u horario fuera de atención) → bloqueamos los pedidos.
+  if (!estadoLocal.abierto) {
+    return (
+      <div className="v2-root min-h-screen overflow-x-hidden v2-bg-base">
+        <NavbarV2 />
+        <section className="relative min-h-screen flex items-center justify-center pt-28 pb-16 px-6 md:px-14 overflow-hidden text-center">
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: "radial-gradient(ellipse at top, hsla(270, 50%, 50%, 0.12), transparent 60%)" }}
+          />
+          <div className="relative z-10 max-w-xl w-full">
+            <span className="font-jp text-xs tracking-[0.4em] text-v2-champagne mb-4 block">— 営業時間 —</span>
+            <h1 className="font-display font-light text-5xl sm:text-7xl text-v2-text leading-none mb-5">
+              Pedidos cerrados
+            </h1>
+            <p className="v2-text-muted mb-3">{estadoLocal.motivo}</p>
+            <p className="text-sm v2-text-dim">
+              <strong className="text-v2-text">Mar a Jue</strong> 19:30–00:00 ·{" "}
+              <strong className="text-v2-text">Vie y Sáb</strong> 19:30–01:00 hs.
+            </p>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
   if (!orderMode) {
     return (
       <div className="v2-root min-h-screen overflow-x-hidden v2-bg-base">
