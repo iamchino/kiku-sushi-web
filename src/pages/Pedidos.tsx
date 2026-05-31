@@ -147,6 +147,7 @@ const Pedidos = () => {
         .from("pedidos")
         .insert({
           canal:             orderMode === "delivery" ? "delivery" : "takeaway",
+          origen:            "web",
           total,
           cliente_nombre:    nombre.trim(),
           cliente_telefono:  telefono.trim(),

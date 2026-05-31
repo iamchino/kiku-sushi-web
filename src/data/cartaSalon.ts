@@ -44,6 +44,15 @@ export async function fetchCartaFromSheet(): Promise<CartaSection[]> {
   }
 }
 
+// ─── Formato de precio ────────────────────────────────────────────────────────
+// La BD guarda el precio numérico (ej. 31900). Lo mostramos como "$31.900".
+function formatPrecio(precio: unknown): string | undefined {
+  if (precio == null || precio === '') return undefined
+  const n = typeof precio === 'number' ? precio : Number(String(precio).replace(/[^0-9.-]/g, ''))
+  if (!Number.isFinite(n) || n <= 0) return undefined
+  return `$${n.toLocaleString('es-AR')}`
+}
+
 // ─── Agrupador por sección ────────────────────────────────────────────────────
 
 function groupToSections(rows: any[]): CartaSection[] {
@@ -61,7 +70,7 @@ function groupToSections(rows: any[]): CartaSection[] {
       id: row.id,
       name: row.nombre,
       description: row.descripcion || '',
-      price: row.precio || undefined,
+      price: formatPrecio(row.precio),
       image: row.imagen_url || undefined,
       category: row.categoria,
       badge: row.etiqueta || undefined,

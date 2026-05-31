@@ -8,24 +8,6 @@ import { motion, AnimatePresence, useInView } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 
-// ─── Iconos para el mensaje de WhatsApp ────────────────────────────────────
-// Construidos con codepoints para evitar corrupción de encoding al bundlear.
-const ICON = {
-  sushi:    String.fromCodePoint(0x1F363),   // 🍣
-  date:     String.fromCodePoint(0x1F4C5),   // 📅
-  clock:    String.fromCodePoint(0x1F550),   // 🕐
-  people:   String.fromCodePoint(0x1F465),   // 👥
-  sparkles: String.fromCodePoint(0x2728),    // ✨
-  person:   String.fromCodePoint(0x1F464),   // 👤
-  phone:    String.fromCodePoint(0x1F4DE),   // 📞
-  email:    String.fromCodePoint(0x1F4E7),   // 📧
-  salad:    String.fromCodePoint(0x1F957),   // 🥗
-  wheel:    String.fromCodePoint(0x267F),    // ♿
-  memo:     String.fromCodePoint(0x1F4DD),   // 📝
-  ticket:   String.fromCodePoint(0x1F3AB),   // 🎫
-  check:    String.fromCodePoint(0x2713),    // ✓
-};
-
 /**
  * Form de reserva V2 — flujo wizard por pasos.
  *
@@ -36,8 +18,10 @@ const ICON = {
  *   Paso 3 · Resumen + datos del cliente
  *
  * Backend: Supabase RPC `crear_reserva` con tipo_experiencia, restricciones,
- * accesibilidad y datos del cliente. Origen 'web' → dispara notificación
- * realtime en el dashboard. Post-confirmación: abre WhatsApp.
+ * accesibilidad y datos del cliente. Origen 'web' → dispara (1) notificación
+ * realtime en el dashboard y (2) un webhook del backend que envía el WhatsApp
+ * a Kiku automáticamente (Make/n8n/Zapier). El cliente NO manda nada a mano:
+ * solo ve la confirmación en pantalla.
  *
  * Props:
  *   hideHeader: oculta el header interno (kanji 菊 + título "Reservá tu mesa")
@@ -155,8 +139,8 @@ const ChipsFecha = ({
     if (!el) return;
     // showPicker es soportado en navegadores modernos
     try {
-      // @ts-expect-error showPicker no está en lib.dom todavía en algunos TS targets
-      el.showPicker ? el.showPicker() : el.click();
+      if (typeof el.showPicker === "function") el.showPicker();
+      else el.click();
     } catch {
       el.click();
     }
@@ -603,13 +587,6 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
 
     setSubmitting(true);
 
-    const expLabel = EXPERIENCIAS.find((x) => x.id === tipo)?.label || tipo;
-    const formattedDate = new Date(date + "T00:00:00").toLocaleDateString("es-ES", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-    });
-
     let reservaId: string | null = null;
     let dbError: string | null = null;
 
@@ -635,60 +612,15 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
       dbError = err instanceof Error ? err.message : "Error desconocido";
     }
 
-    // ─── Mensaje WhatsApp ─────────────────────────────────────────────
-    const shortId = reservaId ? reservaId.slice(0, 8).toUpperCase() : null;
-
-    const bloqueReserva = [
-      `${ICON.date} Fecha · ${formattedDate}`,
-      `${ICON.clock} Hora · ${time}`,
-      `${ICON.people} Personas · ${people}`,
-      `${ICON.sparkles} Experiencia · ${expLabel}`,
-    ].join("\n");
-
-    const bloqueCliente = [
-      `${ICON.person} ${cleanName}`,
-      `${ICON.phone} ${cleanTel}`,
-      email.trim() ? `${ICON.email} ${email.trim()}` : null,
-    ].filter(Boolean).join("\n");
-
-    const bloqueNotasLines = [
-      restricciones.trim() ? `${ICON.salad} Restricciones · ${restricciones.trim()}` : null,
-      accesibilidad.trim() ? `${ICON.wheel} Accesibilidad · ${accesibilidad.trim()}` : null,
-      notas.trim()         ? `${ICON.memo} ${notas.trim()}` : null,
-    ].filter(Boolean);
-
-    const lineaCierre = shortId
-      ? (requiereSeña
-          ? `${ICON.check} Mesa reservada. Quiero coordinar la seña.`
-          : `${ICON.check} Ya quedó registrada en el sistema.`)
-      : `Quedo a la espera de su confirmación. ¡Gracias!`;
-
-    const message = [
-      `Hola Kiku Sushi ${ICON.sushi}`,
-      `Quiero confirmar mi reserva:`,
-      ``,
-      bloqueReserva,
-      ``,
-      `— Datos del cliente —`,
-      bloqueCliente,
-      ...(bloqueNotasLines.length
-        ? [``, `— Notas y preferencias —`, bloqueNotasLines.join("\n")]
-        : []),
-      ``,
-      shortId ? `${ICON.ticket} Código de reserva · #${shortId}` : null,
-      lineaCierre,
-    ]
-      .filter((line) => line !== null && line !== undefined)
-      .join("\n");
-
-    const phoneNumber = "5493412764562";
-    window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, "_blank");
-
+    // La reserva queda registrada en Supabase. Al insertarse con origen='web',
+    // un trigger del backend dispara el webhook (Make/n8n/Zapier) que envía el
+    // WhatsApp a Kiku automáticamente. El cliente ya no manda nada a mano.
     if (reservaId) {
+      const shortId = reservaId.slice(0, 8).toUpperCase();
       toast.success("¡Reserva confirmada!", {
         description: requiereSeña
-          ? "Te abrimos WhatsApp para coordinar la seña."
-          : "Te abrimos WhatsApp para avisar al local.",
+          ? `Código #${shortId}. Kiku te contacta por WhatsApp para coordinar la seña.`
+          : `Código #${shortId}. ¡Te esperamos! Kiku te escribe si necesita confirmar algo.`,
       });
       // Reset
       setTipo("");
@@ -700,10 +632,10 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
       setNotas("");
       setStep(1);
     } else {
-      toast.warning("Te abrimos WhatsApp para confirmar", {
+      toast.error("No pudimos registrar tu reserva", {
         description: dbError
-          ? `No pudimos pre-registrar (${dbError}), confirmá por WhatsApp.`
-          : "Por favor envía el mensaje para confirmar tu reserva.",
+          ? `${dbError}. Probá de nuevo en unos segundos.`
+          : "Probá de nuevo en unos segundos.",
       });
     }
 

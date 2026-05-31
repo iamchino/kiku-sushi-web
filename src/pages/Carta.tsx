@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect, useRef } from "react";
-import { Search, Loader2, Sparkles, UtensilsCrossed } from "lucide-react";
-import Navbar from "@/components/kiku/Navbar";
+import { Link } from "react-router-dom";
+import { Search, Loader2, UtensilsCrossed } from "lucide-react";
+import NavbarV2 from "@/components/kiku-v2/NavbarV2";
+import FooterV2 from "@/components/kiku-v2/FooterV2";
 import { fallbackCartaData, fetchCartaFromSheet, type CartaSection } from "@/data/cartaSalon";
 
 const Carta = () => {
@@ -9,6 +11,12 @@ const Carta = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
+
+  // Aplicar la estética v2 mientras esta página está montada
+  useEffect(() => {
+    document.body.classList.add("v2-root");
+    return () => { document.body.classList.remove("v2-root"); };
+  }, []);
 
   useEffect(() => {
     fetchCartaFromSheet()
@@ -45,41 +53,37 @@ const Carta = () => {
   };
 
   return (
-    <div className="min-h-screen">
-      <Navbar />
+    <div className="v2-root min-h-screen overflow-x-hidden v2-bg-base">
+      <NavbarV2 />
 
       {/* ── Hero ── */}
-      <section className="relative pt-24 pb-16 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background" />
-        <div className="absolute -top-40 -left-40 w-[50rem] h-[50rem] bg-glow opacity-60 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-40 -right-40 w-[40rem] h-[40rem] bg-glow opacity-40 blur-3xl pointer-events-none" />
-
-        <div className="container relative z-10 text-center max-w-3xl pt-10 pb-6">
-          <span className="font-jp text-accent text-sm tracking-widest">— お品書き —</span>
-          <h1 className="font-display text-5xl sm:text-7xl mt-4 mb-3 glow-text-soft">
-            Carta <span className="text-gradient-neon italic">Salón</span>
-          </h1>
-          <p className="text-muted-foreground mb-2">
-            Descubrí nuestra propuesta nikkei en cada plato.
-          </p>
-          <p className="text-xs text-accent/80 flex items-center justify-center gap-1.5">
-            <UtensilsCrossed className="w-3 h-3" /> Cubiertos $3.500
-          </p>
-        </div>
+      <section className="relative pt-32 md:pt-40 pb-12 px-6 md:px-14 text-center">
+        <span className="font-jp text-xs tracking-[0.4em] text-v2-champagne mb-5 block">
+          — お品書き —
+        </span>
+        <h1 className="font-display font-light tracking-[-0.02em] leading-none text-5xl md:text-7xl text-v2-text">
+          Carta <em className="italic font-normal text-v2-champagne">Salón</em>
+        </h1>
+        <p className="v2-text-muted text-base leading-[1.85] max-w-xl mx-auto mt-6">
+          Nuestra propuesta nikkei completa para disfrutar en el salón.
+        </p>
+        <p className="text-[11px] uppercase tracking-[0.24em] text-v2-champagne/80 flex items-center justify-center gap-2 mt-5">
+          <UtensilsCrossed className="w-3.5 h-3.5" /> Cubiertos $3.500
+        </p>
       </section>
 
       {/* ── Sticky search + pills ── */}
-      <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-lg border-b border-border/40 py-4">
-        <div className="container">
+      <div className="sticky top-16 md:top-20 z-30 v2-bg-base/90 backdrop-blur-lg border-y border-v2-champagne/10 py-4">
+        <div className="max-w-5xl mx-auto px-6 md:px-14">
           {/* Search */}
           <div className="relative max-w-xl mb-4">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-v2-champagne/60" />
             <input
               type="text"
               placeholder="Buscar en la carta..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-card/60 border border-border rounded-xl pl-11 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 transition-colors"
+              className="w-full v2-bg-card border border-v2-champagne/15 rounded-full pl-11 pr-4 py-3 text-sm text-v2-text placeholder:text-v2-text-dim outline-none focus:border-v2-champagne/50 transition-colors"
             />
           </div>
 
@@ -87,10 +91,10 @@ const Carta = () => {
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
             <button
               onClick={() => setActiveSection(null)}
-              className={`shrink-0 px-4 py-2 rounded-full text-xs uppercase tracking-wider border transition-all ${
+              className={`shrink-0 px-4 py-2 rounded-full text-[11px] uppercase tracking-[0.18em] border transition-all ${
                 !activeSection
-                  ? "bg-gradient-neon text-primary-foreground border-transparent"
-                  : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                  ? "bg-v2-champagne text-v2-bg border-transparent"
+                  : "border-v2-champagne/20 text-v2-text-muted hover:border-v2-champagne/50 hover:text-v2-text"
               }`}
             >
               Todos
@@ -99,10 +103,10 @@ const Carta = () => {
               <button
                 key={s.name}
                 onClick={() => scrollToSection(s.name)}
-                className={`shrink-0 px-4 py-2 rounded-full text-xs uppercase tracking-wider border transition-all ${
+                className={`shrink-0 px-4 py-2 rounded-full text-[11px] uppercase tracking-[0.18em] border transition-all whitespace-nowrap ${
                   activeSection === s.name
-                    ? "bg-gradient-neon text-primary-foreground border-transparent"
-                    : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                    ? "bg-v2-champagne text-v2-bg border-transparent"
+                    : "border-v2-champagne/20 text-v2-text-muted hover:border-v2-champagne/50 hover:text-v2-text"
                 }`}
               >
                 {s.name}
@@ -113,61 +117,59 @@ const Carta = () => {
       </div>
 
       {/* ── Menu content ── */}
-      <section className="py-12">
-        <div className="container max-w-5xl">
+      <section className="py-14 px-6 md:px-14">
+        <div className="max-w-5xl mx-auto">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-4">
-              <Loader2 className="w-8 h-8 text-accent animate-spin" />
-              <p className="text-muted-foreground text-sm">Cargando carta...</p>
+              <Loader2 className="w-8 h-8 text-v2-champagne animate-spin" />
+              <p className="v2-text-muted text-sm">Cargando carta...</p>
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-20">
-              <p className="text-muted-foreground text-lg">
+              <p className="v2-text-muted text-lg">
                 No se encontraron platos para "{searchQuery}"
               </p>
             </div>
           ) : (
-            filtered.map((section, sIdx) => (
+            filtered.map((section) => (
               <div
                 key={section.name}
                 ref={(el) => { if (el) sectionRefs.current.set(section.name, el); }}
-                className="mb-16 scroll-mt-40 animate-fade-up"
-                style={{ animationDelay: `${sIdx * 60}ms` }}
+                className="mb-16 scroll-mt-40"
               >
                 {/* Section header */}
                 <div className="relative mb-8">
                   <div className="flex items-end gap-4">
-                    <h2 className="font-display text-4xl md:text-5xl text-foreground leading-tight">
+                    <h2 className="font-display font-light text-4xl md:text-5xl text-v2-text leading-tight">
                       {section.name}
                     </h2>
-                    <div className="flex-1 h-px bg-gradient-to-r from-primary/40 to-transparent mb-2" />
+                    <div className="flex-1 h-px bg-gradient-to-r from-v2-champagne/40 to-transparent mb-3" />
                   </div>
                   {section.subtitle && (
-                    <p className="text-sm text-accent/70 mt-1 font-light tracking-wide">
+                    <p className="text-xs uppercase tracking-[0.2em] text-v2-champagne/70 mt-2">
                       {section.subtitle}
                     </p>
                   )}
                 </div>
 
                 {/* Items */}
-                <div className="space-y-3">
-                  {section.items.map((item, iIdx) => (
+                <div>
+                  {section.items.map((item) => (
                     <div
                       key={item.id}
-                      className="group relative flex gap-4 items-start py-4 px-4 -mx-4 rounded-2xl hover:bg-card/60 transition-all duration-300"
-                      style={{ animationDelay: `${(sIdx * 60) + (iIdx * 30)}ms` }}
+                      className="group relative flex gap-5 items-start py-5 border-b border-v2-champagne/10 last:border-b-0"
                     >
                       {/* Thumbnail */}
                       {item.image ? (
                         <img
                           src={item.image}
                           alt={item.name}
-                          className="w-20 h-20 md:w-24 md:h-24 rounded-xl object-cover shrink-0 border border-border/50"
+                          className="w-20 h-20 md:w-24 md:h-24 rounded-lg object-cover shrink-0 border border-v2-champagne/15"
                           loading="lazy"
                         />
                       ) : (
-                        <div className="w-20 h-20 md:w-24 md:h-24 rounded-xl shrink-0 bg-gradient-to-br from-primary/10 to-accent/10 border border-border/40 flex items-center justify-center">
-                          <span className="font-jp text-2xl text-primary/25">菊</span>
+                        <div className="w-20 h-20 md:w-24 md:h-24 rounded-lg shrink-0 v2-bg-card border border-v2-champagne/10 flex items-center justify-center">
+                          <span className="font-jp text-2xl text-v2-champagne/25">菊</span>
                         </div>
                       )}
 
@@ -176,31 +178,30 @@ const Carta = () => {
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <h3 className="font-display text-xl md:text-2xl text-foreground group-hover:text-gradient-neon transition-all duration-300">
+                              <h3 className="font-display text-xl md:text-2xl text-v2-text group-hover:text-v2-champagne transition-colors duration-300">
                                 {item.name}
                               </h3>
                               {item.badge && (
-                                <span className="px-2 py-0.5 rounded-full bg-accent/15 border border-accent/30 text-accent text-[9px] uppercase tracking-widest font-semibold">
+                                <span className="px-2 py-0.5 rounded-full border border-v2-champagne/30 text-v2-champagne text-[9px] uppercase tracking-widest font-semibold">
                                   {item.badge}
                                 </span>
                               )}
                             </div>
-                            <p className="text-xs md:text-sm text-muted-foreground leading-relaxed mt-1 max-w-xl">
-                              {item.description}
-                            </p>
+                            {item.description && (
+                              <p className="text-xs md:text-sm v2-text-muted leading-relaxed mt-1.5 max-w-xl">
+                                {item.description}
+                              </p>
+                            )}
                           </div>
 
                           {/* Price */}
                           {item.price && (
-                            <span className="text-sm md:text-base font-semibold text-gradient-neon whitespace-nowrap pt-1 font-display shrink-0">
+                            <span className="text-base md:text-lg text-v2-champagne whitespace-nowrap pt-1 font-display shrink-0">
                               {item.price}
                             </span>
                           )}
                         </div>
                       </div>
-
-                      {/* Subtle line separator */}
-                      <div className="absolute bottom-0 left-4 right-4 h-px bg-border/30 group-last:hidden" />
                     </div>
                   ))}
                 </div>
@@ -210,22 +211,20 @@ const Carta = () => {
         </div>
       </section>
 
-      {/* ── Footer CTA ── */}
-      <section className="py-16 text-center relative">
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
-        <div className="container relative z-10">
-          <Sparkles className="w-5 h-5 text-accent mx-auto mb-3" />
-          <p className="font-display text-2xl md:text-3xl mb-6 glow-text-soft">
-            ¿Listo para vivir la <span className="text-gradient-neon italic">experiencia Kiku</span>?
-          </p>
-          <a
-            href="/#reservar"
-            className="inline-flex items-center gap-2 bg-gradient-neon text-primary-foreground font-semibold uppercase tracking-widest text-sm px-8 py-4 rounded-full glow-neon hover:scale-105 transition-transform"
-          >
-            Reservar mesa
-          </a>
-        </div>
+      {/* ── CTA ── */}
+      <section className="py-16 text-center px-6">
+        <p className="font-display font-light text-3xl md:text-4xl text-v2-text mb-7">
+          ¿Listo para vivir la <em className="italic text-v2-champagne">experiencia Kiku</em>?
+        </p>
+        <Link
+          to="/reservar"
+          className="inline-flex items-center bg-v2-champagne text-v2-bg px-9 py-4 text-[11px] uppercase tracking-[0.24em] font-medium hover:bg-v2-text hover:-translate-y-px transition-all duration-300"
+        >
+          Reservá tu mesa
+        </Link>
       </section>
+
+      <FooterV2 />
     </div>
   );
 };

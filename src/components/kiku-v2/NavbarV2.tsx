@@ -90,6 +90,14 @@ const NavbarV2 = () => {
             ))}
             <li>
               <Link
+                to="/carta"
+                className="text-[11px] uppercase tracking-[0.24em] text-v2-text/80 hover:text-v2-champagne transition-colors duration-300"
+              >
+                Carta
+              </Link>
+            </li>
+            <li>
+              <Link
                 to="/pedir"
                 className="text-[11px] uppercase tracking-[0.24em] text-v2-text/80 hover:text-v2-champagne transition-colors duration-300"
               >
@@ -161,11 +169,26 @@ const NavbarV2 = () => {
             </motion.a>
           ))}
 
-          {/* Pedir (mismo flujo que el boton del hero: delivery / take away) */}
+          {/* Carta Salón */}
           <motion.div
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: open ? 0 : -20, opacity: open ? 1 : 0 }}
             transition={{ delay: open ? 0.1 + NAV_LINKS.length * 0.06 : 0, duration: 0.5 }}
+          >
+            <Link
+              to="/carta"
+              onClick={() => setOpen(false)}
+              className="font-display text-4xl text-v2-text hover:text-v2-champagne transition-colors"
+            >
+              Carta
+            </Link>
+          </motion.div>
+
+          {/* Pedir (mismo flujo que el boton del hero: delivery / take away) */}
+          <motion.div
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: open ? 0 : -20, opacity: open ? 1 : 0 }}
+            transition={{ delay: open ? 0.1 + (NAV_LINKS.length + 1) * 0.06 : 0, duration: 0.5 }}
           >
             <Link
               to="/pedir"
@@ -180,7 +203,7 @@ const NavbarV2 = () => {
           <motion.div
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: open ? 0 : -20, opacity: open ? 1 : 0 }}
-            transition={{ delay: open ? 0.1 + (NAV_LINKS.length + 1) * 0.06 : 0, duration: 0.5 }}
+            transition={{ delay: open ? 0.1 + (NAV_LINKS.length + 2) * 0.06 : 0, duration: 0.5 }}
           >
             <Link
               to={cartHref}
