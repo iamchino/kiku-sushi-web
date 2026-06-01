@@ -34,6 +34,29 @@ const kikuAbierto = (): { abierto: boolean; motivo: string } => {
   };
 };
 
+// ¿Un horario "YYYY-MM-DDTHH:MM" (hora Argentina) cae dentro de atención?
+const horarioPedidoValido = (value: string): boolean => {
+  if (!value) return false;
+  const [datePart, timePart] = value.split("T");
+  if (!datePart || !timePart) return false;
+  const [y, m, d] = datePart.split("-").map(Number);
+  const [hh, mm] = timePart.split(":").map(Number);
+  const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay();  // weekday TZ-independiente
+  const mins = hh * 60 + mm;
+  return ([2, 3, 4, 5, 6].includes(dow) && mins >= 19 * 60 + 30)
+      || ([6, 0].includes(dow) && mins <= 60);
+};
+
+// Date → "YYYY-MM-DDTHH:MM" (para min/max del input datetime-local).
+const dtLocalInput = (d: Date): string => {
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+};
+
+// "YYYY-MM-DDTHH:MM" interpretado como hora Argentina (UTC-3, sin DST) → ISO UTC.
+const programadoAISO = (value: string): string => new Date(value + ":00-03:00").toISOString();
+const programadoTimeMs = (value: string): number => new Date(value + ":00-03:00").getTime();
+
 interface CartItem {
   product: CatalogProduct;
   quantity: number;
@@ -107,6 +130,8 @@ const Pedidos = () => {
   const [telefono, setTelefono] = useState("");
   const [direccion, setDireccion] = useState("");
   const [notasExtra, setNotasExtra] = useState("");
+  const [cuando, setCuando] = useState<"asap" | "programar">("asap");
+  const [programadoLocal, setProgramadoLocal] = useState("");
 
   // ─── Fetch catálogo (Supabase, tipo delivery) ──────────────────────────────
   const [catalogData, setCatalogData] = useState<CatalogCategory[]>(fallbackData);
@@ -179,10 +204,25 @@ const Pedidos = () => {
   // Confirmar pedido → Supabase
   const confirmarPedido = async (e: React.FormEvent) => {
     e.preventDefault();
-    const est = kikuAbierto();
-    if (!est.abierto) { setErrorMsg(est.motivo); return; }
     if (!nombre.trim() || !telefono.trim()) return;
     if (orderMode === "delivery" && !direccion.trim()) return;
+
+    // ¿Cuándo? Si está cerrado ahora, se obliga a programar.
+    const est = kikuAbierto();
+    const debeProgramar = !est.abierto || cuando === "programar";
+    let programadoPara: string | null = null;
+    if (debeProgramar) {
+      if (!programadoLocal) { setErrorMsg("Elegí el día y la hora para tu pedido."); return; }
+      if (!horarioPedidoValido(programadoLocal)) {
+        setErrorMsg("Ese horario está fuera de atención (Mar–Jue 19:30–00:00, Vie–Sáb 19:30–01:00).");
+        return;
+      }
+      const t = programadoTimeMs(programadoLocal);
+      if (t < Date.now() + 30 * 60000) { setErrorMsg("Programá con al menos 30 minutos de anticipación."); return; }
+      if (t > Date.now() + 3 * 24 * 60 * 60000) { setErrorMsg("Solo se puede programar hasta 3 días de anticipación."); return; }
+      programadoPara = programadoAISO(programadoLocal);
+    }
+
     setEnviando(true);
     try {
       const subtotal = cart.reduce((s, i) => s + parsePrice(i.product.price) * i.quantity, 0);
@@ -199,6 +239,7 @@ const Pedidos = () => {
           cliente_telefono:  telefono.trim(),
           cliente_direccion: orderMode === "delivery" ? direccion.trim() : null,
           notas:             notasExtra.trim() || null,
+          programado_para:   programadoPara,
         })
         .select("id, numero")
         .single();
@@ -233,31 +274,8 @@ const Pedidos = () => {
   };
 
   // ─── Pantalla de selección de modo ──────────────────────────────────────────
-  // Local cerrado (día u horario fuera de atención) → bloqueamos los pedidos.
-  if (!estadoLocal.abierto) {
-    return (
-      <div className="v2-root min-h-screen overflow-x-hidden v2-bg-base">
-        <NavbarV2 />
-        <section className="relative min-h-screen flex items-center justify-center pt-28 pb-16 px-6 md:px-14 overflow-hidden text-center">
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{ background: "radial-gradient(ellipse at top, hsla(270, 50%, 50%, 0.12), transparent 60%)" }}
-          />
-          <div className="relative z-10 max-w-xl w-full">
-            <span className="font-jp text-xs tracking-[0.4em] text-v2-champagne mb-4 block">— 営業時間 —</span>
-            <h1 className="font-display font-light text-5xl sm:text-7xl text-v2-text leading-none mb-5">
-              Pedidos cerrados
-            </h1>
-            <p className="v2-text-muted mb-3">{estadoLocal.motivo}</p>
-            <p className="text-sm v2-text-dim">
-              <strong className="text-v2-text">Mar a Jue</strong> 19:30–00:00 ·{" "}
-              <strong className="text-v2-text">Vie y Sáb</strong> 19:30–01:00 hs.
-            </p>
-          </div>
-        </section>
-      </div>
-    );
-  }
+  // La página queda siempre abierta: si está cerrado, en el checkout se ofrece
+  // programar el pedido (ver selector "¿Cuándo?").
 
   if (!orderMode) {
     return (
@@ -634,6 +652,49 @@ const Pedidos = () => {
               </button>
             </div>
             <form onSubmit={confirmarPedido} className="p-6 space-y-4">
+              {/* ¿Cuándo lo querés? */}
+              <div>
+                <label className="text-xs v2-text-muted mb-1 block">¿Cuándo lo querés?</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" disabled={!estadoLocal.abierto}
+                    onClick={() => { setCuando("asap"); setErrorMsg(null); }}
+                    className={`rounded-xl px-3 py-2.5 text-sm border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                      cuando === "asap" && estadoLocal.abierto
+                        ? "bg-v2-champagne text-v2-bg border-v2-champagne"
+                        : "v2-bg-base text-v2-text border-v2-champagne/15"
+                    }`}>
+                    Lo antes posible
+                  </button>
+                  <button type="button"
+                    onClick={() => { setCuando("programar"); setErrorMsg(null); }}
+                    className={`rounded-xl px-3 py-2.5 text-sm border transition-colors ${
+                      cuando === "programar" || !estadoLocal.abierto
+                        ? "bg-v2-champagne text-v2-bg border-v2-champagne"
+                        : "v2-bg-base text-v2-text border-v2-champagne/15"
+                    }`}>
+                    Programar
+                  </button>
+                </div>
+                {!estadoLocal.abierto && (
+                  <p className="text-[11px] v2-text-dim mt-1.5">Ahora estamos cerrados — programá tu pedido.</p>
+                )}
+                {(cuando === "programar" || !estadoLocal.abierto) && (
+                  <div className="mt-2">
+                    <input
+                      type="datetime-local"
+                      value={programadoLocal}
+                      min={dtLocalInput(new Date(Date.now() + 30 * 60000))}
+                      max={dtLocalInput(new Date(Date.now() + 3 * 24 * 60 * 60000))}
+                      onChange={(e) => { setProgramadoLocal(e.target.value); setErrorMsg(null); }}
+                      className="w-full v2-bg-base border border-v2-champagne/15 rounded-xl px-4 py-3 text-sm text-v2-text outline-none focus:border-v2-champagne/50"
+                    />
+                    <p className="text-[11px] v2-text-dim mt-1.5">
+                      Atención: Mar–Jue 19:30–00:00 · Vie–Sáb 19:30–01:00.
+                    </p>
+                  </div>
+                )}
+              </div>
+
               <div>
                 <label className="text-xs v2-text-muted mb-1 block">Nombre completo *</label>
                 <input value={nombre} onChange={e => setNombre(e.target.value)} required
