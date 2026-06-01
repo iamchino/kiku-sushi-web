@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { ShoppingBag, Search, Truck, Store, Plus, Minus, Trash2, X, Loader2, CheckCircle2, ChevronRight, ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import NavbarV2 from "@/components/kiku-v2/NavbarV2";
 import { fallbackData, fetchCatalogFromSheet, type CatalogProduct, type CatalogCategory } from "@/data/catalog";
 import { supabase } from "@/lib/supabase";
@@ -144,13 +144,18 @@ const Pedidos = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  // Abrir el carrito automáticamente al llegar con #cart
+  // Abrir el carrito cuando se navega a /pedidos#cart — incluso si ya estamos
+  // parados en /pedidos (la bolsita del navbar usa ese hash). Reaccionamos a
+  // cada navegación mediante location.key.
+  const location = useLocation();
+  const navigate = useNavigate();
   useEffect(() => {
-    if (window.location.hash === '#cart' && cart.length > 0) {
+    if (location.hash === '#cart') {
       setCartOpen(true);
-      window.history.replaceState(null, '', window.location.pathname);
+      navigate(location.pathname + location.search, { replace: true }); // limpia el #cart
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key]);
 
   // Filter products by search
   const filteredCategories = useMemo(() => {
@@ -362,18 +367,8 @@ const Pedidos = () => {
                 )}
               </span>
             </div>
-            <button
-              onClick={() => setCartOpen(true)}
-              className="relative inline-flex items-center gap-2 bg-v2-champagne text-v2-bg text-[11px] font-medium uppercase tracking-[0.24em] px-5 py-2.5 hover:bg-v2-text transition-colors"
-            >
-              <ShoppingBag className="w-4 h-4" />
-              Pedido
-              {cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 min-w-[20px] h-5 px-1 bg-v2-text text-v2-bg text-[10px] rounded-full flex items-center justify-center font-bold">
-                  {cartCount}
-                </span>
-              )}
-            </button>
+            {/* El botón de pedido duplicado se quitó: la bolsita del navbar (arriba
+                a la derecha) abre el carrito en esta misma página. */}
           </div>
 
           {/* Search */}
