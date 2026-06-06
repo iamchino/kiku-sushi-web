@@ -10,6 +10,7 @@ const parsePrice = (s: string) => parseInt(s.replace(/[$. ]/g, ''), 10) || 0;
 
 // Formatea un precio (string o número) al formato argentino: 22000 → "$22.000"
 const formatPrice = (s: string) => `$${parsePrice(s).toLocaleString("es-AR")}`;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // ─── Horario de atención de pedidos (hora Argentina) ───
 //   Martes a jueves: 19:30 → 00:00 (medianoche)
@@ -258,6 +259,7 @@ const Pedidos = () => {
           nombre:          i.product.name,
           precio_unitario: parsePrice(i.product.price),
           cantidad:        i.quantity,
+          menu_item_id:     UUID_RE.test(i.product.id) ? i.product.id : null,
         }))
       );
 

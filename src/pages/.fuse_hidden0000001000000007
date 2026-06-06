@@ -344,9 +344,6 @@ const SushiLibre = () => {
               <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
             <p className="text-xs v2-text-dim mt-5">Seña de $20.000 por persona requerida</p>
-            <p className="text-[11px] leading-[2] v2-text-dim mt-8 max-w-xl mx-auto">
-              El consumo de sal en exceso es perjudicial para la salud. Este establecimiento garantiza a cada comensal un vaso de agua potable de 375 ml sin cargo.
-            </p>
           </Reveal>
         </div>
       </section>

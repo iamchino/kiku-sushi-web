@@ -1014,7 +1014,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
               className="font-display font-light tracking-[-0.02em] mb-8 leading-none text-center"
               style={{ fontSize: "clamp(40px, 6vw, 80px)" }}
             >
-              Reservá tu <em className="italic font-normal text-v2-champagne">mesa</em>
+              Reservá tu <span className="font-normal text-v2-champagne">mesa</span>
             </motion.h2>
           </>
         )}
@@ -1159,7 +1159,7 @@ const Field = ({
     </span>
     {children}
     {hint && (
-      <span className="text-[10px] v2-text-dim/80 mt-1 italic">{hint}</span>
+      <span className="text-[10px] v2-text-dim/80 mt-1">{hint}</span>
     )}
   </label>
 );

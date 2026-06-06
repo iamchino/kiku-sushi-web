@@ -1,0 +1,341 @@
+import { useRef } from "react";
+import { Link } from "react-router-dom";
+import { motion, useScroll, useTransform, useInView } from "framer-motion";
+import { ChevronRight } from "lucide-react";
+
+import umamiImg from "@/assets/umami-especial.webp";
+import pacificoImg from "@/assets/pacifico-especial.webp";
+import pastaNikkeiImg from "@/assets/pasta-nikkei.webp";
+
+/**
+ * EspecialesSection — showcases verticales full-height.
+ * Cada especial tiene la misma jerarquía que el Omakase:
+ * panel a pantalla (casi) completa, imagen 4:5 completa con
+ * arco japonés arriba, lados alternados, parallax sutil y
+ * líneas premium de fondo. Scroll vertical natural.
+ *
+ * Los especiales rotan por temporada: editá el array ESPECIALES.
+ */
+
+interface Paso {
+  label: string;
+  text: string;
+}
+
+interface Especial {
+  id: string;
+  number: string;
+  overline: string;
+  title: string;
+  titleAccent: string;
+  description: string;
+  pasos?: Paso[];
+  precio?: string;
+  /** Línea de autor, ej: "— Chef Selection · Marcelo Castro —" */
+  firma?: string;
+  image: string;
+  imageAlt: string;
+}
+
+const ESPECIALES: Especial[] = [
+  {
+    id: "umami",
+    number: "01",
+    overline: "— 南の旨味 —",
+    title: "Umami",
+    titleAccent: "del Sur",
+    description:
+      "Una experiencia de pasos donde el mar toma protagonismo. Los sabores se vuelven más profundos, cada paso está pensado para sorprender.",
+    pasos: [
+      {
+        label: "Entrada",
+        text: "Ostras gratinadas en emulsión de manteca y lima, parmesano gratinado. Maridaje: copa de Albariño · Viñas Las Perdices.",
+      },
+      {
+        label: "Principal",
+        text: "15 piezas de autor: rollo de centolla con mayo nipona, maki de vieiras con emulsión cítrica y ebi furai con crocante de boniato. Maridaje: copa de Riesling · Viñas Las Perdices.",
+      },
+    ],
+    precio: "$39.500 por persona",
+    image: umamiImg,
+    imageAlt: "Especial Umami — pasos de mar con maridaje",
+  },
+  {
+    id: "pacifico",
+    number: "02",
+    overline: "— 太平洋 と パタゴニア —",
+    title: "Pacífico",
+    titleAccent: "y Patagonia",
+    description:
+      "El mar en cada paso: de la costa peruana a los fríos del sur, con maridaje by Viñas Las Perdices.",
+    pasos: [
+      {
+        label: "Entrada",
+        text: "Causa limeña con navajas del Sur.",
+      },
+      {
+        label: "Principal",
+        text: "15 piezas: huancaina roll de langostinos furai, maguro roll de atún rojo con salsa brava y ceviche roll coronado con ceviche confitado de langostinos australes.",
+      },
+      {
+        label: "Maridaje",
+        text: "By Viñas Las Perdices: Albariño y Riesling.",
+      },
+    ],
+    precio: "$39.500 por persona",
+    image: pacificoImg,
+    imageAlt: "Especial Pacífico y Patagonia — rolls con maridaje",
+  },
+  {
+    id: "pasta-nikkei",
+    number: "03",
+    overline: "— 日系 パスタ —",
+    title: "Pasta Nikkei",
+    titleAccent: "del Atlántico",
+    description:
+      "Pasta negra con tinta de calamar, crema suave de miso, mejillones y langostinos salteados, terminada con aceite picante y crocante de almendras.",
+    pasos: [
+      {
+        label: "Maridaje",
+        text: "Incluye copa de Chac Chac Malbec Rosé · Viña Las Perdices.",
+      },
+    ],
+    precio: "$30.000 por persona",
+    firma: "— Chef Selection · Marcelo Castro —",
+    image: pastaNikkeiImg,
+    imageAlt: "Pasta Nikkei del Atlántico — pasta negra con mejillones y langostinos",
+  },
+];
+
+/** Panel individual de un especial, con la jerarquía del Omakase */
+const EspecialPanel = ({ especial, index }: { especial: Especial; index: number }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-120px" });
+  const isEven = index % 2 === 0;
+
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
+  const imageY = useTransform(scrollYProgress, [0, 1], ["-2.5%", "2.5%"]);
+
+  const e = especial;
+
+  return (
+    <div
+      ref={ref}
+      id={e.id}
+      className="relative min-h-screen flex items-center py-24 md:py-28 overflow-hidden"
+    >
+      {/* Número de fondo gigante (watermark) */}
+      <span
+        aria-hidden="true"
+        className={`absolute top-10 font-display font-light pointer-events-none select-none leading-none ${
+          isEven ? "right-2 md:right-10" : "left-2 md:left-10"
+        }`}
+        style={{ fontSize: "clamp(160px, 26vw, 380px)", color: "hsla(41, 64%, 77%, 0.05)" }}
+      >
+        {e.number}
+      </span>
+
+      {/* Líneas premium por panel */}
+      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+        <div
+          className={`absolute top-[12%] h-px w-[34%] bg-gradient-to-r from-v2-champagne/20 to-transparent ${
+            isEven ? "left-6 md:left-14" : "right-6 md:right-14 rotate-180"
+          }`}
+        />
+        <div
+          className={`absolute top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-v2-champagne/12 to-transparent ${
+            isEven ? "left-6 md:left-14" : "right-6 md:right-14"
+          }`}
+        />
+      </div>
+
+      <div className="relative z-10 max-w-[1440px] mx-auto w-full px-6 md:px-14">
+        <div
+          className={`grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 lg:gap-28 items-center ${
+            isEven ? "" : "md:[direction:rtl]"
+          }`}
+        >
+          {/* IMAGEN — 4:5 completa, redondeada con marco fino y glow */}
+          <motion.div
+            initial={{ opacity: 0, y: 48 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+            className={`relative ${isEven ? "" : "md:[direction:ltr]"}`}
+          >
+            <div
+              className="relative overflow-hidden aspect-[4/5] border border-v2-champagne/15"
+              style={{ borderRadius: "28px", boxShadow: "0 0 90px hsla(270, 50%, 50%, 0.30), 0 0 30px hsla(41, 64%, 77%, 0.10)" }}
+            >
+              <motion.img
+                src={e.image}
+                alt={e.imageAlt}
+                style={{ y: imageY, scale: 1.05, filter: "saturate(0.95) brightness(0.95)" }}
+                className="absolute inset-0 w-full h-full object-cover"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-v2-bg/35 to-transparent pointer-events-none" />
+            </div>
+            {/* Marco fino exterior */}
+            <div
+              aria-hidden="true"
+              className="absolute -inset-3 md:-inset-4 border border-v2-champagne/10 pointer-events-none"
+              style={{ borderRadius: "36px" }}
+            />
+          </motion.div>
+
+          {/* TEXTO */}
+          <div className={`max-w-xl ${isEven ? "" : "md:[direction:ltr]"}`}>
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={inView ? { opacity: 1 } : {}}
+              transition={{ duration: 1, delay: 0.15 }}
+              className="font-jp text-xs tracking-[0.45em] text-v2-champagne mb-6 block"
+            >
+              {e.overline}
+            </motion.span>
+
+            <motion.h3
+              initial={{ opacity: 0, y: 48 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 1.2, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              className="font-display font-light leading-[0.92] tracking-[-0.025em] mb-7"
+              style={{ fontSize: "clamp(48px, 6.5vw, 104px)" }}
+            >
+              {e.title}
+              {e.titleAccent && (
+                <>
+                  <br />
+                  <span className="font-normal v2-gradient-text">{e.titleAccent}</span>
+                </>
+              )}
+            </motion.h3>
+
+            <motion.p
+              initial={{ opacity: 0, y: 24 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 1, delay: 0.4 }}
+              className="font-display text-lg md:text-xl v2-text-muted leading-[1.7] font-light mb-8"
+            >
+              {e.description}
+            </motion.p>
+
+            {e.pasos && (
+              <motion.div
+                initial={{ opacity: 0, y: 24 }}
+                animate={inView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 1, delay: 0.5 }}
+                className="mb-8 space-y-4"
+              >
+                {e.pasos.map((p) => (
+                  <div
+                    key={p.label}
+                    className="grid grid-cols-[96px_1fr] gap-5 pt-4 border-t border-v2-champagne/12"
+                  >
+                    <span className="text-[10px] tracking-[0.3em] uppercase text-v2-champagne/70 pt-1">
+                      {p.label}
+                    </span>
+                    <p className="text-sm leading-[1.8] v2-text-muted">{p.text}</p>
+                  </div>
+                ))}
+              </motion.div>
+            )}
+
+            {e.firma && (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={inView ? { opacity: 1 } : {}}
+                transition={{ duration: 1, delay: 0.6 }}
+                className="font-jp text-[10px] tracking-[0.35em] uppercase text-v2-champagne/60 mb-8"
+              >
+                {e.firma}
+              </motion.p>
+            )}
+
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 1, delay: 0.7 }}
+              className="flex items-center gap-7 flex-wrap"
+            >
+              <Link
+                to="/reservar"
+                className="group bg-v2-champagne text-v2-bg px-10 py-[17px] text-[11px] uppercase tracking-[0.3em] font-medium hover:bg-v2-text hover:-translate-y-0.5 transition-all duration-400 inline-flex items-center gap-3"
+              >
+                Reservar
+                <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              {e.precio && (
+                <div className="flex flex-col">
+                  <span className="font-display text-xl text-v2-champagne whitespace-nowrap">{e.precio}</span>
+                  <span className="text-[10px] v2-text-dim mt-1.5">No incluye servicio de mesa ($3.500)</span>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const EspecialesSection = () => {
+  const headerRef = useRef<HTMLDivElement>(null);
+  const headerInView = useInView(headerRef, { once: true, margin: "-100px" });
+
+  return (
+    <section id="especiales" className="relative v2-bg-base">
+      {/* Glow ambiental de la sección */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        aria-hidden="true"
+        style={{
+          background:
+            "radial-gradient(ellipse at 85% 10%, hsla(270, 50%, 50%, 0.08), transparent 50%), radial-gradient(ellipse at 10% 80%, hsla(317, 100%, 65%, 0.05), transparent 50%)",
+        }}
+      />
+
+      {/* Header de la sección */}
+      <div
+        ref={headerRef}
+        className="relative z-10 max-w-[1440px] mx-auto px-6 md:px-14 pt-28 md:pt-40 pb-4 md:pb-8"
+      >
+        <motion.span
+          initial={{ opacity: 0 }}
+          animate={headerInView ? { opacity: 1 } : {}}
+          transition={{ duration: 1 }}
+          className="font-jp text-xs tracking-[0.45em] text-v2-champagne mb-5 block"
+        >
+          — 季節限定 · ROTAN POR TEMPORADA —
+        </motion.span>
+        <motion.h2
+          initial={{ opacity: 0, y: 40 }}
+          animate={headerInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 1.1, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+          className="font-display font-light leading-[0.95] tracking-[-0.02em]"
+          style={{ fontSize: "clamp(40px, 6vw, 96px)" }}
+        >
+          Especiales <span className="font-normal text-v2-champagne">de Kiku</span>
+        </motion.h2>
+      </div>
+
+      {/* Un showcase por especial */}
+      {ESPECIALES.map((e, i) => (
+        <EspecialPanel key={e.id} especial={e} index={i} />
+      ))}
+
+      {/* Aclaraciones */}
+      <div className="relative z-10 max-w-[1440px] mx-auto px-6 md:px-14 pb-20">
+        <p className="text-[11px] leading-[2] v2-text-dim max-w-2xl border-t border-v2-champagne/10 pt-6">
+          Servicio de mesa: $3.500 en carta de salón · En Kiku Libre ya está incluido.
+          El consumo de sal en exceso es perjudicial para la salud.
+          Este establecimiento garantiza a cada comensal un vaso de agua potable de 375 ml sin cargo.
+        </p>
+      </div>
+    </section>
+  );
+};
+
+export default EspecialesSection;

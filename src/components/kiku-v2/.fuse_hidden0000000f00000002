@@ -103,7 +103,8 @@ const MenuPanel = ({
             className="font-display font-light leading-[0.95] tracking-[-0.02em] mb-8"
             style={{ fontSize: "clamp(44px, 5vw, 76px)" }}
           >
-            {title}{" "}
+            {title}
+            <br />
             <span className="font-normal text-v2-champagne">{titleAccent}</span>
           </motion.h2>
 

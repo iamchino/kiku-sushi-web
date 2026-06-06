@@ -10,8 +10,6 @@ interface MenuPanelProps {
   titleAccent: string;     // "del Sur"
   description: string;
   ctaLabel: string;
-  /** Precio opcional, ej: "\$53.500 por persona" */
-  precio?: string;
   ctaHref: string;
   image: string;
   imageAlt: string;
@@ -33,7 +31,6 @@ const MenuPanel = ({
   titleAccent,
   description,
   ctaLabel,
-  precio,
   ctaHref,
   image,
   imageAlt,
@@ -103,7 +100,8 @@ const MenuPanel = ({
             className="font-display font-light leading-[0.95] tracking-[-0.02em] mb-8"
             style={{ fontSize: "clamp(44px, 5vw, 76px)" }}
           >
-            {title}{" "}
+            {title}
+            <br />
             <span className="font-normal text-v2-champagne">{titleAccent}</span>
           </motion.h2>
 
@@ -126,17 +124,6 @@ const MenuPanel = ({
             {ctaLabel}
             <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-400" />
           </motion.a>
-
-          {precio && (
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={inView ? { opacity: 1 } : {}}
-              transition={{ duration: 1, delay: 0.65 }}
-              className="font-display text-xl text-v2-champagne ml-8 whitespace-nowrap"
-            >
-              {precio}
-            </motion.span>
-          )}
         </div>
       </div>
     </section>

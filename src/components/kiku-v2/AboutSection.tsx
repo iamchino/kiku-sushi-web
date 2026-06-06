@@ -43,14 +43,14 @@ const AboutSection = () => {
           className="font-display font-light tracking-[-0.02em] mb-12 leading-none"
           style={{ fontSize: "clamp(48px, 6vw, 88px)" }}
         >
-          Te <em className="italic font-normal text-v2-champagne">recibimos</em>
+          Te <span className="font-normal text-v2-champagne">recibimos</span>
         </motion.h2>
 
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 1, delay: 0.5 }}
-          className="font-display italic text-2xl md:text-[26px] leading-[1.5] v2-text mb-8 font-light"
+          className="font-display text-2xl md:text-[26px] leading-[1.5] v2-text mb-8 font-light"
         >
           Kiku — 菊 — es el crisantemo. La flor de la realeza imperial japonesa. Símbolo de longevidad y de lo que florece en otoño cuando todo lo demás se apaga.
         </motion.p>

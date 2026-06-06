@@ -1,9 +1,10 @@
 import { useRef } from "react";
 import { motion, useInView, useScroll, useTransform } from "framer-motion";
+import itamaePhoto from "@/assets/itamae.webp";
 
 /**
  * Itamae — la sección que enamoró al cliente.
- * Retrato a la izquierda (placeholder hasta que llegue la foto del chef),
+ * Foto real de la itamae a la izquierda (marco fino + glow, como los especiales),
  * bio editorial a la derecha con quote destacada con borde champagne.
  */
 const ItamaeSection = () => {
@@ -15,7 +16,7 @@ const ItamaeSection = () => {
     target: sectionRef,
     offset: ["start end", "end start"],
   });
-  const portraitY = useTransform(scrollYProgress, [0, 1], ["-10%", "10%"]);
+  const portraitY = useTransform(scrollYProgress, [0, 1], ["-2.5%", "2.5%"]);
 
   return (
     <section
@@ -35,36 +36,39 @@ const ItamaeSection = () => {
       <div className="max-w-[1320px] mx-auto relative">
         <div
           ref={ref}
-          className="grid grid-cols-1 md:grid-cols-[5fr_7fr] gap-12 md:gap-22 items-center"
+          className="grid grid-cols-1 md:grid-cols-[6fr_6fr] gap-12 md:gap-22 items-center"
         >
-          {/* PORTRAIT */}
-          <div className="relative aspect-[3/4] v2-bg-card border border-v2-champagne/10 overflow-hidden flex items-center justify-center">
-            <motion.div
-              style={{ y: portraitY }}
-              className="absolute inset-0 flex items-center justify-center"
+          {/* FOTO */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+            className="relative"
+          >
+            <div
+              className="relative overflow-hidden aspect-[16/10] border border-v2-champagne/15"
+              style={{
+                borderRadius: "28px",
+                boxShadow:
+                  "0 0 90px hsla(270, 50%, 50%, 0.30), 0 0 30px hsla(41, 64%, 77%, 0.10)",
+              }}
             >
-              {/* gradient base */}
-              <div
-                className="absolute inset-0"
-                style={{
-                  background:
-                    "linear-gradient(135deg, hsla(270, 50%, 50%, 0.42), hsla(317, 100%, 65%, 0.18))",
-                }}
+              <motion.img
+                src={itamaePhoto}
+                alt="La itamae de Kiku trabajando en la barra"
+                style={{ y: portraitY, scale: 1.06, filter: "saturate(0.95) brightness(0.95)" }}
+                className="absolute inset-0 w-full h-full object-cover"
+                loading="lazy"
               />
-              {/* Watermark kanji */}
-              <span
-                className="font-jp absolute text-[280px] md:text-[320px] leading-none"
-                style={{ color: "hsla(41, 64%, 77%, 0.08)" }}
-              >
-                菊
-              </span>
-            </motion.div>
-
-            {/* Placeholder annotation */}
-            <span className="absolute bottom-6 text-[9px] tracking-[0.3em] uppercase v2-text-dim px-3 py-1.5 border border-v2-champagne/24 bg-v2-bg/70 rounded-full">
-              Retrato del itamae · B&N · luz neón
-            </span>
-          </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-v2-bg/30 to-transparent pointer-events-none" />
+            </div>
+            {/* Marco fino exterior */}
+            <div
+              aria-hidden="true"
+              className="absolute -inset-3 md:-inset-4 border border-v2-champagne/10 pointer-events-none"
+              style={{ borderRadius: "36px" }}
+            />
+          </motion.div>
 
           {/* CONTENT */}
           <div>
@@ -83,7 +87,7 @@ const ItamaeSection = () => {
               transition={{ duration: 1, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
               className="font-display font-light text-5xl md:text-6xl leading-none mb-5"
             >
-              El Itamae
+              Itamae
             </motion.h3>
 
             <motion.span
@@ -101,7 +105,7 @@ const ItamaeSection = () => {
               transition={{ duration: 1, delay: 0.4 }}
               className="text-base leading-[1.85] v2-text-muted mb-5"
             >
-              Su mirada es atenta, sus manos están entrenadas, y su respeto por el producto del día es absoluto. Diez años cortando, flameando y emplatando. Cada noche en la barra es una conversación silenciosa entre el itamae y quien se sienta enfrente.
+              Su mirada es atenta, sus manos están entrenadas, y su respeto por el producto del día es absoluto. Diez años cortando, flameando y emplatando. Cada noche en la barra es una conversación silenciosa entre la itamae y quien se sienta enfrente.
             </motion.p>
 
             <motion.p
@@ -110,14 +114,14 @@ const ItamaeSection = () => {
               transition={{ duration: 1, delay: 0.55 }}
               className="text-base leading-[1.85] v2-text-muted"
             >
-              Formado en la tradición nikkei — esa fusión nacida del encuentro entre la precisión japonesa y los sabores latinos — domina el corte hosomaki, el flameado al carbón, y el equilibrio entre acidez y umami.
+              Formada en la tradición nikkei — esa fusión nacida del encuentro entre la precisión japonesa y los sabores latinos — domina el corte hosomaki, el flameado al carbón, y el equilibrio entre acidez y umami.
             </motion.p>
 
             <motion.blockquote
               initial={{ opacity: 0, x: -20 }}
               animate={inView ? { opacity: 1, x: 0 } : {}}
               transition={{ duration: 1, delay: 0.75 }}
-              className="border-l-2 border-v2-champagne pl-6 mt-9 font-display italic text-xl md:text-[22px] v2-text"
+              className="border-l-2 border-v2-champagne pl-6 mt-9 font-display text-xl md:text-[22px] v2-text"
             >
               "No hay menú fijo. Hay confianza."
             </motion.blockquote>

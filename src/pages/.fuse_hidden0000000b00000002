@@ -1,11 +1,27 @@
 import { useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
 import { ChevronRight, AlertTriangle, Info, Accessibility } from "lucide-react";
 import { motion, useInView } from "framer-motion";
 import NavbarV2 from "@/components/kiku-v2/NavbarV2";
 import FooterV2 from "@/components/kiku-v2/FooterV2";
 import { useLenisScroll } from "@/hooks/useLenisScroll";
 import ambiance from "@/assets/ambiance.webp";
+
+// Iconos por codepoint para evitar corrupción de encoding en el bundle
+const _ICON_SUSHI  = String.fromCodePoint(0x1F363); // 🍣
+const _ICON_DATE   = String.fromCodePoint(0x1F4C5); // 📅
+const _ICON_PEOPLE = String.fromCodePoint(0x1F465); // 👥
+
+const WHATSAPP_URL = `https://wa.me/5493412764562?text=${encodeURIComponent(
+  [
+    `Hola Kiku Sushi ${_ICON_SUSHI}`,
+    `Quiero reservar *Kiku Libre*.`,
+    ``,
+    `${_ICON_DATE} Fecha deseada: `,
+    `${_ICON_PEOPLE} Cantidad de personas: `,
+    ``,
+    `¡Quedo a la espera de su confirmación!`,
+  ].join("\n")
+)}`;
 
 /** Sección con reveal al entrar en viewport */
 const Reveal = ({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) => {
@@ -117,10 +133,10 @@ const SushiLibre = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.65 }}
           >
-            <Link to="/reservar" className={CTA_CLASSES}>
+            <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className={CTA_CLASSES}>
               Reservar Kiku Libre
               <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
+            </a>
           </motion.div>
         </div>
       </section>
@@ -262,12 +278,6 @@ const SushiLibre = () => {
               {
                 icon: Info,
                 iconClass: "text-v2-champagne",
-                title: "Servicio de mesa incluido",
-                desc: "En Kiku Libre el servicio de mesa ya está incluido en el precio.",
-              },
-              {
-                icon: Info,
-                iconClass: "text-v2-champagne",
                 title: "Rondas ilimitadas",
                 desc: "Podés repetir todas las veces que quieras, siempre que la ronda anterior haya sido consumida en su totalidad.",
               },
@@ -339,14 +349,11 @@ const SushiLibre = () => {
             >
               ¿Listos para comer <span className="font-normal text-v2-champagne">sin límites</span>?
             </p>
-            <Link to="/reservar" className={CTA_CLASSES}>
+            <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className={CTA_CLASSES}>
               Reservar Kiku Libre
               <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
+            </a>
             <p className="text-xs v2-text-dim mt-5">Seña de $20.000 por persona requerida</p>
-            <p className="text-[11px] leading-[2] v2-text-dim mt-8 max-w-xl mx-auto">
-              El consumo de sal en exceso es perjudicial para la salud. Este establecimiento garantiza a cada comensal un vaso de agua potable de 375 ml sin cargo.
-            </p>
           </Reveal>
         </div>
       </section>

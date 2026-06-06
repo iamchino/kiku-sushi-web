@@ -70,7 +70,7 @@ const IndexV2 = () => {
         overline="— 食べ放題 —"
         title="Kiku"
         titleAccent="Libre"
-        description="Sushi ilimitado. Repetí todas las rondas que quieras. Empezás con un escabeche de vegetales y langostinos ahumados, seguís con rondas de diez piezas. No incluye bebida."
+        description="Sushi ilimitado. Repetí todas las rondas que quieras: Kiku, Fusión o Exotic. Empezás con un escabeche de vegetales y langostinos ahumados, seguís con rondas de diez piezas. No incluye bebida."
         precio="$53.500 por persona"
         ctaLabel="Ver detalles"
         ctaHref="/sushi-libre"
