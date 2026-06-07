@@ -117,7 +117,7 @@ const SushiLibre = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.65 }}
           >
-            <Link to="/reservar?experiencia=kiku_libre" className={CTA_CLASSES}>
+            <Link to="/reservar" className={CTA_CLASSES}>
               Reservar Kiku Libre
               <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
@@ -324,7 +324,7 @@ const SushiLibre = () => {
             >
               <h3 className="font-display text-2xl md:text-3xl mb-4">Disponibilidad</h3>
               <p className="v2-text-muted mb-1.5">
-                <span className="v2-text font-medium">Miércoles y Jueves</span> de cada mes
+                <span className="v2-text font-medium">Martes, Miércoles y Jueves</span> de cada mes
               </p>
               <p className="text-sm v2-text-muted">
                 De 20:00 a 23:40 hs (cierra la barra de sushi)
@@ -339,7 +339,7 @@ const SushiLibre = () => {
             >
               ¿Listos para comer <span className="font-normal text-v2-champagne">sin límites</span>?
             </p>
-            <Link to="/reservar?experiencia=kiku_libre" className={CTA_CLASSES}>
+            <Link to="/reservar" className={CTA_CLASSES}>
               Reservar Kiku Libre
               <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>

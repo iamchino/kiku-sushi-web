@@ -24,6 +24,8 @@ interface Paso {
 
 interface Especial {
   id: string;
+  /** id de experiencia en el form de reservas */
+  experiencia: string;
   number: string;
   overline: string;
   title: string;
@@ -40,6 +42,7 @@ interface Especial {
 const ESPECIALES: Especial[] = [
   {
     id: "umami",
+    experiencia: "umami_del_sur",
     number: "01",
     overline: "— 南の旨味 —",
     title: "Umami",
@@ -62,6 +65,7 @@ const ESPECIALES: Especial[] = [
   },
   {
     id: "pacifico",
+    experiencia: "pacifico_y_patagonia",
     number: "02",
     overline: "— 太平洋 と パタゴニア —",
     title: "Pacífico",
@@ -88,6 +92,7 @@ const ESPECIALES: Especial[] = [
   },
   {
     id: "pasta-nikkei",
+    experiencia: "pasta_nikkei",
     number: "03",
     overline: "— 日系 パスタ —",
     title: "Pasta Nikkei",
@@ -261,7 +266,7 @@ const EspecialPanel = ({ especial, index }: { especial: Especial; index: number 
               className="flex items-center gap-7 flex-wrap"
             >
               <Link
-                to="/reservar"
+                to={`/reservar?experiencia=${e.experiencia}`}
                 className="group bg-v2-champagne text-v2-bg px-10 py-[17px] text-[11px] uppercase tracking-[0.3em] font-medium hover:bg-v2-text hover:-translate-y-0.5 transition-all duration-400 inline-flex items-center gap-3"
               >
                 Reservar

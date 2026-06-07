@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
 import { motion, useScroll, useSpring } from "framer-motion";
 import { useLenisScroll } from "@/hooks/useLenisScroll";
 import NavbarV2 from "@/components/kiku-v2/NavbarV2";
@@ -32,17 +31,6 @@ import signatureRoll from "@/assets/signature-roll.webp";
  */
 const IndexV2 = () => {
   useLenisScroll();
-
-  // Si llegamos con un hash (/#umami desde otra página), scrollear a esa sección
-  const location = useLocation();
-  useEffect(() => {
-    if (!location.hash) return;
-    const id = location.hash.slice(1);
-    const t = setTimeout(() => {
-      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 300);
-    return () => clearTimeout(t);
-  }, [location.hash]);
 
   // Reading-progress indicator
   const { scrollYProgress } = useScroll();

@@ -4,19 +4,11 @@ import { Menu, X, ShoppingBag } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { LogoLockup } from "./LogoMark";
 
-interface NavLink {
-  label: string;
-  /** ancla de la home (#seccion) */
-  anchor?: string;
-  /** ruta propia (página) */
-  to?: string;
-}
-
-const NAV_LINKS: NavLink[] = [
+const NAV_LINKS = [
   { label: "Umami del Sur", anchor: "umami" },
   { label: "Pacífico", anchor: "pacifico" },
-  { label: "Omakase", to: "/omakase" },
-  { label: "Kiku Libre", to: "/sushi-libre" },
+  { label: "Omakase", anchor: "omakase" },
+  { label: "Kiku Libre", anchor: "kiku-libre" },
   { label: "Itamae", anchor: "itamae" },
 ];
 
@@ -87,22 +79,13 @@ const NavbarV2 = () => {
           {/* Desktop links */}
           <ul className="hidden lg:flex items-center gap-11 ml-auto mr-10">
             {NAV_LINKS.map((link) => (
-              <li key={link.label}>
-                {link.to ? (
-                  <Link
-                    to={link.to}
-                    className="text-[11px] uppercase tracking-[0.24em] text-v2-text/80 hover:text-v2-champagne transition-colors duration-300"
-                  >
-                    {link.label}
-                  </Link>
-                ) : (
-                  <a
-                    href={anchorHref(link.anchor!)}
-                    className="text-[11px] uppercase tracking-[0.24em] text-v2-text/80 hover:text-v2-champagne transition-colors duration-300"
-                  >
-                    {link.label}
-                  </a>
-                )}
+              <li key={link.anchor}>
+                <a
+                  href={anchorHref(link.anchor)}
+                  className="text-[11px] uppercase tracking-[0.24em] text-v2-text/80 hover:text-v2-champagne transition-colors duration-300"
+                >
+                  {link.label}
+                </a>
               </li>
             ))}
             <li>
@@ -170,33 +153,20 @@ const NavbarV2 = () => {
       >
         <div className="h-full flex flex-col justify-center items-start px-10 gap-6">
           {NAV_LINKS.map((link, i) => (
-            <motion.div
-              key={link.label}
+            <motion.a
+              key={link.anchor}
+              href={anchorHref(link.anchor)}
+              onClick={() => setOpen(false)}
               initial={{ x: -20, opacity: 0 }}
               animate={{
                 x: open ? 0 : -20,
                 opacity: open ? 1 : 0,
               }}
               transition={{ delay: open ? 0.1 + i * 0.06 : 0, duration: 0.5 }}
+              className="font-display text-4xl text-v2-text hover:text-v2-champagne transition-colors"
             >
-              {link.to ? (
-                <Link
-                  to={link.to}
-                  onClick={() => setOpen(false)}
-                  className="font-display text-4xl text-v2-text hover:text-v2-champagne transition-colors"
-                >
-                  {link.label}
-                </Link>
-              ) : (
-                <a
-                  href={anchorHref(link.anchor!)}
-                  onClick={() => setOpen(false)}
-                  className="font-display text-4xl text-v2-text hover:text-v2-champagne transition-colors"
-                >
-                  {link.label}
-                </a>
-              )}
-            </motion.div>
+              {link.label}
+            </motion.a>
           ))}
 
           {/* Carta Salón */}

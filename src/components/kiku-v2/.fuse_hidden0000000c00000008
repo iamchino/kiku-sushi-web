@@ -5,7 +5,6 @@ import {
   Sparkles, AlertTriangle, Info, Plus, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
-import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 
@@ -58,7 +57,6 @@ const EXPERIENCIAS: Experiencia[] = [
     label: "Omakase",
     overline: "おまかせ",
     description: "Diez pasos de cocina en vivo en la barra del itamae.",
-    badge: "$65.000 p/p",
     dias: [5, 6],
     diasLabel: "Viernes y sábado",
   },
@@ -76,7 +74,6 @@ const EXPERIENCIAS: Experiencia[] = [
     label: "Umami del Sur",
     overline: "南の旨味",
     description: "Cortes argentinos con técnica japonesa.",
-    badge: "$39.500 p/p",
     dias: [2],
     diasLabel: "Martes",
   },
@@ -85,7 +82,6 @@ const EXPERIENCIAS: Experiencia[] = [
     label: "Pacífico y Patagonia",
     overline: "太平洋",
     description: "Sashimis y nigiris de pescado fresco.",
-    badge: "$39.500 p/p",
     dias: [2],
     diasLabel: "Martes",
   },
@@ -474,13 +470,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
   const today = new Date().toISOString().split("T")[0];
 
   // Experiencia
-  // Si la URL trae ?experiencia=..., la card llega pre-seleccionada
-  const [searchParams] = useSearchParams();
-  const experienciaParam = searchParams.get("experiencia");
-  const initialTipo: Experiencia["id"] | "" = EXPERIENCIAS.some((x) => x.id === experienciaParam)
-    ? (experienciaParam as Experiencia["id"])
-    : "";
-  const [tipo, setTipo] = useState<Experiencia["id"] | "">(initialTipo);
+  const [tipo, setTipo] = useState<Experiencia["id"] | "">("");
 
   // Fecha / hora / personas
   const [date, setDate] = useState(today);
@@ -724,42 +714,25 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
 
   // Aviso breve que explica cómo funciona la confirmación
   const renderAvisoConfirmacion = () => {
-    // Cubiertos: aplica a todas las experiencias menos Kiku Libre
-    const avisoCubiertos = tipo !== "kiku_libre" && (
-      <div className="mt-2.5 flex items-start gap-2.5 px-3.5 py-3 border border-v2-champagne/20 bg-v2-bg/50 text-[11.5px] v2-text-muted leading-relaxed">
-        <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-v2-champagne" />
-        <span>
-          A todas las experiencias —excepto Kiku Libre— se les agregan{" "}
-          <strong className="text-v2-text">$3.500 de cubiertos</strong>.
-        </span>
-      </div>
-    );
-
     if (requiereSeña) {
       return (
-        <>
-          <div className="mt-5 flex items-start gap-2.5 px-3.5 py-3 border border-v2-accent/40 bg-v2-accent/10 text-[11.5px] v2-text leading-relaxed">
-            <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-v2-accent" />
-            <span>
-              Te bloqueamos la mesa al enviar. Coordinamos la{" "}
-              <strong className="text-v2-text">seña por WhatsApp</strong> para asegurar el cupo.
-            </span>
-          </div>
-          {avisoCubiertos}
-        </>
+        <div className="mt-5 flex items-start gap-2.5 px-3.5 py-3 border border-v2-accent/40 bg-v2-accent/10 text-[11.5px] v2-text leading-relaxed">
+          <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-v2-accent" />
+          <span>
+            Te bloqueamos la mesa al enviar. Coordinamos la{" "}
+            <strong className="text-v2-text">seña por WhatsApp</strong> para asegurar el cupo.
+          </span>
+        </div>
       );
     }
     return (
-      <>
-        <div className="mt-5 flex items-start gap-2.5 px-3.5 py-3 border border-v2-champagne/20 bg-v2-bg/50 text-[11.5px] v2-text-muted leading-relaxed">
-          <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-v2-champagne" />
-          <span>
-            Los menús con precio fijo se aseguran con una{" "}
-            <strong className="text-v2-text">seña</strong> que coordinamos por WhatsApp.
-          </span>
-        </div>
-        {avisoCubiertos}
-      </>
+      <div className="mt-5 flex items-start gap-2.5 px-3.5 py-3 border border-v2-champagne/20 bg-v2-bg/50 text-[11.5px] v2-text-muted leading-relaxed">
+        <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-v2-champagne" />
+        <span>
+          Los menús con precio fijo se aseguran con una{" "}
+          <strong className="text-v2-text">seña</strong> que coordinamos por WhatsApp.
+        </span>
+      </div>
     );
   };
 
@@ -826,6 +799,15 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
           </button>
         );
       })}
+
+      {/* Especial de temporada — solo informativo */}
+      <div className="sm:col-span-2 flex items-start gap-2.5 px-4 py-3 border border-v2-accent/30 bg-v2-accent/5 text-[11.5px] v2-text-muted leading-relaxed">
+        <Sparkles className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-v2-accent" />
+        <span>
+          <strong className="text-v2-text">Especial Otoño — “Pasta Nikkei del Atlántico”.</strong>{" "}
+          Disponible solo los sábados. Consultanos al confirmar tu reserva.
+        </span>
+      </div>
     </div>
   );
 

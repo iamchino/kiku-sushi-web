@@ -96,7 +96,7 @@ const ItamaeSection = () => {
               transition={{ duration: 0.8, delay: 0.3 }}
               className="text-[10px] tracking-[0.4em] uppercase v2-text-accent mb-8 block"
             >
-              Master Sushi Chef
+              Noe Vera · Sushiwoman
             </motion.span>
 
             <motion.p
@@ -105,7 +105,7 @@ const ItamaeSection = () => {
               transition={{ duration: 1, delay: 0.4 }}
               className="text-base leading-[1.85] v2-text-muted mb-5"
             >
-              Su mirada es atenta, sus manos están entrenadas, y su respeto por el producto del día es absoluto. Diez años cortando, flameando y emplatando. Cada noche en la barra es una conversación silenciosa entre la itamae y quien se sienta enfrente.
+              Precisión japonesa, frescura peruana y espíritu rebelde. Formada en la tradición nikkei, nuestra sushiwoman Noe Vera es la mente detrás de Kiku Sushi. Su propuesta nace del respeto absoluto por el producto del día, en un entorno que cruza lo íntimo y familiar con la cultura underground.
             </motion.p>
 
             <motion.p
@@ -114,7 +114,7 @@ const ItamaeSection = () => {
               transition={{ duration: 1, delay: 0.55 }}
               className="text-base leading-[1.85] v2-text-muted"
             >
-              Formada en la tradición nikkei — esa fusión nacida del encuentro entre la precisión japonesa y los sabores latinos — domina el corte hosomaki, el flameado al carbón, y el equilibrio entre acidez y umami.
+              En Kiku conviven el cuidado y la entrega: el equipo diseña experiencias únicas en cada pieza y los comensales se entregan al juego de texturas de la casa. Al final, el alma del lugar es el reflejo de su fundadora: una fuerza femenina que cuida el detalle, pero que mantiene intacta su esencia punk.
             </motion.p>
 
             <motion.blockquote

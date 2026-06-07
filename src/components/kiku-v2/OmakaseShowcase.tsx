@@ -106,11 +106,18 @@ const OmakaseShowcase = () => {
           className="flex items-center gap-8 flex-wrap"
         >
           <Link
-            to="/reservar"
+            to="/reservar?experiencia=omakase"
             className="group bg-v2-champagne text-v2-bg px-10 py-[17px] text-[11px] uppercase tracking-[0.3em] font-medium hover:bg-v2-text hover:-translate-y-0.5 transition-all duration-400 inline-flex items-center gap-3"
           >
             Reservar Omakase
             <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+          </Link>
+          <Link
+            to="/omakase"
+            className="group inline-flex items-center gap-3 text-[11px] uppercase tracking-[0.3em] text-v2-champagne pb-1.5 border-b border-v2-champagne/24 hover:border-v2-champagne transition-all"
+          >
+            Conocer la experiencia
+            <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-400" />
           </Link>
           <span className="font-display text-xl text-v2-champagne whitespace-nowrap">$65.000 por persona</span>
         </motion.div>
