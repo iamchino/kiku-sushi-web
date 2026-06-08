@@ -77,7 +77,7 @@ const PASOS = [
   {
     n: "01",
     title: "Te sentás a la barra",
-    text: "Diez asientos frente a la tabla. La itamae te recibe con la mirada atenta y el producto del día ya seleccionado.",
+    text: "Seis asientos frente a la tabla. Nuestro itamae te recibe con la mirada atenta y el producto del día ya seleccionado.",
   },
   {
     n: "02",
@@ -284,9 +284,8 @@ const Omakase = () => {
             </Reveal>
             <Reveal delay={0.12}>
               <p className="text-base leading-[1.9] v2-text-muted mb-6">
-                Precisión japonesa, frescura peruana y espíritu rebelde. Nuestra
-                itamae te recibe con la mirada atenta, las manos entrenadas y un
-                respeto absoluto por el producto del día.
+                Nuestro equipo te recibe atento, con las manos entrenadas, y
+                el menú del día listo y pensado solamente para esta ocasión.
               </p>
               <p className="text-base leading-[1.9] v2-text-muted">
                 Cada omakase se diseña de forma única: según los ingredientes
@@ -302,7 +301,7 @@ const Omakase = () => {
             </Reveal>
           </div>
           <Reveal className="md:order-2 order-1">
-            <FramedImage src={omakase2} alt="La itamae de Kiku preparando una pieza en la barra" />
+            <FramedImage src={omakase2} alt="Nuestro itamae preparando una pieza en la barra" />
           </Reveal>
         </div>
       </section>

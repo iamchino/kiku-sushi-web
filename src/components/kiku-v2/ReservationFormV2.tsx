@@ -742,7 +742,8 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
             <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-v2-accent" />
             <span>
               Te bloqueamos la mesa al enviar. Coordinamos la{" "}
-              <strong className="text-v2-text">seña por WhatsApp</strong> para asegurar el cupo.
+              <strong className="text-v2-text">seña de $20.000 por persona</strong> por WhatsApp
+              para asegurar el cupo.
             </span>
           </div>
           {avisoCubiertos}
@@ -755,7 +756,8 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
           <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-v2-champagne" />
           <span>
             Los menús con precio fijo se aseguran con una{" "}
-            <strong className="text-v2-text">seña</strong> que coordinamos por WhatsApp.
+            <strong className="text-v2-text">seña de $20.000 por persona</strong> que
+            coordinamos por WhatsApp.
           </span>
         </div>
         {avisoCubiertos}

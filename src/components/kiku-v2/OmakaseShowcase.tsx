@@ -2,15 +2,12 @@ import { useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
-import ambiance from "@/assets/ambiance.webp";
+import omakaseSectionBg from "@/assets/omakase-section-bg.webp";
 
 /**
  * OmakaseShowcase — la estrella de Kiku.
  * Full-width, imagen de fondo con parallax, tipografía gigante,
- * líneas premium decorativas. CTA hacia /omakase (futura página).
- *
- * Cuando tengas la imagen/video definitivo del Omakase,
- * reemplazá `ambiance` por el asset nuevo.
+ * líneas premium decorativas. Fondo: OMAK1HERO (omakase-section-bg.webp).
  */
 const OmakaseShowcase = () => {
   const ref = useRef<HTMLElement>(null);
@@ -33,7 +30,7 @@ const OmakaseShowcase = () => {
       {/* BG image con parallax */}
       <motion.div style={{ y: bgY, scale: bgScale }} className="absolute inset-[-5%]">
         <img
-          src={ambiance}
+          src={omakaseSectionBg}
           alt="Barra del Omakase bajo luz violeta"
           className="w-full h-full object-cover"
           style={{ filter: "saturate(0.85) brightness(0.45)" }}

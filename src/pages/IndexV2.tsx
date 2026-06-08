@@ -8,7 +8,6 @@ import OmakaseShowcase from "@/components/kiku-v2/OmakaseShowcase";
 import EspecialesSection from "@/components/kiku-v2/EspecialesSection";
 import MenuPanel from "@/components/kiku-v2/MenuPanel";
 import ItamaeSection from "@/components/kiku-v2/ItamaeSection";
-import AboutSection from "@/components/kiku-v2/AboutSection";
 import ReservationFormV2 from "@/components/kiku-v2/ReservationFormV2";
 import TestimonialsCinema from "@/components/kiku-v2/TestimonialsCinema";
 import FooterV2 from "@/components/kiku-v2/FooterV2";
@@ -92,7 +91,6 @@ const IndexV2 = () => {
       />
 
       <ItamaeSection />
-      <AboutSection />
       <TestimonialsCinema />
       <ReservationFormV2 />
       <FooterV2 />
