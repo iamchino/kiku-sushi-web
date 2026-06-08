@@ -116,15 +116,6 @@ const ItamaeSection = () => {
             >
               En Kiku conviven el cuidado y la entrega: el equipo diseña experiencias únicas en cada pieza y los comensales se entregan al juego de texturas de la casa. Al final, el alma del lugar es el reflejo de su fundadora: una fuerza femenina que cuida el detalle, pero que mantiene intacta su esencia punk.
             </motion.p>
-
-            <motion.blockquote
-              initial={{ opacity: 0, x: -20 }}
-              animate={inView ? { opacity: 1, x: 0 } : {}}
-              transition={{ duration: 1, delay: 0.75 }}
-              className="border-l-2 border-v2-champagne pl-6 mt-9 font-display text-xl md:text-[22px] v2-text"
-            >
-              "No hay menú fijo. Hay confianza."
-            </motion.blockquote>
           </div>
         </div>
       </div>
