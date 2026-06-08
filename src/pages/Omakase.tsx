@@ -250,7 +250,7 @@ const Omakase = () => {
         </div>
       </section>
 
-      {/* ── LA FILOSOFÍA ── */}
+      {/* ── NUESTRA BARRA ── */}
       <section className="relative py-28 md:py-40 px-6 md:px-14 border-t border-v2-champagne/10 overflow-hidden">
         <div
           className="absolute inset-0 pointer-events-none"
@@ -259,41 +259,40 @@ const Omakase = () => {
               "radial-gradient(ellipse at 20% 30%, hsla(270, 50%, 50%, 0.10), transparent 55%)",
           }}
         />
-        <div className="max-w-[1320px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-14 md:gap-24 items-center">
+        <span
+          aria-hidden="true"
+          className="absolute top-6 left-0 font-jp pointer-events-none select-none leading-none"
+          style={{ fontSize: "clamp(180px, 24vw, 360px)", color: "hsla(41, 64%, 77%, 0.04)" }}
+        >
+          菊
+        </span>
+        <div className="max-w-[1320px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-14 md:gap-24 items-center relative">
           <div className="md:order-1 order-2">
             <Reveal>
               <span className="font-jp text-xs tracking-[0.45em] text-v2-champagne mb-6 block">
-                — 職人 · LA FILOSOFÍA —
+                — 菊 · EN KIKU —
               </span>
               <h2
                 className="font-display font-light leading-[0.95] tracking-[-0.02em] mb-8"
                 style={{ fontSize: "clamp(36px, 4.5vw, 64px)" }}
               >
-                Shokunin: el arte de{" "}
+                Nuestra barra es{" "}
                 <span className="font-normal text-v2-champagne">
-                  perfeccionar un oficio
+                  el corazón del local
                 </span>
               </h2>
             </Reveal>
             <Reveal delay={0.12}>
               <p className="text-base leading-[1.9] v2-text-muted mb-6">
-                En Japón existe una palabra para quien dedica su vida a un solo
-                oficio: shokunin. No es un trabajo — es una vocación. En Kiku,
-                esa palabra tiene nombre propio: Noe Vera.
-              </p>
-              <p className="text-base leading-[1.9] v2-text-muted mb-6">
-                Nuestra itamae se formó durante diez años en la tradición
-                nikkei: primero el arroz, después el corte, recién al final la
-                barra. Diez años cortando, flameando y emplatando antes de
-                pararse frente a vos. Porque en el omakase no hay dónde
-                esconderse — todo sucede a la vista, a un metro de tu plato.
+                Precisión japonesa, frescura peruana y espíritu rebelde. Nuestra
+                itamae te recibe con la mirada atenta, las manos entrenadas y un
+                respeto absoluto por el producto del día.
               </p>
               <p className="text-base leading-[1.9] v2-text-muted">
-                Y ahí está el secreto de nuestra barra: Noe no solo cocina.
-                Observa. Lee cada reacción, ajusta la temperatura del arroz, el
-                punto del corte, el ritmo de los pasos. Por eso ningún omakase
-                de Kiku se repite: el menú se escribe en tiempo real, entre sus
-                manos y tu mesa.
+                Cada omakase se diseña de forma única: según los ingredientes
+                más frescos, el clima y el momento, en un entorno que cruza lo
+                íntimo con la cultura underground. No hay decisiones que tomar.
+                Solo sentarte, confiar y dejarte sorprender.
               </p>
             </Reveal>
             <Reveal delay={0.2}>
@@ -304,47 +303,6 @@ const Omakase = () => {
           </div>
           <Reveal className="md:order-2 order-1">
             <FramedImage src={omakase2} alt="La itamae de Kiku preparando una pieza en la barra" />
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ── ASÍ TRABAJAMOS ── */}
-      <section className="relative py-28 md:py-40 px-6 md:px-14 border-t border-v2-champagne/10 overflow-hidden">
-        <span
-          aria-hidden="true"
-          className="absolute top-6 left-0 font-jp pointer-events-none select-none leading-none"
-          style={{ fontSize: "clamp(180px, 24vw, 360px)", color: "hsla(41, 64%, 77%, 0.04)" }}
-        >
-          菊
-        </span>
-        <div className="max-w-3xl mx-auto text-center relative">
-          <Reveal>
-            <span className="font-jp text-xs tracking-[0.45em] text-v2-champagne mb-6 block">
-              — 菊 · EN KIKU —
-            </span>
-            <h2
-              className="font-display font-light leading-[0.95] tracking-[-0.02em] mb-10"
-              style={{ fontSize: "clamp(36px, 4.5vw, 64px)" }}
-            >
-              Nuestra barra es{" "}
-              <span className="font-normal text-v2-champagne">
-                el corazón del local
-              </span>
-            </h2>
-          </Reveal>
-          <Reveal delay={0.12}>
-            <p className="text-base md:text-lg leading-[1.9] v2-text-muted mb-6">
-              Precisión japonesa, frescura peruana y espíritu rebelde. Nuestra
-              itamae te recibe con la mirada atenta, las manos entrenadas y un
-              respeto absoluto por el producto del día. Cada omakase se diseña
-              de forma única: según los ingredientes más frescos, el clima y el
-              momento, en un entorno que cruza lo íntimo con la cultura
-              underground.
-            </p>
-            <p className="text-base md:text-lg leading-[1.9] v2-text-muted">
-              No hay decisiones que tomar. Solo sentarte, confiar y dejarte
-              sorprender.
-            </p>
           </Reveal>
         </div>
       </section>

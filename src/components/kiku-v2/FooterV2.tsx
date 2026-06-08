@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { LogoLockup } from "./LogoMark";
 
 const FooterV2 = () => (
@@ -12,24 +13,56 @@ const FooterV2 = () => (
         </p>
       </div>
 
-      <FooterCol title="Visitanos" items={[
-        "Callao Bis 139",
-        "Rosario, Santa Fe",
-        "+341 15-276-4562",
-        "Mar–Dom · 20:00–00:00",
-      ]} />
+      <div>
+        <h4 className="font-body text-[10px] tracking-[0.3em] uppercase text-v2-champagne mb-5 font-medium">
+          Visitanos
+        </h4>
+        <ul className="text-[13px] v2-text-muted leading-[2] list-none">
+          <li>
+            <a
+              href="https://maps.app.goo.gl/WtTjUhcp9nQa7y9t6"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-v2-champagne transition-colors"
+            >
+              Callao Bis 139
+              <br />
+              Rosario, Santa Fe
+            </a>
+          </li>
+          <li>
+            <a
+              href="https://wa.me/5493412764562"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-v2-champagne transition-colors"
+            >
+              +54 9 341 276-4562
+            </a>
+          </li>
+          <li>Mar–Sáb · 20:00–01:00</li>
+        </ul>
+        <Link
+          to="/trabaja-con-nosotros"
+          className="font-body text-[10px] tracking-[0.3em] uppercase text-v2-champagne font-medium mt-6 inline-block hover:text-v2-text transition-colors"
+        >
+          Trabajá con nosotros
+        </Link>
+      </div>
 
       <FooterCol title="Explorar" items={[
-        { label: "Umami del Sur", href: "#umami" },
-        { label: "Pacífico y Patagonia", href: "#pacifico" },
-        { label: "Omakase", href: "#omakase" },
-        { label: "Kiku Libre", href: "#kiku-libre" },
+        { label: "Umami del Sur", href: "/#umami" },
+        { label: "Pacífico y Patagonia", href: "/#pacifico" },
+        { label: "Pasta Nikkei", href: "/#pasta-nikkei" },
+        { label: "Omakase", href: "/omakase" },
+        { label: "Kiku Libre", href: "/sushi-libre" },
+        { label: "Carta", href: "/carta" },
       ]} />
 
       <FooterCol title="Síguenos" items={[
-        { label: "Instagram", href: "#" },
-        { label: "Spotify · Kiku Sounds", href: "#" },
-        { label: "WhatsApp", href: "#" },
+        { label: "Instagram", href: "https://www.instagram.com/kikusushi.rosario", external: true },
+        { label: "Facebook", href: "https://www.facebook.com/profile.php?id=100067842387204&sk=about", external: true },
+        { label: "WhatsApp", href: "https://wa.me/5493412764562", external: true },
       ]} />
     </div>
 
@@ -40,7 +73,13 @@ const FooterV2 = () => (
   </footer>
 );
 
-interface ColItem { label: string; href: string }
+interface ColItem {
+  label: string;
+  href: string;
+  /** true = link externo (nueva pestaña) */
+  external?: boolean;
+}
+
 function FooterCol({ title, items }: { title: string; items: (string | ColItem)[] }) {
   return (
     <div>
@@ -50,9 +89,25 @@ function FooterCol({ title, items }: { title: string; items: (string | ColItem)[
       <ul className="text-[13px] v2-text-muted leading-[2] list-none">
         {items.map((item, i) => {
           if (typeof item === "string") return <li key={i}>{item}</li>;
+          if (item.external) {
+            return (
+              <li key={i}>
+                <a
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-v2-champagne transition-colors"
+                >
+                  {item.label}
+                </a>
+              </li>
+            );
+          }
           return (
             <li key={i}>
-              <a href={item.href} className="hover:v2-text transition-colors">{item.label}</a>
+              <Link to={item.href} className="hover:text-v2-champagne transition-colors">
+                {item.label}
+              </Link>
             </li>
           );
         })}

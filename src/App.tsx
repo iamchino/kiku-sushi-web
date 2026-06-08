@@ -11,6 +11,7 @@ import Pedidos from "./pages/Pedidos.tsx";
 import Carta from "./pages/Carta.tsx";
 import SushiLibre from "./pages/SushiLibre.tsx";
 import Omakase from "./pages/Omakase.tsx";
+import TrabajaConNosotros from "./pages/TrabajaConNosotros.tsx";
 import Reservar from "./pages/Reservar.tsx";
 import Pedir from "./pages/Pedir.tsx";
 
@@ -44,6 +45,7 @@ const App = () => (
           <Route path="/carta" element={<Carta />} />
           <Route path="/sushi-libre" element={<SushiLibre />} />
           <Route path="/omakase" element={<Omakase />} />
+          <Route path="/trabaja-con-nosotros" element={<TrabajaConNosotros />} />
           <Route path="/reservar" element={<Reservar />} />
           <Route path="/pedir" element={<Pedir />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
