@@ -1,9 +1,22 @@
 import { Link } from "react-router-dom";
 import { LogoLockup } from "./LogoMark";
+import footerBg from "@/assets/footer-bg.webp";
 
 const FooterV2 = () => (
-  <footer className="px-6 md:px-14 pt-24 pb-10 border-t border-v2-champagne/10 v2-bg-base">
-    <div className="max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr] gap-12 pb-16 border-b border-v2-champagne/10">
+  <footer className="relative overflow-hidden px-6 md:px-14 pt-24 pb-10 border-t border-v2-champagne/10 v2-bg-base">
+    {/* Fondo: fachada del local con neones */}
+    <div className="absolute inset-0" aria-hidden="true">
+      <img
+        src={footerBg}
+        alt=""
+        className="w-full h-full object-cover object-top"
+        style={{ filter: "saturate(0.95) brightness(0.4)" }}
+        loading="lazy"
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-v2-bg/95 via-v2-bg/75 to-v2-bg/90" />
+    </div>
+
+    <div className="relative z-10 max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr] gap-12 pb-16 border-b border-v2-champagne/10">
       <div>
         <div className="mb-5">
           <LogoLockup kanjiSize={44} />
@@ -66,7 +79,7 @@ const FooterV2 = () => (
       ]} />
     </div>
 
-    <div className="max-w-[1440px] mx-auto mt-8 flex flex-wrap justify-between items-center gap-3 text-[11px] v2-text-dim">
+    <div className="relative z-10 max-w-[1440px] mx-auto mt-8 flex flex-wrap justify-between items-center gap-3 text-[11px] v2-text-dim">
       <span>© {new Date().getFullYear()} Kiku Sushi · Todos los derechos reservados</span>
       <span className="font-jp text-v2-champagne/55">いただきます</span>
     </div>

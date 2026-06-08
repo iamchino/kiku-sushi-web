@@ -9,6 +9,7 @@ import { useLenisScroll } from "@/hooks/useLenisScroll";
 import omakaseHero from "@/assets/omakase-hero.webp";
 import omakase1 from "@/assets/omakase-1.webp";
 import omakase2 from "@/assets/omakase-2.webp";
+import omak2 from "@/assets/omak2.webp";
 
 /**
  * Omakase — la página de la experiencia estrella.
@@ -45,11 +46,23 @@ const Reveal = ({
   );
 };
 
-/** Imagen 4:5 con el marco fino + glow de la casa */
-const FramedImage = ({ src, alt }: { src: string; alt: string }) => (
+/** Imagen con el marco fino + glow de la casa (4:5 por defecto) */
+const FramedImage = ({
+  src,
+  alt,
+  aspect = "aspect-[4/5]",
+  position = "center",
+}: {
+  src: string;
+  alt: string;
+  /** clases tailwind de aspect-ratio, admite responsive */
+  aspect?: string;
+  /** object-position del recorte */
+  position?: string;
+}) => (
   <div className="relative">
     <div
-      className="relative overflow-hidden aspect-[4/5] border border-v2-champagne/15"
+      className={`relative overflow-hidden ${aspect} border border-v2-champagne/15`}
       style={{
         borderRadius: "28px",
         boxShadow:
@@ -60,7 +73,7 @@ const FramedImage = ({ src, alt }: { src: string; alt: string }) => (
         src={src}
         alt={alt}
         className="absolute inset-0 w-full h-full object-cover"
-        style={{ filter: "saturate(0.95) brightness(0.95)" }}
+        style={{ filter: "saturate(0.95) brightness(0.95)", objectPosition: position }}
         loading="lazy"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-v2-bg/30 to-transparent pointer-events-none" />
@@ -308,8 +321,8 @@ const Omakase = () => {
 
       {/* ── LA PROPUESTA (pasos) ── */}
       <section className="relative py-28 md:py-40 px-6 md:px-14 border-t border-v2-champagne/10">
-        <div className="max-w-4xl mx-auto">
-          <Reveal className="text-center mb-16 md:mb-20">
+        <div className="max-w-6xl mx-auto">
+          <Reveal className="text-center mb-14 md:mb-20">
             <span className="font-jp text-xs tracking-[0.45em] text-v2-champagne mb-6 block">
               — 十の手順 · LA PROPUESTA —
             </span>
@@ -322,40 +335,43 @@ const Omakase = () => {
             </h2>
           </Reveal>
 
-          <div className="relative">
-            {/* Línea vertical del recorrido */}
-            <div
-              aria-hidden="true"
-              className="absolute left-[19px] md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-v2-champagne/25 to-transparent"
-            />
-            <div className="space-y-14 md:space-y-20">
-              {PASOS.map((p, i) => (
-                <Reveal key={p.n} delay={i * 0.08}>
-                  <div
-                    className={`relative flex flex-col md:flex-row items-start gap-5 md:gap-0 ${
-                      i % 2 === 0 ? "" : "md:flex-row-reverse"
-                    }`}
-                  >
-                    {/* Nodo */}
-                    <span className="absolute left-[12px] md:left-1/2 md:-translate-x-1/2 top-1 w-4 h-4 rounded-full border border-v2-champagne/60 bg-v2-bg flex items-center justify-center">
-                      <span className="w-1.5 h-1.5 rounded-full bg-v2-champagne" />
-                    </span>
-                    <div
-                      className={`pl-12 md:pl-0 md:w-1/2 ${
-                        i % 2 === 0
-                          ? "md:pr-16 md:text-right"
-                          : "md:pl-16 md:text-left"
-                      }`}
-                    >
-                      <span className="font-display text-3xl text-v2-champagne/40 block mb-2">
-                        {p.n}
+          <div className="grid grid-cols-1 md:grid-cols-[5fr_7fr] gap-12 md:gap-20 items-start">
+            {/* Imagen — arriba en mobile, columna izquierda en desktop */}
+            <Reveal className="md:sticky md:top-28">
+              <FramedImage
+                src={omak2}
+                alt="Nigiris sobre hoja de bambú junto a whisky japonés, al cierre del omakase"
+                aspect="aspect-[4/3] md:aspect-[3/4]"
+                position="22% center"
+              />
+            </Reveal>
+
+            {/* Recorrido de pasos — riel a la izquierda */}
+            <div className="relative md:pt-2">
+              {/* Línea vertical del recorrido */}
+              <div
+                aria-hidden="true"
+                className="absolute left-[19px] top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-v2-champagne/25 to-transparent"
+              />
+              <div className="space-y-14 md:space-y-16">
+                {PASOS.map((p, i) => (
+                  <Reveal key={p.n} delay={i * 0.08}>
+                    <div className="relative flex items-start">
+                      {/* Nodo */}
+                      <span className="absolute left-[12px] top-1 w-4 h-4 rounded-full border border-v2-champagne/60 bg-v2-bg flex items-center justify-center">
+                        <span className="w-1.5 h-1.5 rounded-full bg-v2-champagne" />
                       </span>
-                      <h3 className="font-display text-2xl mb-3">{p.title}</h3>
-                      <p className="text-sm leading-[1.85] v2-text-muted">{p.text}</p>
+                      <div className="pl-12">
+                        <span className="font-display text-3xl text-v2-champagne/40 block mb-2">
+                          {p.n}
+                        </span>
+                        <h3 className="font-display text-2xl mb-3">{p.title}</h3>
+                        <p className="text-sm leading-[1.85] v2-text-muted">{p.text}</p>
+                      </div>
                     </div>
-                  </div>
-                </Reveal>
-              ))}
+                  </Reveal>
+                ))}
+              </div>
             </div>
           </div>
         </div>

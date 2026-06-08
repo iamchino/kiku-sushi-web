@@ -2,14 +2,15 @@ import { useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
-import omakaseSectionBg from "@/assets/omakase-section-bg.webp";
+import kikuLibreBg from "@/assets/kiku-libre-section-bg.webp";
 
 /**
- * OmakaseShowcase — la estrella de Kiku.
- * Full-width, imagen de fondo con parallax, tipografía gigante,
- * líneas premium decorativas. Fondo: OMAK1HERO (omakase-section-bg.webp).
+ * KikuLibreShowcase — sección full-width del Kiku Libre.
+ * Misma lógica que OmakaseShowcase (parallax + reveal) pero con la
+ * imagen menos apagada: el plato es el protagonista.
+ * Fondo: kiku libre.jpg (kiku-libre-section-bg.webp).
  */
-const OmakaseShowcase = () => {
+const KikuLibreShowcase = () => {
   const ref = useRef<HTMLElement>(null);
   const inViewRef = useRef<HTMLDivElement>(null);
   const inView = useInView(inViewRef, { once: true, margin: "-120px" });
@@ -24,35 +25,30 @@ const OmakaseShowcase = () => {
   return (
     <section
       ref={ref}
-      id="omakase"
+      id="kiku-libre"
       className="relative min-h-[92svh] md:min-h-screen flex items-center overflow-hidden v2-bg-base"
     >
-      {/* BG image con parallax */}
+      {/* BG image con parallax — menos difuminada que Omakase */}
       <motion.div style={{ y: bgY, scale: bgScale }} className="absolute inset-[-5%]">
         <img
-          src={omakaseSectionBg}
-          alt="Barra del Omakase bajo luz violeta"
+          src={kikuLibreBg}
+          alt="Plato de rolls y nigiris del Kiku Libre con flores comestibles"
           className="w-full h-full object-cover"
-          style={{ filter: "saturate(0.95) brightness(0.58)", objectPosition: "center 55%" }}
+          style={{ filter: "saturate(1) brightness(0.7)", objectPosition: "center 60%" }}
           loading="lazy"
         />
       </motion.div>
       {/* Overlay horizontal solo en desktop (texto a la izquierda) */}
-      <div className="absolute inset-0 hidden md:block bg-gradient-to-r from-v2-bg/80 via-v2-bg/40 to-v2-bg/20" />
-      {/* Overlay mobile: oscurecido parejo + degradé vertical más fuerte */}
-      <div className="absolute inset-0 md:hidden bg-v2-bg/45" />
-      <div className="absolute inset-0 bg-gradient-to-b from-v2-bg/70 via-transparent to-v2-bg/90" />
+      <div className="absolute inset-0 hidden md:block bg-gradient-to-r from-v2-bg/80 via-v2-bg/40 to-v2-bg/15" />
+      {/* Overlay mobile: oscurecido parejo más suave que Omakase */}
+      <div className="absolute inset-0 md:hidden bg-v2-bg/35" />
+      <div className="absolute inset-0 bg-gradient-to-b from-v2-bg/70 via-transparent to-v2-bg/85" />
 
       {/* Líneas premium decorativas */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-        {/* línea vertical izquierda */}
-        <div className="absolute left-6 md:left-14 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-v2-champagne/20 to-transparent" />
-        {/* línea horizontal superior */}
-        <div className="absolute top-[18%] left-6 md:left-14 right-[40%] h-px bg-gradient-to-r from-v2-champagne/25 to-transparent" />
-        {/* línea horizontal inferior */}
-        <div className="absolute bottom-[14%] left-[30%] right-6 md:right-14 h-px bg-gradient-to-l from-v2-champagne/25 to-transparent" />
-        {/* cruz fina esquina derecha */}
-        <div className="absolute top-[18%] right-[40%] w-px h-10 bg-v2-champagne/25 -translate-y-1/2" />
+        <div className="absolute right-6 md:right-14 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-v2-champagne/20 to-transparent" />
+        <div className="absolute top-[18%] right-6 md:right-14 left-[40%] h-px bg-gradient-to-l from-v2-champagne/25 to-transparent" />
+        <div className="absolute bottom-[14%] right-[30%] left-6 md:left-14 h-px bg-gradient-to-r from-v2-champagne/25 to-transparent" />
       </div>
 
       {/* CONTENT */}
@@ -66,7 +62,7 @@ const OmakaseShowcase = () => {
           transition={{ duration: 1 }}
           className="font-jp text-xs tracking-[0.45em] text-v2-champagne mb-8 block"
         >
-          — おまかせ —
+          — 食べ放題 —
         </motion.span>
 
         <motion.h2
@@ -74,56 +70,47 @@ const OmakaseShowcase = () => {
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 1.3, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
           className="font-display font-light leading-[0.88] tracking-[-0.03em] mb-10"
-          style={{ fontSize: "clamp(64px, 11vw, 170px)" }}
+          style={{ fontSize: "clamp(56px, 9vw, 140px)" }}
         >
-          <span className="font-normal v2-gradient-text">Omakase</span>
+          Kiku <span className="font-normal v2-gradient-text">Libre</span>
         </motion.h2>
 
         <motion.p
           initial={{ opacity: 0, y: 24 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 1, delay: 0.35 }}
-          className="font-display text-xl md:text-2xl v2-text-muted max-w-xl leading-[1.7] font-light mb-6"
-        >
-          "Me pongo en tus manos."
-        </motion.p>
-
-        <motion.p
-          initial={{ opacity: 0, y: 24 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 1, delay: 0.45 }}
           className="text-base leading-[1.85] v2-text-muted max-w-xl mb-12"
         >
-          Diez pasos de cocina en vivo en la barra del itamae. Sake o whisky al
-          cierre, entradas y sushi de autor, postre y bebida incluidos. No hay
-          menú fijo. Solo sentarte, confiar y dejarte sorprender.
+          Sushi ilimitado. Repetí todas las rondas que quieras. Empezás con un
+          escabeche de vegetales y langostinos ahumados, seguís con rondas de
+          diez piezas. No incluye bebida.
         </motion.p>
 
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 1, delay: 0.6 }}
+          transition={{ duration: 1, delay: 0.5 }}
           className="flex items-center gap-8 flex-wrap"
         >
           <Link
-            to="/reservar?experiencia=omakase"
+            to="/reservar?experiencia=kiku_libre"
             className="group bg-v2-champagne text-v2-bg px-10 py-[17px] text-[11px] uppercase tracking-[0.3em] font-medium hover:bg-v2-text hover:-translate-y-0.5 transition-all duration-400 inline-flex items-center gap-3"
           >
-            Reservar Omakase
+            Reservar Kiku Libre
             <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
           </Link>
           <Link
-            to="/omakase"
+            to="/sushi-libre"
             className="group inline-flex items-center gap-3 text-[11px] uppercase tracking-[0.3em] text-v2-champagne pb-1.5 border-b border-v2-champagne/24 hover:border-v2-champagne transition-all"
           >
-            Conocer la experiencia
+            Ver detalles
             <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-400" />
           </Link>
-          <span className="font-display text-xl text-v2-champagne whitespace-nowrap">$65.000 por persona</span>
+          <span className="font-display text-xl text-v2-champagne whitespace-nowrap">$53.500 por persona</span>
         </motion.div>
       </div>
     </section>
   );
 };
 
-export default OmakaseShowcase;
+export default KikuLibreShowcase;

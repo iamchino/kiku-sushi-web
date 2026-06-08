@@ -6,13 +6,11 @@ import NavbarV2 from "@/components/kiku-v2/NavbarV2";
 import HeroV2 from "@/components/kiku-v2/HeroV2";
 import OmakaseShowcase from "@/components/kiku-v2/OmakaseShowcase";
 import EspecialesSection from "@/components/kiku-v2/EspecialesSection";
-import MenuPanel from "@/components/kiku-v2/MenuPanel";
+import KikuLibreShowcase from "@/components/kiku-v2/KikuLibreShowcase";
 import ItamaeSection from "@/components/kiku-v2/ItamaeSection";
 import ReservationFormV2 from "@/components/kiku-v2/ReservationFormV2";
 import TestimonialsCinema from "@/components/kiku-v2/TestimonialsCinema";
 import FooterV2 from "@/components/kiku-v2/FooterV2";
-
-import signatureRoll from "@/assets/signature-roll.webp";
 
 /**
  * Index V2 — la nueva landing.
@@ -20,9 +18,9 @@ import signatureRoll from "@/assets/signature-roll.webp";
  *   Hero (video + parallax)
  *   Omakase — showcase full-width (la estrella)
  *   Especiales de Kiku — scroll horizontal (Umami del Sur · Pacífico y Patagonia · Kiku Otoñal)
- *   Kiku Libre
+ *   Kiku Libre — showcase full-width (foto propia de fondo)
  *   Itamae
- *   About — Te recibimos
+ *   Testimonios
  *   Form de reserva (Supabase + WhatsApp)
  *   Footer
  *
@@ -74,21 +72,8 @@ const IndexV2 = () => {
       {/* Especiales rotativos — scroll horizontal */}
       <EspecialesSection />
 
-      {/* Kiku Libre */}
-      <MenuPanel
-        id="kiku-libre"
-        number=""
-        overline="— 食べ放題 —"
-        title="Kiku"
-        titleAccent="Libre"
-        description="Sushi ilimitado. Repetí todas las rondas que quieras. Empezás con un escabeche de vegetales y langostinos ahumados, seguís con rondas de diez piezas. No incluye bebida."
-        precio="$53.500 por persona"
-        ctaLabel="Ver detalles"
-        ctaHref="/sushi-libre"
-        image={signatureRoll}
-        imageAlt="Roll signature del Kiku Libre"
-        imagePosition="right"
-      />
+      {/* Kiku Libre — showcase full-width con foto propia */}
+      <KikuLibreShowcase />
 
       <ItamaeSection />
       <TestimonialsCinema />
