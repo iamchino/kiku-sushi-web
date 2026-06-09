@@ -83,7 +83,7 @@ const KikuLibreShowcase = () => {
         >
           Sushi ilimitado. Repetí todas las rondas que quieras. Empezás con un
           escabeche de vegetales y langostinos ahumados, seguís con rondas de
-          diez piezas. No incluye bebida.
+          diez piezas. No incluye bebida, sashimis ni nigiris.
         </motion.p>
 
         <motion.div

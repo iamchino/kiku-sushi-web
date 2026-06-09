@@ -94,9 +94,8 @@ const OmakaseShowcase = () => {
           transition={{ duration: 1, delay: 0.45 }}
           className="text-base leading-[1.85] v2-text-muted max-w-xl mb-12"
         >
-          Diez pasos de cocina en vivo en la barra del itamae. Sake o whisky al
-          cierre, entradas y sushi de autor, postre y bebida incluidos. No hay
-          menú fijo. Solo sentarte, confiar y dejarte sorprender.
+          Cocina y sushi en vivo. No hay menú fijo. Solo sentarte, confiar y
+          dejarte sorprender.
         </motion.p>
 
         <motion.div

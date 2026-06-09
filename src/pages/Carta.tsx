@@ -230,7 +230,7 @@ const Carta = () => {
       <section className="px-6 pb-2">
         <div className="max-w-3xl mx-auto border-t border-v2-champagne/10 pt-8">
           <ul className="text-[11px] leading-[2] v2-text-dim space-y-1">
-            <li>· Servicio de mesa: $3.500 (carta de salón). En Kiku Libre ya está incluido.</li>
+            <li>· Servicio de mesa: $3.500 · solo a la carta de salón.</li>
             <li>· El consumo de sal en exceso es perjudicial para la salud.</li>
             <li>· Este establecimiento garantiza a cada comensal un vaso de agua potable de 375 ml sin cargo.</li>
           </ul>

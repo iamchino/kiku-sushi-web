@@ -262,14 +262,14 @@ const SushiLibre = () => {
               {
                 icon: Info,
                 iconClass: "text-v2-champagne",
-                title: "Servicio de mesa incluido",
-                desc: "En Kiku Libre el servicio de mesa ya está incluido en el precio.",
+                title: "Rondas ilimitadas",
+                desc: "Podés repetir todas las veces que quieras, siempre que la ronda anterior haya sido consumida en su totalidad.",
               },
               {
                 icon: Info,
                 iconClass: "text-v2-champagne",
-                title: "Rondas ilimitadas",
-                desc: "Podés repetir todas las veces que quieras, siempre que la ronda anterior haya sido consumida en su totalidad.",
+                title: "No incluye sashimis ni nigiris",
+                desc: "El Kiku Libre se sirve en rondas de rolls. Los sashimis y nigiris no están incluidos.",
               },
               {
                 icon: AlertTriangle,

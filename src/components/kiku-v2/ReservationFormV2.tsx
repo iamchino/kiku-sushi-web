@@ -724,13 +724,13 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
 
   // Aviso breve que explica cómo funciona la confirmación
   const renderAvisoConfirmacion = () => {
-    // Cubiertos: aplica a todas las experiencias menos Kiku Libre
-    const avisoCubiertos = tipo !== "kiku_libre" && (
+    // Servicio de mesa: aplica únicamente a la carta de salón
+    const avisoCubiertos = tipo === "carta_abierta" && (
       <div className="mt-2.5 flex items-start gap-2.5 px-3.5 py-3 border border-v2-champagne/20 bg-v2-bg/50 text-[11.5px] v2-text-muted leading-relaxed">
         <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-v2-champagne" />
         <span>
-          A todas las experiencias —excepto Kiku Libre— se les agregan{" "}
-          <strong className="text-v2-text">$3.500 de cubiertos</strong>.
+          Solo a la carta se agrega un{" "}
+          <strong className="text-v2-text">servicio de mesa de $3.500</strong>.
         </span>
       </div>
     );

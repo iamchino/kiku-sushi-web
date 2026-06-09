@@ -99,12 +99,6 @@ const ESPECIALES: Especial[] = [
     titleAccent: "del Atlántico",
     description:
       "Pasta negra con tinta de calamar, crema suave de miso, mejillones y langostinos salteados, terminada con aceite picante y crocante de almendras.",
-    pasos: [
-      {
-        label: "Maridaje",
-        text: "Incluye copa de Chac Chac Malbec Rosé · Viña Las Perdices.",
-      },
-    ],
     precio: "$30.000 por persona",
     firma: "— Chef Selection · Marcelo Castro —",
     image: pastaNikkeiImg,
@@ -275,7 +269,6 @@ const EspecialPanel = ({ especial, index }: { especial: Especial; index: number 
               {e.precio && (
                 <div className="flex flex-col">
                   <span className="font-display text-xl text-v2-champagne whitespace-nowrap">{e.precio}</span>
-                  <span className="text-[10px] v2-text-dim mt-1.5">No incluye servicio de mesa ($3.500)</span>
                 </div>
               )}
             </motion.div>
@@ -334,7 +327,7 @@ const EspecialesSection = () => {
       {/* Aclaraciones */}
       <div className="relative z-10 max-w-[1440px] mx-auto px-6 md:px-14 pb-20">
         <p className="text-[11px] leading-[2] v2-text-dim max-w-2xl border-t border-v2-champagne/10 pt-6">
-          Servicio de mesa: $3.500 en carta de salón · En Kiku Libre ya está incluido.
+          Servicio de mesa: $3.500 · solo a la carta de salón.
           El consumo de sal en exceso es perjudicial para la salud.
           Este establecimiento garantiza a cada comensal un vaso de agua potable de 375 ml sin cargo.
         </p>

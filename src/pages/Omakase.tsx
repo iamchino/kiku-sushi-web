@@ -88,22 +88,14 @@ const FramedImage = ({
 
 const PASOS = [
   {
-    n: "01",
     title: "Te sentás a la barra",
-    text: "Seis asientos frente a la tabla. Nuestro itamae te recibe con la mirada atenta y el producto del día ya seleccionado.",
+    text: "Seis asientos frente a la tabla. Te recibimos con una bebida de cortesía, mientras preparamos el menú pensado para ese día. No hay dos omakase iguales.",
   },
   {
-    n: "02",
-    title: "Entradas y sushi delux en 10 pasos",
-    text: "Cada paso se crea en el momento, según los ingredientes más frescos, el clima y la noche. No hay dos omakase iguales.",
+    title: "Entradas y sushi delux",
+    text: "Cada paso creado y pensado en conjunto con nuestro chef y nuestro itamae: creaciones de autor que expresan la esencia y el arte de nuestra cocina.",
   },
   {
-    n: "03",
-    title: "Tu bebida, incluida",
-    text: "Copa de vino, cerveza Corona o Heineken, o gaseosa. Lo que mejor acompañe tu recorrido.",
-  },
-  {
-    n: "04",
     title: "Postre y cierre ceremonial",
     text: "Al finalizar el servicio, una medida de whisky o sake japonés de nuestra barra de sushi. El punto final del ritual.",
   },
@@ -324,14 +316,14 @@ const Omakase = () => {
         <div className="max-w-6xl mx-auto">
           <Reveal className="text-center mb-14 md:mb-20">
             <span className="font-jp text-xs tracking-[0.45em] text-v2-champagne mb-6 block">
-              — 十の手順 · LA PROPUESTA —
+              — 菊 · LA PROPUESTA —
             </span>
             <h2
               className="font-display font-light leading-[0.95] tracking-[-0.02em]"
               style={{ fontSize: "clamp(36px, 4.5vw, 64px)" }}
             >
               Una noche,{" "}
-              <span className="font-normal text-v2-champagne">diez pasos</span>
+              <span className="font-normal text-v2-champagne">una experiencia</span>
             </h2>
           </Reveal>
 
@@ -355,15 +347,15 @@ const Omakase = () => {
               />
               <div className="space-y-14 md:space-y-16">
                 {PASOS.map((p, i) => (
-                  <Reveal key={p.n} delay={i * 0.08}>
+                  <Reveal key={p.title} delay={i * 0.08}>
                     <div className="relative flex items-start">
                       {/* Nodo */}
                       <span className="absolute left-[12px] top-1 w-4 h-4 rounded-full border border-v2-champagne/60 bg-v2-bg flex items-center justify-center">
                         <span className="w-1.5 h-1.5 rounded-full bg-v2-champagne" />
                       </span>
                       <div className="pl-12">
-                        <span className="font-display text-3xl text-v2-champagne/40 block mb-2">
-                          {p.n}
+                        <span className="font-jp text-3xl text-v2-champagne/40 block mb-2">
+                          菊
                         </span>
                         <h3 className="font-display text-2xl mb-3">{p.title}</h3>
                         <p className="text-sm leading-[1.85] v2-text-muted">{p.text}</p>
@@ -408,8 +400,7 @@ const Omakase = () => {
                 Efectivo o transferencia · Consultar por otro medio de pago
               </p>
               <p className="text-[11px] v2-text-dim">
-                Viernes y sábado · Hasta 6 personas por reserva · No incluye
-                servicio de mesa ($3.500)
+                Viernes y sábado · Hasta 6 personas por reserva
               </p>
             </div>
           </Reveal>

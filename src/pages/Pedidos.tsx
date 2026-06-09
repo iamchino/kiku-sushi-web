@@ -312,7 +312,7 @@ const Pedidos = () => {
                 </div>
                 <h3 className="font-display text-2xl text-v2-text mb-2">Delivery</h3>
                 <p className="text-sm v2-text-muted mb-1">Lo enviamos a tu domicilio</p>
-                <p className="text-xs text-v2-champagne">Costo de envío: $3.500</p>
+                <p className="text-xs text-v2-champagne">Costo de envío: $3.500 según distancia</p>
               </button>
 
               <button
