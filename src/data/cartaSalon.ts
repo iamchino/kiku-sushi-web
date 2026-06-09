@@ -15,6 +15,10 @@ export interface CartaItem {
   image?: string
   category: string
   badge?: string
+  picante?: number          // 0-3 (1 Leve · 2 Medio · 3 Muy Picante)
+  vegano?: boolean
+  vegetariano?: boolean
+  sinTacc?: boolean
 }
 
 export interface CartaSection {
@@ -29,7 +33,7 @@ export async function fetchCartaFromSheet(): Promise<CartaSection[]> {
   try {
     const { data, error } = await supabase
       .from('menu_items')
-      .select('id, categoria, subtitulo, nombre, descripcion, precio, imagen_url, etiqueta')
+      .select('id, categoria, subtitulo, nombre, descripcion, precio, imagen_url, etiqueta, picante, vegano, vegetariano, sin_tacc')
       .eq('tipo', 'carta')
       .eq('activo', true)
       .order('orden', { ascending: true })
@@ -74,6 +78,10 @@ function groupToSections(rows: any[]): CartaSection[] {
       image: row.imagen_url || undefined,
       category: row.categoria,
       badge: row.etiqueta || undefined,
+      picante: row.picante ?? 0,
+      vegano: !!row.vegano,
+      vegetariano: !!row.vegetariano,
+      sinTacc: !!row.sin_tacc,
     })
   })
 

@@ -16,6 +16,11 @@ export interface CatalogProduct {
   image?: string
   category: string
   badge?: string
+  /** 0 = no pica · 1 = leve · 2 = medio · 3 = muy picante */
+  picante?: number
+  vegano?: boolean
+  vegetariano?: boolean
+  sinTacc?: boolean
 }
 
 export interface CatalogCategory {
@@ -30,7 +35,7 @@ export async function fetchCatalogFromSheet(): Promise<CatalogCategory[]> {
   try {
     const { data, error } = await supabase
       .from('menu_items')
-      .select('id, categoria, subtitulo, nombre, descripcion, precio, imagen_url, etiqueta')
+      .select('id, categoria, subtitulo, nombre, descripcion, precio, imagen_url, etiqueta, picante, vegano, vegetariano, sin_tacc')
       .eq('tipo', 'delivery')
       .eq('activo', true)
       .order('orden', { ascending: true })
@@ -66,6 +71,10 @@ function groupToCategories(rows: any[]): CatalogCategory[] {
       image: row.imagen_url || undefined,
       category: row.categoria,
       badge: row.etiqueta || undefined,
+      picante: row.picante ?? 0,
+      vegano: !!row.vegano,
+      vegetariano: !!row.vegetariano,
+      sinTacc: !!row.sin_tacc,
     })
   })
 
@@ -106,14 +115,14 @@ export const fallbackData: CatalogCategory[] = [
     ],
   },
   {
-    name: 'Rollos de Sushi',
+    name: 'Rolls de Sushi',
     subtitle: 'Presentaciones de 5, 8 y 9 piezas',
     products: [
-      { id: 'ebi-roll', name: 'Ebi Roll', description: 'Salmón, queso, palta y langostinos. Salsa acevichada y huevas.', price: '5p: $12.500 / 9p: $23.200', category: 'Rollos de Sushi', badge: 'Popular' },
-      { id: 'philadelphia-roll', name: 'Philadelphia Roll', description: 'Salmón y queso. Cubierto de sésamo blanco.', price: '5p: $12.800 / 9p: $22.200', category: 'Rollos de Sushi' },
-      { id: 'ahumado-roll', name: 'Ahumado Roll', description: 'Salmón ahumado, palta y queso. Salsa de sésamo.', price: '5p: $13.200 / 9p: $22.900', category: 'Rollos de Sushi' },
-      { id: 'new-york-roll', name: 'New York Roll', description: 'Salmón y palta. Cubierto de sésamo negro.', price: '5p: $13.300 / 9p: $23.300', category: 'Rollos de Sushi' },
-      { id: 'nikkei-roll', name: 'Nikkei Roll', description: 'Langostinos furai y palta. Coronado de tartar de pulpo.', price: '5p: $14.900 / 9p: $27.800', category: 'Rollos de Sushi', badge: 'Premium' },
+      { id: 'ebi-roll', name: 'Ebi Roll', description: 'Salmón, queso, palta y langostinos. Salsa acevichada y huevas.', price: '5p: $12.500 / 9p: $23.200', category: 'Rolls de Sushi', badge: 'Popular' },
+      { id: 'philadelphia-roll', name: 'Philadelphia Roll', description: 'Salmón y queso. Cubierto de sésamo blanco.', price: '5p: $12.800 / 9p: $22.200', category: 'Rolls de Sushi' },
+      { id: 'ahumado-roll', name: 'Ahumado Roll', description: 'Salmón ahumado, palta y queso. Salsa de sésamo.', price: '5p: $13.200 / 9p: $22.900', category: 'Rolls de Sushi' },
+      { id: 'new-york-roll', name: 'New York Roll', description: 'Salmón y palta. Cubierto de sésamo negro.', price: '5p: $13.300 / 9p: $23.300', category: 'Rolls de Sushi' },
+      { id: 'nikkei-roll', name: 'Nikkei Roll', description: 'Langostinos furai y palta. Coronado de tartar de pulpo.', price: '5p: $14.900 / 9p: $27.800', category: 'Rolls de Sushi', badge: 'Premium' },
     ],
   },
   {

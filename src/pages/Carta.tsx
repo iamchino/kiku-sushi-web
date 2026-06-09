@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Search, Loader2, UtensilsCrossed, X } from "lucide-react";
+import { Search, Loader2, UtensilsCrossed, X, Flame, Leaf, Sprout, WheatOff } from "lucide-react";
 import NavbarV2 from "@/components/kiku-v2/NavbarV2";
 import FooterV2 from "@/components/kiku-v2/FooterV2";
 import { fallbackCartaData, fetchCartaFromSheet, type CartaSection, type CartaItem } from "@/data/cartaSalon";
@@ -183,11 +183,7 @@ const Carta = () => {
                             loading="lazy"
                           />
                         </button>
-                      ) : (
-                        <div className="w-20 h-20 md:w-24 md:h-24 rounded-lg shrink-0 v2-bg-card border border-v2-champagne/10 flex items-center justify-center">
-                          <span className="font-jp text-2xl text-v2-champagne/25">菊</span>
-                        </div>
-                      )}
+                      ) : null}
 
                       {/* Content */}
                       <div className="flex-1 min-w-0">
@@ -200,6 +196,40 @@ const Carta = () => {
                               {item.badge && (
                                 <span className="px-2 py-0.5 rounded-full border border-v2-champagne/30 text-v2-champagne text-[9px] uppercase tracking-widest font-semibold">
                                   {item.badge}
+                                </span>
+                              )}
+                              {(item.picante || item.vegano || item.vegetariano || item.sinTacc) && (
+                                <span className="flex items-center gap-1.5">
+                                  {item.picante ? (
+                                    <span
+                                      className="flex items-center"
+                                      title={`Picante ${item.picante === 1 ? "leve" : item.picante === 2 ? "medio" : "muy picante"}`}
+                                      aria-label={`Picante ${item.picante === 1 ? "leve" : item.picante === 2 ? "medio" : "muy picante"}`}
+                                    >
+                                      {Array.from({ length: item.picante }).map((_, i) => (
+                                        <Flame key={i} className="w-3.5 h-3.5 text-red-500" fill="currentColor" />
+                                      ))}
+                                    </span>
+                                  ) : null}
+                                  {item.vegano && (
+                                    <span title="Vegano" aria-label="Vegano">
+                                      <Sprout className="w-3.5 h-3.5 text-emerald-500" />
+                                    </span>
+                                  )}
+                                  {item.vegetariano && !item.vegano && (
+                                    <span title="Vegetariano" aria-label="Vegetariano">
+                                      <Leaf className="w-3.5 h-3.5 text-emerald-500" />
+                                    </span>
+                                  )}
+                                  {item.sinTacc && (
+                                    <span
+                                      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border border-amber-400/40 text-amber-300 text-[8px] uppercase tracking-wider"
+                                      title="Sin TACC"
+                                      aria-label="Sin TACC"
+                                    >
+                                      <WheatOff className="w-3 h-3" /> Sin TACC
+                                    </span>
+                                  )}
                                 </span>
                               )}
                             </div>

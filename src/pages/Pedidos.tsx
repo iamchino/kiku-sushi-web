@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { ShoppingBag, Search, Truck, Store, Plus, Minus, Trash2, X, Loader2, CheckCircle2, ChevronRight, ArrowLeft } from "lucide-react";
+import { ShoppingBag, Search, Truck, Store, Plus, Minus, Trash2, X, Loader2, CheckCircle2, ChevronRight, ArrowLeft, Flame, Sprout, Leaf, WheatOff } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import NavbarV2 from "@/components/kiku-v2/NavbarV2";
 import { fallbackData, fetchCatalogFromSheet, type CatalogProduct, type CatalogCategory } from "@/data/catalog";
@@ -441,31 +441,123 @@ const Pedidos = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {cat.products.map((product) => {
                   const inCart = cart.find((i) => i.product.id === product.id);
+
+                  // Iconitos veggie / vegano / vegetariano / sin TACC (igual que la carta)
+                  const vegBadges =
+                    product.picante || product.vegano || product.vegetariano || product.sinTacc ? (
+                      <span className="flex items-center gap-1.5">
+                        {product.picante ? (
+                          <span
+                            className="flex items-center"
+                            title={`Picante ${product.picante === 1 ? "leve" : product.picante === 2 ? "medio" : "muy picante"}`}
+                            aria-label={`Picante ${product.picante === 1 ? "leve" : product.picante === 2 ? "medio" : "muy picante"}`}
+                          >
+                            {Array.from({ length: product.picante }).map((_, i) => (
+                              <Flame key={i} className="w-3.5 h-3.5 text-red-500" fill="currentColor" />
+                            ))}
+                          </span>
+                        ) : null}
+                        {product.vegano && (
+                          <span title="Vegano" aria-label="Vegano">
+                            <Sprout className="w-3.5 h-3.5 text-emerald-500" />
+                          </span>
+                        )}
+                        {product.vegetariano && !product.vegano && (
+                          <span title="Vegetariano" aria-label="Vegetariano">
+                            <Leaf className="w-3.5 h-3.5 text-emerald-500" />
+                          </span>
+                        )}
+                        {product.sinTacc && (
+                          <span
+                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border border-amber-400/40 text-amber-300 text-[8px] uppercase tracking-wider"
+                            title="Sin TACC"
+                            aria-label="Sin TACC"
+                          >
+                            <WheatOff className="w-3 h-3" /> Sin TACC
+                          </span>
+                        )}
+                      </span>
+                    ) : null;
+
+                  // Controles de cantidad / agregar (compartidos entre tarjeta y lista)
+                  const qtyControls = inCart ? (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => updateQuantity(product.id, -1)}
+                        className="w-7 h-7 rounded-full border border-v2-champagne/25 flex items-center justify-center text-v2-text-muted hover:text-v2-text hover:border-v2-champagne/50 transition-colors"
+                      >
+                        <Minus className="w-3 h-3" />
+                      </button>
+                      <span className="text-sm font-semibold w-5 text-center text-v2-text">
+                        {inCart.quantity}
+                      </span>
+                      <button
+                        onClick={() => addToCart(product)}
+                        className="w-7 h-7 rounded-full bg-v2-champagne flex items-center justify-center text-v2-bg hover:bg-v2-text transition-colors"
+                      >
+                        <Plus className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => addToCart(product)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-v2-champagne/40 text-xs text-v2-champagne hover:bg-v2-champagne hover:text-v2-bg hover:border-transparent transition-all whitespace-nowrap"
+                    >
+                      <Plus className="w-3 h-3" /> Agregar
+                    </button>
+                  );
+
+                  // Sin foto → modo lista (fila a todo el ancho), tal cual la carta
+                  if (!product.image) {
+                    return (
+                      <article
+                        key={product.id}
+                        className="group relative col-span-full v2-bg-card border border-v2-champagne/12 rounded-xl px-5 py-4 hover:border-v2-champagne/40 transition-all duration-300 flex items-center gap-4"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-display text-lg text-v2-text">{product.name}</h3>
+                            {product.badge && (
+                              <span className="px-2 py-0.5 rounded-full border border-v2-champagne/30 text-v2-champagne text-[9px] uppercase tracking-widest font-semibold">
+                                {product.badge}
+                              </span>
+                            )}
+                            {vegBadges}
+                          </div>
+                          {product.description && (
+                            <p className="text-xs v2-text-muted leading-relaxed mt-1 max-w-xl">
+                              {product.description}
+                            </p>
+                          )}
+                        </div>
+                        <span className="text-base font-display text-v2-champagne whitespace-nowrap shrink-0">
+                          {formatPrice(product.price)}
+                        </span>
+                        <div className="shrink-0">{qtyControls}</div>
+                      </article>
+                    );
+                  }
+
+                  // Con foto → tarjeta
                   return (
                     <article
                       key={product.id}
                       className="group relative v2-bg-card border border-v2-champagne/12 rounded-2xl p-5 hover:border-v2-champagne/40 transition-all duration-500 overflow-hidden"
                     >
                       <div className="relative flex flex-col h-full">
-                        {product.image ? (
-                          <button
-                            type="button"
-                            onClick={() => setZoomProduct(product)}
-                            className="block w-full mb-4 rounded-xl overflow-hidden cursor-zoom-in"
-                            aria-label={`Ampliar imagen de ${product.name}`}
-                          >
-                            <img
-                              src={product.image}
-                              alt={product.name}
-                              className="w-full h-40 object-cover transition-transform duration-500 group-hover:scale-105"
-                              loading="lazy"
-                            />
-                          </button>
-                        ) : (
-                          <div className="w-full h-40 rounded-xl mb-4 v2-bg-base border border-v2-champagne/10 flex items-center justify-center">
-                            <span className="font-jp text-3xl text-v2-champagne/25">菊</span>
-                          </div>
-                        )}
+                        <button
+                          type="button"
+                          onClick={() => setZoomProduct(product)}
+                          className="block w-full mb-4 rounded-xl overflow-hidden cursor-zoom-in"
+                          aria-label={`Ampliar imagen de ${product.name}`}
+                        >
+                          <img
+                            src={product.image}
+                            alt={product.name}
+                            className="w-full h-40 object-cover transition-transform duration-500 group-hover:scale-105"
+                            loading="lazy"
+                          />
+                        </button>
 
                         {product.badge && (
                           <span className="absolute top-3 right-3 px-2.5 py-0.5 rounded-full border border-v2-champagne/30 text-v2-champagne text-[10px] uppercase tracking-wider font-semibold bg-v2-bg/60">
@@ -473,7 +565,10 @@ const Pedidos = () => {
                           </span>
                         )}
 
-                        <h3 className="font-display text-xl text-v2-text mb-1">{product.name}</h3>
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <h3 className="font-display text-xl text-v2-text">{product.name}</h3>
+                          {vegBadges}
+                        </div>
                         <p className="text-xs v2-text-muted leading-relaxed mb-4 flex-1">
                           {product.description}
                         </p>
@@ -482,33 +577,7 @@ const Pedidos = () => {
                           <span className="text-base font-display text-v2-champagne">
                             {formatPrice(product.price)}
                           </span>
-
-                          {inCart ? (
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => updateQuantity(product.id, -1)}
-                                className="w-7 h-7 rounded-full border border-v2-champagne/25 flex items-center justify-center text-v2-text-muted hover:text-v2-text hover:border-v2-champagne/50 transition-colors"
-                              >
-                                <Minus className="w-3 h-3" />
-                              </button>
-                              <span className="text-sm font-semibold w-5 text-center text-v2-text">
-                                {inCart.quantity}
-                              </span>
-                              <button
-                                onClick={() => addToCart(product)}
-                                className="w-7 h-7 rounded-full bg-v2-champagne flex items-center justify-center text-v2-bg hover:bg-v2-text transition-colors"
-                              >
-                                <Plus className="w-3 h-3" />
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() => addToCart(product)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-v2-champagne/40 text-xs text-v2-champagne hover:bg-v2-champagne hover:text-v2-bg hover:border-transparent transition-all"
-                            >
-                              <Plus className="w-3 h-3" /> Agregar
-                            </button>
-                          )}
+                          {qtyControls}
                         </div>
                       </div>
                     </article>

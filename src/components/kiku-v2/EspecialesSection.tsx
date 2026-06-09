@@ -52,11 +52,15 @@ const ESPECIALES: Especial[] = [
     pasos: [
       {
         label: "Entrada",
-        text: "Ostras gratinadas en emulsión de manteca y lima, parmesano gratinado. Maridaje: copa de Albariño · Viñas Las Perdices.",
+        text: "Ostras gratinadas en emulsión de manteca, lima y parmesano.",
       },
       {
         label: "Principal",
-        text: "15 piezas de autor: rollo de centolla con mayo nipona, maki de vieiras con emulsión cítrica y ebi furai con crocante de boniato. Maridaje: copa de Riesling · Viñas Las Perdices.",
+        text: "15 piezas de autor. Centolla roll: shiromi furai y palta, coronado con centolla y mayo nipona. Maki de vieiras: salmón, rúcula y pepino en juliana, coronado de tartar de vieiras y emulsión cítrica. Ebi furai roll: langostinos furai y queso crema, chimi nipón, coronado con crocante de boniato.",
+      },
+      {
+        label: "Maridaje",
+        text: "Albariño y Riesling de Viña las Perdices.",
       },
     ],
     precio: "$39.500 por persona",
@@ -79,11 +83,11 @@ const ESPECIALES: Especial[] = [
       },
       {
         label: "Principal",
-        text: "15 piezas: huancaina roll de langostinos furai, maguro roll de atún rojo con salsa brava y ceviche roll coronado con ceviche confitado de langostinos australes.",
+        text: "15 piezas de sushi. Huancaina roll: langostinos furai y palta, semicubierto de salmón, salsa huancaína y polvo de aceituna. Maguro roll: tartar de atún rojo y paltas selladas, semicubierto de salmón, salsa brava. Ceviche roll: langostinos furai y queso crema, coronado con ceviche confitado de langostinos australes y pesca blanca, con notas cítricas.",
       },
       {
         label: "Maridaje",
-        text: "By Viñas Las Perdices: Albariño y Riesling.",
+        text: "Albariño y Riesling de Viña las Perdices.",
       },
     ],
     precio: "$39.500 por persona",
