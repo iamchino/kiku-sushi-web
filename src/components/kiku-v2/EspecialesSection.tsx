@@ -17,9 +17,18 @@ import pastaNikkeiImg from "@/assets/pasta-nikkei.webp";
  * Los especiales rotan por temporada: editá el array ESPECIALES.
  */
 
+interface RollItem {
+  /** Nombre del roll, ej: "Centolla roll" */
+  roll: string;
+  /** Descripción del roll */
+  detalle: string;
+}
+
 interface Paso {
   label: string;
   text: string;
+  /** Si el paso es un combo, lista de rolls que lo componen */
+  items?: RollItem[];
 }
 
 interface Especial {
@@ -56,7 +65,22 @@ const ESPECIALES: Especial[] = [
       },
       {
         label: "Principal",
-        text: "15 piezas de autor. Centolla roll: shiromi furai y palta, coronado con centolla y mayo nipona. Maki de vieiras: salmón, rúcula y pepino en juliana, coronado de tartar de vieiras y emulsión cítrica. Ebi furai roll: langostinos furai y queso crema, chimi nipón, coronado con crocante de boniato.",
+        text: "15 piezas de autor.",
+        items: [
+          {
+            roll: "Centolla roll",
+            detalle: "shiromi furai y palta, coronado con centolla y mayo nipona.",
+          },
+          {
+            roll: "Maki de vieiras",
+            detalle:
+              "salmón, rúcula y pepino en juliana, coronado de tartar de vieiras y emulsión cítrica.",
+          },
+          {
+            roll: "Ebi furai roll",
+            detalle: "langostinos furai y queso crema, chimi nipón, coronado con crocante de boniato.",
+          },
+        ],
       },
       {
         label: "Maridaje",
@@ -83,7 +107,23 @@ const ESPECIALES: Especial[] = [
       },
       {
         label: "Principal",
-        text: "15 piezas de sushi. Huancaina roll: langostinos furai y palta, semicubierto de salmón, salsa huancaína y polvo de aceituna. Maguro roll: tartar de atún rojo y paltas selladas, semicubierto de salmón, salsa brava. Ceviche roll: langostinos furai y queso crema, coronado con ceviche confitado de langostinos australes y pesca blanca, con notas cítricas.",
+        text: "15 piezas de sushi.",
+        items: [
+          {
+            roll: "Huancaína roll",
+            detalle:
+              "langostinos furai y palta, semicubierto de salmón, salsa huancaína y polvo de aceituna.",
+          },
+          {
+            roll: "Maguro roll",
+            detalle: "tartar de atún rojo y paltas selladas, semicubierto de salmón, salsa brava.",
+          },
+          {
+            roll: "Ceviche roll",
+            detalle:
+              "langostinos furai y queso crema, coronado con ceviche confitado de langostinos australes y pesca blanca, con notas cítricas.",
+          },
+        ],
       },
       {
         label: "Maridaje",
@@ -104,7 +144,6 @@ const ESPECIALES: Especial[] = [
     description:
       "Pasta negra con tinta de calamar, crema suave de miso, mejillones y langostinos salteados, terminada con aceite picante y crocante de almendras.",
     precio: "$30.000 por persona",
-    firma: "— Chef Selection · Marcelo Castro —",
     image: pastaNikkeiImg,
     imageAlt: "Pasta Nikkei del Atlántico — pasta negra con mejillones y langostinos",
   },
@@ -240,7 +279,19 @@ const EspecialPanel = ({ especial, index }: { especial: Especial; index: number 
                     <span className="text-[10px] tracking-[0.3em] uppercase text-v2-champagne/70 pt-1">
                       {p.label}
                     </span>
-                    <p className="text-sm leading-[1.8] v2-text-muted">{p.text}</p>
+                    <div>
+                      <p className="text-sm leading-[1.8] v2-text-muted">{p.text}</p>
+                      {p.items && (
+                        <ul className="mt-2.5 space-y-2 list-disc pl-4 marker:text-v2-champagne/50">
+                          {p.items.map((it) => (
+                            <li key={it.roll} className="text-sm leading-[1.75] v2-text-muted">
+                              <span className="text-v2-champagne/90 font-medium">{it.roll}:</span>{" "}
+                              {it.detalle}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
                   </div>
                 ))}
               </motion.div>

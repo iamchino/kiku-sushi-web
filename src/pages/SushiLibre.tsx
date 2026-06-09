@@ -150,7 +150,7 @@ const SushiLibre = () => {
               {
                 step: "02",
                 title: "Rondas de 10 piezas",
-                desc: "Variedades Fusion y Exotic. Repetí todas las veces que quieras.",
+                desc: "Variedades Kiku, Fusión y Exotic. Repetí todas las veces que quieras.",
               },
               {
                 step: "03",
