@@ -242,7 +242,7 @@ const Carta = () => {
 
                           {/* Price */}
                           {item.price && (
-                            <span className="text-base md:text-lg text-v2-champagne whitespace-nowrap pt-1 font-display shrink-0">
+                            <span className="text-2xl md:text-3xl font-display font-medium tracking-tight text-v2-champagne whitespace-nowrap pt-1 shrink-0">
                               {item.price}
                             </span>
                           )}
@@ -319,7 +319,7 @@ const Carta = () => {
                 </p>
               )}
               {zoomItem.price && (
-                <span className="text-lg font-display text-v2-champagne">
+                <span className="text-2xl md:text-3xl font-display font-medium tracking-tight text-v2-champagne">
                   {zoomItem.price}
                 </span>
               )}
