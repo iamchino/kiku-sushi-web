@@ -1,11 +1,9 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 
-import umamiImg from "@/assets/umami-especial.webp";
-import pacificoImg from "@/assets/pacifico-especial.webp";
-import pastaNikkeiImg from "@/assets/pasta-nikkei.webp";
+import { fetchEspeciales, fallbackEspeciales, type Especial } from "@/data/especiales";
 
 /**
  * EspecialesSection — showcases verticales full-height.
@@ -14,140 +12,10 @@ import pastaNikkeiImg from "@/assets/pasta-nikkei.webp";
  * arco japonés arriba, lados alternados, parallax sutil y
  * líneas premium de fondo. Scroll vertical natural.
  *
- * Los especiales rotan por temporada: editá el array ESPECIALES.
+ * Los especiales se gestionan desde el dashboard interno
+ * (/menu → tab "Especiales Web"), tabla `especiales` en Supabase.
+ * Si Supabase no responde se usa el fallback de src/data/especiales.ts.
  */
-
-interface RollItem {
-  /** Nombre del roll, ej: "Centolla roll" */
-  roll: string;
-  /** Descripción del roll */
-  detalle: string;
-}
-
-interface Paso {
-  label: string;
-  text: string;
-  /** Si el paso es un combo, lista de rolls que lo componen */
-  items?: RollItem[];
-}
-
-interface Especial {
-  id: string;
-  /** id de experiencia en el form de reservas */
-  experiencia: string;
-  number: string;
-  overline: string;
-  title: string;
-  titleAccent: string;
-  description: string;
-  pasos?: Paso[];
-  precio?: string;
-  /** Línea de autor, ej: "— Chef Selection · Marcelo Castro —" */
-  firma?: string;
-  image: string;
-  imageAlt: string;
-}
-
-const ESPECIALES: Especial[] = [
-  {
-    id: "umami",
-    experiencia: "umami_del_sur",
-    number: "01",
-    overline: "— 南の旨味 —",
-    title: "Umami",
-    titleAccent: "del Sur",
-    description:
-      "Una experiencia de pasos donde el mar toma protagonismo. Los sabores se vuelven más profundos, cada paso está pensado para sorprender.",
-    pasos: [
-      {
-        label: "Entrada",
-        text: "Ostras gratinadas en emulsión de manteca, lima y parmesano.",
-      },
-      {
-        label: "Principal",
-        text: "15 piezas de autor.",
-        items: [
-          {
-            roll: "Centolla roll",
-            detalle: "shiromi furai y palta, coronado con centolla y mayo nipona.",
-          },
-          {
-            roll: "Maki de vieiras",
-            detalle:
-              "salmón, rúcula y pepino en juliana, coronado de tartar de vieiras y emulsión cítrica.",
-          },
-          {
-            roll: "Ebi furai roll",
-            detalle: "langostinos furai y queso crema, chimi nipón, coronado con crocante de boniato.",
-          },
-        ],
-      },
-      {
-        label: "Maridaje",
-        text: "Albariño y Riesling de Viña las Perdices.",
-      },
-    ],
-    precio: "$39.500 por persona",
-    image: umamiImg,
-    imageAlt: "Especial Umami — pasos de mar con maridaje",
-  },
-  {
-    id: "pacifico",
-    experiencia: "pacifico_y_patagonia",
-    number: "02",
-    overline: "— 太平洋 と パタゴニア —",
-    title: "Pacífico",
-    titleAccent: "y Patagonia",
-    description:
-      "El mar en cada paso: de la costa peruana a los fríos del sur, con maridaje by Viñas Las Perdices.",
-    pasos: [
-      {
-        label: "Entrada",
-        text: "Causa limeña con navajas del Sur.",
-      },
-      {
-        label: "Principal",
-        text: "15 piezas de sushi.",
-        items: [
-          {
-            roll: "Huancaína roll",
-            detalle:
-              "langostinos furai y palta, semicubierto de salmón, salsa huancaína y polvo de aceituna.",
-          },
-          {
-            roll: "Maguro roll",
-            detalle: "tartar de atún rojo y paltas selladas, semicubierto de salmón, salsa brava.",
-          },
-          {
-            roll: "Ceviche roll",
-            detalle:
-              "langostinos furai y queso crema, coronado con ceviche confitado de langostinos australes y pesca blanca, con notas cítricas.",
-          },
-        ],
-      },
-      {
-        label: "Maridaje",
-        text: "Albariño y Riesling de Viña las Perdices.",
-      },
-    ],
-    precio: "$39.500 por persona",
-    image: pacificoImg,
-    imageAlt: "Especial Pacífico y Patagonia — rolls con maridaje",
-  },
-  {
-    id: "pasta-nikkei",
-    experiencia: "pasta_nikkei",
-    number: "03",
-    overline: "— 日系 パスタ —",
-    title: "Pasta Nikkei",
-    titleAccent: "del Atlántico",
-    description:
-      "Pasta negra con tinta de calamar, crema suave de miso, mejillones y langostinos salteados, terminada con aceite picante y crocante de almendras.",
-    precio: "$30.000 por persona",
-    image: pastaNikkeiImg,
-    imageAlt: "Pasta Nikkei del Atlántico — pasta negra con mejillones y langostinos",
-  },
-];
 
 /** Panel individual de un especial, con la jerarquía del Omakase */
 const EspecialPanel = ({ especial, index }: { especial: Especial; index: number }) => {
@@ -338,6 +206,21 @@ const EspecialesSection = () => {
   const headerRef = useRef<HTMLDivElement>(null);
   const headerInView = useInView(headerRef, { once: true, margin: "-100px" });
 
+  // null = cargando. La web pinta el header de inmediato y los paneles
+  // apenas llega la data (Supabase, o fallback si falla).
+  const [especiales, setEspeciales] = useState<Especial[] | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    fetchEspeciales()
+      .then((data) => { if (alive) setEspeciales(data); })
+      .catch(() => { if (alive) setEspeciales(fallbackEspeciales); });
+    return () => { alive = false; };
+  }, []);
+
+  // Todos los especiales desactivados desde el dashboard → ocultar la sección.
+  if (especiales !== null && especiales.length === 0) return null;
+
   return (
     <section id="especiales" className="relative v2-bg-base">
       {/* Glow ambiental de la sección */}
@@ -375,7 +258,7 @@ const EspecialesSection = () => {
       </div>
 
       {/* Un showcase por especial */}
-      {ESPECIALES.map((e, i) => (
+      {(especiales ?? []).map((e, i) => (
         <EspecialPanel key={e.id} especial={e} index={i} />
       ))}
 
