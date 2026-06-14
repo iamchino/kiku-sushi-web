@@ -200,9 +200,9 @@ html.lenis, html.lenis body { height: auto; }
 .v2-root {
   background: hsl(var(--v2-bg));
   color: hsl(var(--v2-text));
-  font-family: 'Inter', sans-serif;
-  font-weight: 300;
-  line-height: 1.65;
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 500;
+  line-height: 1.55;
 }
 
 .v2-root .font-jp { font-family: 'Noto Serif JP', serif; }

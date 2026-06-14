@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import {
   Calendar, Clock, Users, User, Loader2, Phone, Mail,
   Salad, Accessibility, MessageSquare, ArrowLeft, ArrowRight, CheckCircle2,
-  Sparkles, AlertTriangle, Info, Plus, ChevronLeft, ChevronRight,
+  Sparkles, AlertTriangle, Info, Plus, ChevronLeft, ChevronRight, Gift,
 } from "lucide-react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import { useSearchParams } from "react-router-dom";
@@ -491,6 +491,8 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
   const [name, setName] = useState("");
   const [telefono, setTelefono] = useState("");
   const [email, setEmail] = useState("");
+  const [cumple, setCumple] = useState("");           // fecha de cumpleaños (opcional)
+  const [aceptaMarketing, setAceptaMarketing] = useState(false); // opt-in promos
   const [restricciones, setRestricciones] = useState("");
   const [accesibilidad, setAccesibilidad] = useState("");
   const [notas, setNotas] = useState("");
@@ -662,6 +664,13 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
       });
       return;
     }
+    // Si pidió recibir promos, necesitamos un email para enviárselas.
+    if (aceptaMarketing && !email.trim()) {
+      toast.error("Necesitamos tu email para enviarte las promos", {
+        description: "Cargá tu email o destildá la opción de novedades.",
+      });
+      return;
+    }
 
     setSubmitting(true);
 
@@ -683,6 +692,8 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
         p_restricciones:    restricciones.trim() || null,
         p_accesibilidad:    accesibilidad.trim() || null,
         p_tipo_experiencia: tipo,
+        p_cliente_cumple:   cumple || null,
+        p_acepta_marketing: aceptaMarketing,
       });
       if (error) dbError = error.message;
       else reservaId = data as string;
@@ -705,6 +716,8 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
       setName("");
       setTelefono("");
       setEmail("");
+      setCumple("");
+      setAceptaMarketing(false);
       setRestricciones("");
       setAccesibilidad("");
       setNotas("");
@@ -881,7 +894,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
     </div>
   );
 
-  // Form de datos del cliente
+  // Form de datos del cliente (incluye cumpleaños + consentimiento de marketing)
   const renderClientFields = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
       <Field icon={<User className="w-4 h-4" />} label="Nombre completo *">
@@ -906,15 +919,44 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
         />
       </Field>
 
-      <Field icon={<Mail className="w-4 h-4" />} label="Email (opcional)" full>
+      <Field
+        icon={<Mail className="w-4 h-4" />}
+        label={aceptaMarketing ? "Email *" : "Email (opcional)"}
+      >
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="email@ejemplo.com"
+          required={aceptaMarketing}
           className="w-full bg-transparent outline-none text-sm font-normal v2-text placeholder:text-v2-text-dim"
         />
       </Field>
+
+      <Field icon={<Gift className="w-4 h-4" />} label="Cumpleaños (opcional)" hint="Para sorprenderte con algo en tu día">
+        <input
+          type="date"
+          value={cumple}
+          onChange={(e) => setCumple(e.target.value)}
+          className="w-full bg-transparent outline-none text-sm font-normal v2-text placeholder:text-v2-text-dim [color-scheme:dark]"
+        />
+      </Field>
+
+      {/* Consentimiento opt-in para promos / novedades (desmarcado por defecto) */}
+      <label className="md:col-span-2 group flex items-start gap-3 bg-v2-bg/60 border border-v2-champagne/10 hover:border-v2-accent transition-colors px-4 py-3 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={aceptaMarketing}
+          onChange={(e) => setAceptaMarketing(e.target.checked)}
+          className="mt-0.5 h-4 w-4 flex-shrink-0 accent-v2-champagne cursor-pointer"
+        />
+        <span className="text-[12px] v2-text-muted leading-relaxed">
+          Quiero recibir <strong className="text-v2-text">promos y novedades</strong> de Kiku.
+          <span className="block text-[10.5px] v2-text-dim mt-0.5">
+            Usamos tu email y, si lo cargás, tu cumpleaños solo para enviarte beneficios. Podés darte de baja cuando quieras.
+          </span>
+        </span>
+      </label>
 
       <Field icon={<Salad className="w-4 h-4" />} label="Restricciones alimentarias (opcional)" full hint="Ayudanos a preparar una mejor experiencia">
         <input
@@ -1194,3 +1236,4 @@ const Field = ({
 );
 
 export default ReservationFormV2;
+// (form V2 con captación de clientes para marketing)

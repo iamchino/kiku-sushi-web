@@ -71,13 +71,13 @@ const Carta = () => {
           — お品書き —
         </span>
         <h1 className="font-display font-light tracking-[-0.02em] leading-none text-5xl md:text-7xl text-v2-text">
-          Carta <em className="italic font-normal text-v2-champagne">Salón</em>
+          Carta <em className="not-italic font-normal text-v2-champagne">Salón</em>
         </h1>
         <p className="v2-text-muted text-base leading-[1.85] max-w-xl mx-auto mt-6">
           Nuestra propuesta nikkei completa para disfrutar en el salón.
         </p>
-        <p className="text-[11px] uppercase tracking-[0.24em] text-v2-champagne/80 flex items-center justify-center gap-2 mt-5">
-          <UtensilsCrossed className="w-3.5 h-3.5" /> Cubiertos $3.500
+        <p className="text-[13px] md:text-sm uppercase tracking-[0.24em] text-v2-champagne/80 flex items-center justify-center gap-2 mt-5">
+          <UtensilsCrossed className="w-4 h-4" /> Cubiertos $3.500
         </p>
       </section>
 
@@ -234,7 +234,7 @@ const Carta = () => {
                               )}
                             </div>
                             {item.description && (
-                              <p className="text-xs md:text-sm v2-text-muted leading-relaxed mt-1.5 max-w-xl">
+                              <p className="text-sm md:text-base v2-text-muted leading-relaxed mt-1.5 max-w-xl">
                                 {item.description}
                               </p>
                             )}
@@ -259,7 +259,7 @@ const Carta = () => {
       {/* ── Notas ── */}
       <section className="px-6 pb-2">
         <div className="max-w-3xl mx-auto border-t border-v2-champagne/10 pt-8">
-          <ul className="text-[11px] leading-[2] v2-text-dim space-y-1">
+          <ul className="text-sm md:text-base leading-[1.9] v2-text-dim space-y-1">
             <li>· Servicio de mesa: $3.500 · solo a la carta de salón.</li>
             <li>· El consumo de sal en exceso es perjudicial para la salud.</li>
             <li>· Este establecimiento garantiza a cada comensal un vaso de agua potable de 375 ml sin cargo.</li>
@@ -314,7 +314,7 @@ const Carta = () => {
               )}
               <h3 className="font-display text-2xl text-v2-text mb-2">{zoomItem.name}</h3>
               {zoomItem.description && (
-                <p className="text-sm v2-text-muted leading-relaxed mb-4">
+                <p className="text-base v2-text-muted leading-relaxed mb-4">
                   {zoomItem.description}
                 </p>
               )}
