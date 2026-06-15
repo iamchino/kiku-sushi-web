@@ -145,6 +145,17 @@ const Pedidos = () => {
       .finally(() => setLoading(false));
   }, []);
 
+  // Deep-link desde un Especial "Pedir": /pedidos?producto=<menu_items.id>
+  // Una vez cargado el catálogo, prefiltramos por el nombre de ese producto
+  // para que el usuario aterrice directo en el ítem listo para agregar.
+  useEffect(() => {
+    if (loading) return;
+    const pid = new URLSearchParams(window.location.search).get('producto');
+    if (!pid) return;
+    const prod = catalogData.flatMap((c) => c.products).find((p) => p.id === pid);
+    if (prod) setSearchQuery(prod.name);
+  }, [loading, catalogData]);
+
   // Abrir el carrito cuando se navega a /pedidos#cart — incluso si ya estamos
   // parados en /pedidos (la bolsita del navbar usa ese hash). Reaccionamos a
   // cada navegación mediante location.key.

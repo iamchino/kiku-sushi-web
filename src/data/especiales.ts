@@ -41,6 +41,10 @@ export interface Especial {
   firma?: string
   image: string
   imageAlt: string
+  /** Acción del botón (ya resuelta): destino, texto y si es link externo. */
+  ctaHref: string
+  ctaLabel: string
+  ctaExternal: boolean
 }
 
 // Imágenes locales por slug: si el especial no tiene imagen subida en el
@@ -62,9 +66,40 @@ function formatPrecio(precio: unknown, nota?: string | null): string | undefined
   return `$${n.toLocaleString('es-AR')}${nota ? ` ${nota}` : ''}`
 }
 
+// ─── Acción del botón (CTA) ───────────────────────────────────────────────────
+// Resuelve, según cta_tipo, a dónde va el botón y qué texto muestra.
+//   reservar → /reservar?experiencia=<...>
+//   pedir    → /pedidos?modo=takeaway&producto=<id>  (deep-link al producto)
+//   link     → la URL cargada (puede ser externa)
+/* eslint-disable @typescript-eslint/no-explicit-any */
+function resolveCta(row: any): { ctaHref: string; ctaLabel: string; ctaExternal: boolean } {
+  const tipo = row.cta_tipo || 'reservar'
+  const label = (row.cta_label && String(row.cta_label).trim()) || ''
+
+  if (tipo === 'pedir') {
+    const pid = row.cta_producto_id
+    const href = pid
+      ? `/pedidos?modo=takeaway&producto=${encodeURIComponent(pid)}`
+      : '/pedir'
+    return { ctaHref: href, ctaLabel: label || 'Pedir ahora', ctaExternal: false }
+  }
+
+  if (tipo === 'link') {
+    const url = (row.cta_url && String(row.cta_url).trim()) || ''
+    const external = /^https?:\/\//i.test(url)
+    return { ctaHref: url || '#', ctaLabel: label || 'Ver más', ctaExternal: external }
+  }
+
+  // reservar (default)
+  return {
+    ctaHref: `/reservar?experiencia=${row.experiencia}`,
+    ctaLabel: label || 'Reservar',
+    ctaExternal: false,
+  }
+}
+
 // ─── Mapeo fila BD → shape del componente ─────────────────────────────────────
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 function mapRow(row: any): Especial {
   const pasosRows = ((row.especial_pasos || []) as any[])
     .slice()
@@ -96,6 +131,7 @@ function mapRow(row: any): Especial {
     ...(row.firma ? { firma: row.firma } : {}),
     image: row.imagen_url || IMAGENES_LOCALES[row.slug] || IMAGEN_DEFAULT,
     imageAlt: row.imagen_alt || `Especial ${row.titulo}`,
+    ...resolveCta(row),
   }
 }
 
@@ -125,8 +161,9 @@ export async function fetchEspeciales(): Promise<Especial[]> {
 }
 
 // ─── Datos de respaldo (los 3 especiales originales) ──────────────────────────
+// Todos son de tipo "reservar"; el CTA se inyecta abajo con .map().
 
-export const fallbackEspeciales: Especial[] = [
+export const fallbackEspeciales: Especial[] = ([
   {
     id: 'umami',
     experiencia: 'umami_del_sur',
@@ -225,4 +262,9 @@ export const fallbackEspeciales: Especial[] = [
     image: pastaNikkeiImg,
     imageAlt: 'Pasta Nikkei del Atlántico — pasta negra con mejillones y langostinos',
   },
-]
+] as Omit<Especial, 'ctaHref' | 'ctaLabel' | 'ctaExternal'>[]).map((e) => ({
+  ...e,
+  ctaHref: `/reservar?experiencia=${e.experiencia}`,
+  ctaLabel: 'Reservar',
+  ctaExternal: false,
+}))
