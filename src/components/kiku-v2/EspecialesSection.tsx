@@ -52,7 +52,7 @@ const EspecialTexto = ({ e }: { e: Especial }) => (
       )}
     </h3>
 
-    <p className="font-display text-lg md:text-xl v2-text-muted leading-[1.7] font-light mb-8">
+    <p className="font-display text-lg md:text-xl v2-text-muted leading-[1.7] font-light mb-8 whitespace-pre-line">
       {e.description}
     </p>
 
