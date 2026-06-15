@@ -45,6 +45,8 @@ export interface Especial {
   ctaHref: string
   ctaLabel: string
   ctaExternal: boolean
+  /** Etiqueta de agrupación: especiales con el mismo grupo se muestran como carrusel. */
+  grupo?: string | null
 }
 
 // Imágenes locales por slug: si el especial no tiene imagen subida en el
@@ -131,6 +133,7 @@ function mapRow(row: any): Especial {
     ...(row.firma ? { firma: row.firma } : {}),
     image: row.imagen_url || IMAGENES_LOCALES[row.slug] || IMAGEN_DEFAULT,
     imageAlt: row.imagen_alt || `Especial ${row.titulo}`,
+    grupo: row.grupo || null,
     ...resolveCta(row),
   }
 }

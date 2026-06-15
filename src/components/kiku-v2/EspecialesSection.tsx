@@ -1,26 +1,26 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { motion, useInView } from "framer-motion";
+import { motion, useScroll, useTransform, useInView, type MotionValue } from "framer-motion";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 
 import { fetchEspeciales, fallbackEspeciales, type Especial } from "@/data/especiales";
 
 /**
- * EspecialesSection — carrusel horizontal de especiales.
+ * EspecialesSection — showcases verticales full-height (uno por sección),
+ * con la opción de AGRUPAR varios en un carrusel.
  *
- * Cada especial es un slide a ancho completo (imagen 4:5 + texto, pasos y CTA),
- * con scroll-snap, flechas e indicadores. Pensado para mostrar varios especiales
- * "uno al lado del otro" sin estirar la página verticalmente.
+ * - Especiales sin `grupo`  → cada uno en su sección apilada (como siempre).
+ * - Especiales con el mismo `grupo` → se muestran juntos como carrusel
+ *   deslizable, en una sola sección (ej: las dos mesas del Mundial).
  *
- * Los especiales se gestionan desde el dashboard interno
- * (/menu → tab "Especiales Web"), tabla `especiales` en Supabase.
- * Si Supabase no responde se usa el fallback de src/data/especiales.ts.
+ * Se gestionan desde el dashboard interno (/menu → tab "Especiales Web"),
+ * tabla `especiales` en Supabase. Si Supabase no responde se usa el fallback.
  */
 
-/** Botón CTA del especial: link interno (router) o externo (URL libre). */
+/** Botón CTA: link interno (router) o externo (URL libre). */
 const EspecialCta = ({ e }: { e: Especial }) => {
   const cls =
-    "group bg-v2-champagne text-v2-bg px-10 py-[17px] text-[11px] uppercase tracking-[0.3em] font-medium hover:bg-v2-text hover:-translate-y-0.5 transition-all duration-300 inline-flex items-center gap-3";
+    "group bg-v2-champagne text-v2-bg px-10 py-[17px] text-[11px] uppercase tracking-[0.3em] font-medium hover:bg-v2-text hover:-translate-y-0.5 transition-all duration-400 inline-flex items-center gap-3";
   const inner = (
     <>
       {e.ctaLabel}
@@ -28,131 +28,276 @@ const EspecialCta = ({ e }: { e: Especial }) => {
     </>
   );
   return e.ctaExternal ? (
-    <a href={e.ctaHref} target="_blank" rel="noopener noreferrer" className={cls}>
-      {inner}
-    </a>
+    <a href={e.ctaHref} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>
   ) : (
-    <Link to={e.ctaHref} className={cls}>
-      {inner}
-    </Link>
+    <Link to={e.ctaHref} className={cls}>{inner}</Link>
   );
 };
 
-/** Slide individual del carrusel. */
-const EspecialSlide = ({ especial }: { especial: Especial }) => {
+/** Columna de texto del especial (overline, título, descripción, pasos, firma, CTA). */
+const EspecialTexto = ({ e }: { e: Especial }) => (
+  <>
+    <span className="font-jp text-xs tracking-[0.45em] text-v2-champagne mb-6 block">{e.overline}</span>
+
+    <h3
+      className="font-display font-light leading-[0.92] tracking-[-0.025em] mb-7"
+      style={{ fontSize: "clamp(48px, 6.5vw, 104px)" }}
+    >
+      {e.title}
+      {e.titleAccent && (
+        <>
+          <br />
+          <span className="font-normal v2-gradient-text">{e.titleAccent}</span>
+        </>
+      )}
+    </h3>
+
+    <p className="font-display text-lg md:text-xl v2-text-muted leading-[1.7] font-light mb-8">
+      {e.description}
+    </p>
+
+    {e.pasos && (
+      <div className="mb-8 space-y-4">
+        {e.pasos.map((p) => (
+          <div key={p.label} className="grid grid-cols-[96px_1fr] gap-5 pt-4 border-t border-v2-champagne/12">
+            <span className="text-[10px] tracking-[0.3em] uppercase text-v2-champagne/70 pt-1">{p.label}</span>
+            <div>
+              <p className="text-sm leading-[1.8] v2-text-muted">{p.text}</p>
+              {p.items && (
+                <ul className="mt-2.5 space-y-2 list-disc pl-4 marker:text-v2-champagne/50">
+                  {p.items.map((it) => (
+                    <li key={it.roll} className="text-sm leading-[1.75] v2-text-muted">
+                      <span className="text-v2-champagne/90 font-medium">{it.roll}:</span> {it.detalle}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+
+    {e.firma && (
+      <p className="font-jp text-[10px] tracking-[0.35em] uppercase text-v2-champagne/60 mb-8">{e.firma}</p>
+    )}
+
+    <div className="flex items-center gap-7 flex-wrap">
+      <EspecialCta e={e} />
+      {e.precio && (
+        <span className="font-display text-xl text-v2-champagne whitespace-nowrap">{e.precio}</span>
+      )}
+    </div>
+  </>
+);
+
+/** Imagen 4:5 con marco y glow (opcionalmente con parallax). */
+const EspecialImagen = ({ e, y }: { e: Especial; y?: MotionValue<string> }) => (
+  <div className="relative">
+    <div
+      className="relative overflow-hidden aspect-[4/5] border border-v2-champagne/15"
+      style={{ borderRadius: "28px", boxShadow: "0 0 90px hsla(270, 50%, 50%, 0.30), 0 0 30px hsla(41, 64%, 77%, 0.10)" }}
+    >
+      <motion.img
+        src={e.image}
+        alt={e.imageAlt}
+        style={{ y, scale: 1.05, filter: "saturate(0.95) brightness(0.95)" }}
+        className="absolute inset-0 w-full h-full object-cover"
+        loading="lazy"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-v2-bg/35 to-transparent pointer-events-none" />
+    </div>
+    <div
+      aria-hidden="true"
+      className="absolute -inset-3 md:-inset-4 border border-v2-champagne/10 pointer-events-none"
+      style={{ borderRadius: "36px" }}
+    />
+  </div>
+);
+
+/** Panel individual de un especial — el showcase de siempre (lados alternados, parallax). */
+const EspecialPanel = ({ especial, index }: { especial: Especial; index: number }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-120px" });
+  const isEven = index % 2 === 0;
+
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const imageY = useTransform(scrollYProgress, [0, 1], ["-2.5%", "2.5%"]);
+
   const e = especial;
+
   return (
-    <div className="snap-center shrink-0 w-full px-2 md:px-6">
-      <div className="relative max-w-[1180px] mx-auto rounded-[28px] overflow-hidden border border-v2-champagne/12 v2-bg-base">
-        {/* Número de fondo gigante (watermark) */}
-        <span
-          aria-hidden="true"
-          className="absolute -top-6 right-2 md:right-8 font-display font-light pointer-events-none select-none leading-none"
-          style={{ fontSize: "clamp(140px, 20vw, 300px)", color: "hsla(41, 64%, 77%, 0.05)" }}
+    <div ref={ref} id={e.id} className="relative min-h-screen flex items-center py-24 md:py-28 overflow-hidden">
+      {/* Número de fondo gigante */}
+      <span
+        aria-hidden="true"
+        className={`absolute top-10 font-display font-light pointer-events-none select-none leading-none ${
+          isEven ? "right-2 md:right-10" : "left-2 md:left-10"
+        }`}
+        style={{ fontSize: "clamp(160px, 26vw, 380px)", color: "hsla(41, 64%, 77%, 0.05)" }}
+      >
+        {e.number}
+      </span>
+
+      {/* Líneas premium */}
+      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+        <div
+          className={`absolute top-[12%] h-px w-[34%] bg-gradient-to-r from-v2-champagne/20 to-transparent ${
+            isEven ? "left-6 md:left-14" : "right-6 md:right-14 rotate-180"
+          }`}
+        />
+        <div
+          className={`absolute top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-v2-champagne/12 to-transparent ${
+            isEven ? "left-6 md:left-14" : "right-6 md:right-14"
+          }`}
+        />
+      </div>
+
+      <div className="relative z-10 max-w-[1440px] mx-auto w-full px-6 md:px-14">
+        <div
+          className={`grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 lg:gap-28 items-center ${
+            isEven ? "" : "md:[direction:rtl]"
+          }`}
         >
-          {e.number}
-        </span>
+          <motion.div
+            initial={{ opacity: 0, y: 48 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+            className={isEven ? "" : "md:[direction:ltr]"}
+          >
+            <EspecialImagen e={e} y={imageY} />
+          </motion.div>
 
-        <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center p-6 md:p-12">
-          {/* IMAGEN 4:5 */}
-          <div className="relative">
-            <div
-              className="relative overflow-hidden aspect-[4/5] border border-v2-champagne/15"
-              style={{
-                borderRadius: "24px",
-                boxShadow: "0 0 80px hsla(270, 50%, 50%, 0.28), 0 0 28px hsla(41, 64%, 77%, 0.10)",
-              }}
-            >
-              <img
-                src={e.image}
-                alt={e.imageAlt}
-                style={{ filter: "saturate(0.95) brightness(0.95)" }}
-                className="absolute inset-0 w-full h-full object-cover"
-                loading="lazy"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-v2-bg/35 to-transparent pointer-events-none" />
-            </div>
-          </div>
-
-          {/* TEXTO */}
-          <div className="max-w-xl">
-            <span className="font-jp text-xs tracking-[0.45em] text-v2-champagne mb-5 block">
-              {e.overline}
-            </span>
-
-            <h3
-              className="font-display font-light leading-[0.92] tracking-[-0.025em] mb-6"
-              style={{ fontSize: "clamp(40px, 5vw, 80px)" }}
-            >
-              {e.title}
-              {e.titleAccent && (
-                <>
-                  <br />
-                  <span className="font-normal v2-gradient-text">{e.titleAccent}</span>
-                </>
-              )}
-            </h3>
-
-            <p className="font-display text-base md:text-lg v2-text-muted leading-[1.7] font-light mb-7">
-              {e.description}
-            </p>
-
-            {e.pasos && (
-              <div className="mb-7 space-y-3.5">
-                {e.pasos.map((p) => (
-                  <div
-                    key={p.label}
-                    className="grid grid-cols-[88px_1fr] gap-4 pt-3.5 border-t border-v2-champagne/12"
-                  >
-                    <span className="text-[10px] tracking-[0.3em] uppercase text-v2-champagne/70 pt-1">
-                      {p.label}
-                    </span>
-                    <div>
-                      <p className="text-sm leading-[1.8] v2-text-muted">{p.text}</p>
-                      {p.items && (
-                        <ul className="mt-2.5 space-y-2 list-disc pl-4 marker:text-v2-champagne/50">
-                          {p.items.map((it) => (
-                            <li key={it.roll} className="text-sm leading-[1.75] v2-text-muted">
-                              <span className="text-v2-champagne/90 font-medium">{it.roll}:</span>{" "}
-                              {it.detalle}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {e.firma && (
-              <p className="font-jp text-[10px] tracking-[0.35em] uppercase text-v2-champagne/60 mb-7">
-                {e.firma}
-              </p>
-            )}
-
-            <div className="flex items-center gap-7 flex-wrap">
-              <EspecialCta e={e} />
-              {e.precio && (
-                <span className="font-display text-xl text-v2-champagne whitespace-nowrap">{e.precio}</span>
-              )}
-            </div>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 1, delay: 0.3 }}
+            className={`max-w-xl ${isEven ? "" : "md:[direction:ltr]"}`}
+          >
+            <EspecialTexto e={e} />
+          </motion.div>
         </div>
       </div>
     </div>
   );
 };
 
+/** Carrusel: varios especiales agrupados, deslizables dentro de una sola sección. */
+const EspecialCarrusel = ({ items }: { items: Especial[] }) => {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState(0);
+
+  const onScroll = useCallback(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    setActive(Math.round(el.scrollLeft / el.clientWidth));
+  }, []);
+
+  const goTo = useCallback((i: number) => {
+    const el = trackRef.current;
+    if (!el) return;
+    const target = Math.max(0, Math.min(i, el.children.length - 1));
+    el.scrollTo({ left: target * el.clientWidth, behavior: "smooth" });
+  }, []);
+
+  return (
+    <div className="relative min-h-screen flex flex-col justify-center py-24 md:py-28 overflow-hidden">
+      {/* Track deslizable */}
+      <div
+        ref={trackRef}
+        onScroll={onScroll}
+        className="especiales-track flex overflow-x-auto snap-x snap-mandatory scroll-smooth"
+      >
+        {items.map((e) => (
+          <div key={e.id} id={e.id} className="snap-center shrink-0 w-full px-6 md:px-14">
+            <div className="relative max-w-[1440px] mx-auto">
+              {/* Número de fondo */}
+              <span
+                aria-hidden="true"
+                className="absolute -top-8 right-2 md:right-10 font-display font-light pointer-events-none select-none leading-none"
+                style={{ fontSize: "clamp(140px, 22vw, 320px)", color: "hsla(41, 64%, 77%, 0.05)" }}
+              >
+                {e.number}
+              </span>
+              <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 items-center">
+                <EspecialImagen e={e} />
+                <div className="max-w-xl">
+                  <EspecialTexto e={e} />
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Controles */}
+      {items.length > 1 && (
+        <>
+          <button
+            type="button"
+            aria-label="Anterior"
+            onClick={() => goTo(active - 1)}
+            disabled={active === 0}
+            className="hidden md:flex absolute left-4 lg:left-10 top-1/2 -translate-y-1/2 w-12 h-12 items-center justify-center rounded-full border border-v2-champagne/30 bg-v2-bg/70 backdrop-blur-sm text-v2-champagne hover:bg-v2-champagne hover:text-v2-bg transition-all disabled:opacity-25 disabled:pointer-events-none z-20"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button
+            type="button"
+            aria-label="Siguiente"
+            onClick={() => goTo(active + 1)}
+            disabled={active >= items.length - 1}
+            className="hidden md:flex absolute right-4 lg:right-10 top-1/2 -translate-y-1/2 w-12 h-12 items-center justify-center rounded-full border border-v2-champagne/30 bg-v2-bg/70 backdrop-blur-sm text-v2-champagne hover:bg-v2-champagne hover:text-v2-bg transition-all disabled:opacity-25 disabled:pointer-events-none z-20"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+
+          <div className="flex items-center justify-center gap-2.5 mt-8">
+            {items.map((e, i) => (
+              <button
+                key={e.id}
+                type="button"
+                aria-label={`Ir al ${i + 1}`}
+                onClick={() => goTo(i)}
+                className="h-2 rounded-full transition-all"
+                style={{
+                  width: i === active ? "26px" : "8px",
+                  background: i === active ? "hsl(41, 64%, 77%)" : "hsla(41, 64%, 77%, 0.30)",
+                }}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+/** Agrupa la lista en bloques: cada grupo (mismo `grupo`) es un carrusel; el resto, panel suelto. */
+type Bloque = { key: string; items: Especial[] };
+function agrupar(lista: Especial[]): Bloque[] {
+  const bloques: Bloque[] = [];
+  const indicePorGrupo = new Map<string, number>();
+  for (const e of lista) {
+    if (e.grupo) {
+      const idx = indicePorGrupo.get(e.grupo);
+      if (idx !== undefined) {
+        bloques[idx].items.push(e);
+      } else {
+        indicePorGrupo.set(e.grupo, bloques.length);
+        bloques.push({ key: `g:${e.grupo}`, items: [e] });
+      }
+    } else {
+      bloques.push({ key: `e:${e.id}`, items: [e] });
+    }
+  }
+  return bloques;
+}
+
 const EspecialesSection = () => {
   const headerRef = useRef<HTMLDivElement>(null);
   const headerInView = useInView(headerRef, { once: true, margin: "-100px" });
 
-  const trackRef = useRef<HTMLDivElement>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  // null = cargando. La web pinta el header de inmediato y los slides
-  // apenas llega la data (Supabase, o fallback si falla).
   const [especiales, setEspeciales] = useState<Especial[] | null>(null);
 
   useEffect(() => {
@@ -163,27 +308,9 @@ const EspecialesSection = () => {
     return () => { alive = false; };
   }, []);
 
-  // Índice activo según la posición del scroll horizontal.
-  const onScroll = useCallback(() => {
-    const el = trackRef.current;
-    if (!el) return;
-    const i = Math.round(el.scrollLeft / el.clientWidth);
-    setActiveIndex(i);
-  }, []);
-
-  const scrollToIndex = useCallback((i: number) => {
-    const el = trackRef.current;
-    if (!el) return;
-    const max = el.children.length - 1;
-    const target = Math.max(0, Math.min(i, max));
-    el.scrollTo({ left: target * el.clientWidth, behavior: "smooth" });
-  }, []);
-
-  // Todos los especiales desactivados desde el dashboard → ocultar la sección.
   if (especiales !== null && especiales.length === 0) return null;
 
-  const lista = especiales ?? [];
-  const multiple = lista.length > 1;
+  const bloques = agrupar(especiales ?? []);
 
   return (
     <section id="especiales" className="relative v2-bg-base">
@@ -198,10 +325,7 @@ const EspecialesSection = () => {
       />
 
       {/* Header */}
-      <div
-        ref={headerRef}
-        className="relative z-10 max-w-[1440px] mx-auto px-6 md:px-14 pt-28 md:pt-40 pb-8 md:pb-12"
-      >
+      <div ref={headerRef} className="relative z-10 max-w-[1440px] mx-auto px-6 md:px-14 pt-28 md:pt-40 pb-4 md:pb-8">
         <motion.span
           initial={{ opacity: 0 }}
           animate={headerInView ? { opacity: 1 } : {}}
@@ -221,66 +345,17 @@ const EspecialesSection = () => {
         </motion.h2>
       </div>
 
-      {/* Carrusel */}
-      <div className="relative z-10">
-        {/* Track horizontal con scroll-snap */}
-        <div
-          ref={trackRef}
-          onScroll={onScroll}
-          className="especiales-track flex overflow-x-auto snap-x snap-mandatory scroll-smooth pb-6"
-        >
-          {lista.map((e) => (
-            <EspecialSlide key={e.id} especial={e} />
-          ))}
-        </div>
-
-        {/* Flechas (solo si hay más de uno) */}
-        {multiple && (
-          <>
-            <button
-              type="button"
-              aria-label="Especial anterior"
-              onClick={() => scrollToIndex(activeIndex - 1)}
-              disabled={activeIndex === 0}
-              className="hidden md:flex absolute left-4 lg:left-10 top-1/2 -translate-y-1/2 w-12 h-12 items-center justify-center rounded-full border border-v2-champagne/30 bg-v2-bg/70 backdrop-blur-sm text-v2-champagne hover:bg-v2-champagne hover:text-v2-bg transition-all disabled:opacity-25 disabled:pointer-events-none"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <button
-              type="button"
-              aria-label="Especial siguiente"
-              onClick={() => scrollToIndex(activeIndex + 1)}
-              disabled={activeIndex >= lista.length - 1}
-              className="hidden md:flex absolute right-4 lg:right-10 top-1/2 -translate-y-1/2 w-12 h-12 items-center justify-center rounded-full border border-v2-champagne/30 bg-v2-bg/70 backdrop-blur-sm text-v2-champagne hover:bg-v2-champagne hover:text-v2-bg transition-all disabled:opacity-25 disabled:pointer-events-none"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </>
-        )}
-
-        {/* Indicadores (dots) */}
-        {multiple && (
-          <div className="flex items-center justify-center gap-2.5 mt-2">
-            {lista.map((e, i) => (
-              <button
-                key={e.id}
-                type="button"
-                aria-label={`Ir al especial ${i + 1}`}
-                onClick={() => scrollToIndex(i)}
-                className="h-2 rounded-full transition-all"
-                style={{
-                  width: i === activeIndex ? "26px" : "8px",
-                  background:
-                    i === activeIndex ? "hsl(41, 64%, 77%)" : "hsla(41, 64%, 77%, 0.30)",
-                }}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Bloques: panel suelto o carrusel por grupo */}
+      {bloques.map((b, i) =>
+        b.items.length === 1 ? (
+          <EspecialPanel key={b.key} especial={b.items[0]} index={i} />
+        ) : (
+          <EspecialCarrusel key={b.key} items={b.items} />
+        )
+      )}
 
       {/* Aclaraciones */}
-      <div className="relative z-10 max-w-[1440px] mx-auto px-6 md:px-14 pt-12 pb-20">
+      <div className="relative z-10 max-w-[1440px] mx-auto px-6 md:px-14 pb-20">
         <p className="text-[11px] leading-[2] v2-text-dim max-w-2xl border-t border-v2-champagne/10 pt-6">
           Servicio de mesa: $3.500 · solo a la carta de salón.
           El consumo de sal en exceso es perjudicial para la salud.
@@ -288,7 +363,7 @@ const EspecialesSection = () => {
         </p>
       </div>
 
-      {/* Ocultar la barra de scroll del track */}
+      {/* Ocultar la barra de scroll de los carruseles */}
       <style>{`
         .especiales-track::-webkit-scrollbar { display: none; }
         .especiales-track { -ms-overflow-style: none; scrollbar-width: none; }
