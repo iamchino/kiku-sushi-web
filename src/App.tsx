@@ -20,6 +20,17 @@ const queryClient = new QueryClient();
 /** Al cambiar de página, subir siempre al top. Los anchors (/#seccion) los maneja cada página. */
 const ScrollToTop = () => {
   const { pathname, hash } = useLocation();
+
+  // Desactivar la restauración automática del navegador: si no, al volver atrás
+  // el navegador re-posiciona el scroll donde estaba y la página no sube.
+  useEffect(() => {
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+  }, []);
+
+  // En cada navegación (incluido volver atrás/adelante) subir al top,
+  // salvo que la URL traiga un anchor (#seccion), que lo maneja la página.
   useEffect(() => {
     if (hash) return;
     window.scrollTo(0, 0);

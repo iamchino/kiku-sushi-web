@@ -80,7 +80,11 @@ const NavbarV2 = () => {
         className="fixed top-0 left-0 right-0 z-50 border-b border-v2-champagne/10"
       >
         <nav className="max-w-[1440px] mx-auto px-6 md:px-14 h-16 md:h-20 flex items-center justify-between">
-          <Link to="/" className="z-50">
+          <Link
+            to="/"
+            className="z-50"
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          >
             <LogoLockup kanjiSize={36} />
           </Link>
 
