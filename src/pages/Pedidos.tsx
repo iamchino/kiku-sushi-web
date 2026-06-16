@@ -174,14 +174,21 @@ const Pedidos = () => {
     if (!searchQuery.trim()) return catalogData;
     const q = searchQuery.toLowerCase();
     return catalogData
-      .map((cat) => ({
-        ...cat,
-        products: cat.products.filter(
-          (p) =>
-            p.name.toLowerCase().includes(q) ||
-            p.description.toLowerCase().includes(q)
-        ),
-      }))
+      .map((cat) => {
+        // Si el texto coincide con el nombre de la categoría, mostramos todos
+        // sus productos; si no, filtramos por nombre/descripción del producto.
+        const catMatch = cat.name.toLowerCase().includes(q);
+        return {
+          ...cat,
+          products: catMatch
+            ? cat.products
+            : cat.products.filter(
+                (p) =>
+                  p.name.toLowerCase().includes(q) ||
+                  p.description.toLowerCase().includes(q)
+              ),
+        };
+      })
       .filter((cat) => cat.products.length > 0);
   }, [searchQuery, catalogData]);
 
@@ -396,8 +403,8 @@ const Pedidos = () => {
             />
           </div>
 
-          {/* Category pills */}
-          <div className="flex gap-2 mt-5 overflow-x-auto pb-2 scrollbar-hide">
+          {/* Category pills (solo mobile; en desktop va el sidebar lateral) */}
+          <div className="flex lg:hidden gap-2 mt-5 overflow-x-auto pb-2 scrollbar-hide">
             <button
               onClick={() => setActiveCategory(null)}
               className={`shrink-0 px-4 py-2 rounded-full text-[11px] uppercase tracking-[0.18em] border transition-all ${
@@ -427,7 +434,42 @@ const Pedidos = () => {
 
       {/* Product grid */}
       <section className="pb-32 px-6 md:px-14">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto lg:grid lg:grid-cols-[220px_1fr] lg:gap-10 lg:items-start">
+          {/* Sidebar de categorías (desktop) */}
+          <aside className="hidden lg:block sticky top-28 self-start">
+            <p className="text-[10px] uppercase tracking-[0.24em] text-v2-champagne/70 mb-3 px-3">
+              Categorías
+            </p>
+            <nav className="flex flex-col gap-1">
+              <button
+                onClick={() => setActiveCategory(null)}
+                className={`text-left px-3 py-2 rounded-lg text-sm transition-all ${
+                  !activeCategory
+                    ? "bg-v2-champagne/15 text-v2-champagne"
+                    : "text-v2-text-muted hover:text-v2-text hover:bg-v2-champagne/5"
+                }`}
+              >
+                Todos
+              </button>
+              {catalogData.map((cat) => (
+                <button
+                  key={cat.name}
+                  onClick={() => setActiveCategory(cat.name === activeCategory ? null : cat.name)}
+                  className={`flex items-center justify-between gap-2 text-left px-3 py-2 rounded-lg text-sm transition-all ${
+                    activeCategory === cat.name
+                      ? "bg-v2-champagne/15 text-v2-champagne"
+                      : "text-v2-text-muted hover:text-v2-text hover:bg-v2-champagne/5"
+                  }`}
+                >
+                  <span>{cat.name}</span>
+                  <span className="text-[10px] text-v2-text-dim shrink-0">{cat.products.length}</span>
+                </button>
+              ))}
+            </nav>
+          </aside>
+
+          {/* Contenido (productos) */}
+          <div className="min-w-0">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-4">
               <Loader2 className="w-8 h-8 text-v2-champagne animate-spin" />
@@ -598,6 +640,7 @@ const Pedidos = () => {
             </div>
           ))
           )}
+          </div>
         </div>
       </section>
 

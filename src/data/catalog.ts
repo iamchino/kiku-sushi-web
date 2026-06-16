@@ -41,13 +41,31 @@ export async function fetchCatalogFromSheet(): Promise<CatalogCategory[]> {
       .order('orden', { ascending: true })
 
     if (error) throw error
-    if (!data?.length) return fallbackData
+    if (!data?.length) return ordenarCategorias(fallbackData)
 
-    return groupToCategories(data)
+    return ordenarCategorias(groupToCategories(data))
   } catch (err) {
     console.error('Error cargando catálogo desde Supabase:', err)
-    return fallbackData
+    return ordenarCategorias(fallbackData)
   }
+}
+
+// ─── Orden de las categorías en el menú ───────────────────────────────────────
+// Regla pedida: primero los especiales (por temporada / mundial), después los
+// Combinados, y luego el resto en su orden natural (el campo `orden` de cada
+// producto). Así no hay que renumerar productos para mover una categoría.
+function ordenarCategorias(cats: CatalogCategory[]): CatalogCategory[] {
+  const rango = (name: string) => {
+    const n = name.toLowerCase()
+    if (/especial|mundial|temporada/.test(n)) return 0 // especiales primero
+    if (n.includes('combinado')) return 1              // combinados justo después
+    return 2                                           // el resto, como viene
+  }
+  // Ordena por rango, y dentro de cada rango respeta el orden original (estable).
+  return cats
+    .map((c, i) => ({ c, i }))
+    .sort((a, b) => rango(a.c.name) - rango(b.c.name) || a.i - b.i)
+    .map((x) => x.c)
 }
 
 // ─── Agrupador de filas por categoría ────────────────────────────────────────
