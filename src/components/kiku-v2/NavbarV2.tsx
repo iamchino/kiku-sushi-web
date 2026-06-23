@@ -245,7 +245,7 @@ const NavbarV2 = () => {
         {/* Segundo header: barra de anuncio (editable desde el dashboard).
             Va DEBAJO del header principal. */}
         {anuncioVisible && (
-          <div className="bg-[#e7c98f] text-[#2a1d0e] text-center text-[16px] md:text-[19px] font-semibold tracking-[0.01em] leading-snug px-4 py-3">
+          <div className="bg-[#e7c98f] text-[#2a1d0e] text-center text-[18px] md:text-[22px] font-semibold tracking-[0.01em] leading-snug px-4 py-3.5">
             {anuncio.texto}
           </div>
         )}
