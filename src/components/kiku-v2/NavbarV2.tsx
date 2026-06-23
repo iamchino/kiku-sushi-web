@@ -126,13 +126,6 @@ const NavbarV2 = () => {
         }}
         className="fixed top-0 left-0 right-0 z-50 border-b border-v2-champagne/10"
       >
-        {/* Segundo header: barra de anuncio (editable desde el dashboard) */}
-        {anuncioVisible && (
-          <div className="bg-[#e7c98f] text-[#2a1d0e] text-center text-[14px] md:text-[16px] font-semibold tracking-[0.02em] leading-snug px-4 py-2.5">
-            {anuncio.texto}
-          </div>
-        )}
-
         <nav className="max-w-[1440px] mx-auto px-6 md:px-14 h-16 md:h-20 flex items-center justify-between">
           <Link
             to="/"
@@ -248,6 +241,14 @@ const NavbarV2 = () => {
             </button>
           </div>
         </nav>
+
+        {/* Segundo header: barra de anuncio (editable desde el dashboard).
+            Va DEBAJO del header principal. */}
+        {anuncioVisible && (
+          <div className="bg-[#e7c98f] text-[#2a1d0e] text-center text-[16px] md:text-[19px] font-semibold tracking-[0.01em] leading-snug px-4 py-3">
+            {anuncio.texto}
+          </div>
+        )}
       </motion.header>
 
       {/* Mobile menu overlay */}
