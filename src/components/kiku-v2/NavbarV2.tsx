@@ -4,6 +4,7 @@ import { Menu, X, ShoppingBag, ChevronDown } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { LogoLockup } from "./LogoMark";
 import { fetchEspeciales, fallbackEspeciales, type Especial } from "@/data/especiales";
+import { supabase } from "@/lib/supabase";
 
 interface NavLink {
   label: string;
@@ -42,6 +43,7 @@ const NavbarV2 = () => {
   const [open, setOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [especiales, setEspeciales] = useState<Especial[]>([]);
+  const [anuncio, setAnuncio] = useState<{ texto: string; activo: boolean }>({ texto: "", activo: false });
   const [espOpen, setEspOpen] = useState(false);       // desplegable desktop
   const [espOpenMobile, setEspOpenMobile] = useState(false);
   const espCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -62,6 +64,22 @@ const NavbarV2 = () => {
       .catch(() => { if (alive) setEspeciales(fallbackEspeciales); });
     return () => { alive = false; };
   }, []);
+
+  // Barra de anuncio ("segundo header"), gestionada desde el dashboard (/menu).
+  useEffect(() => {
+    let alive = true;
+    supabase
+      .from("web_config")
+      .select("anuncio_texto, anuncio_activo")
+      .eq("id", 1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (alive && data) setAnuncio({ texto: data.anuncio_texto || "", activo: Boolean(data.anuncio_activo) });
+      });
+    return () => { alive = false; };
+  }, []);
+
+  const anuncioVisible = anuncio.activo && anuncio.texto.trim().length > 0;
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
@@ -108,6 +126,13 @@ const NavbarV2 = () => {
         }}
         className="fixed top-0 left-0 right-0 z-50 border-b border-v2-champagne/10"
       >
+        {/* Segundo header: barra de anuncio (editable desde el dashboard) */}
+        {anuncioVisible && (
+          <div className="bg-[#e7c98f] text-[#2a1d0e] text-center text-[11px] md:text-xs font-medium tracking-[0.03em] leading-snug px-4 py-1.5">
+            {anuncio.texto}
+          </div>
+        )}
+
         <nav className="max-w-[1440px] mx-auto px-6 md:px-14 h-16 md:h-20 flex items-center justify-between">
           <Link
             to="/"
