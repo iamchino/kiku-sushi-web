@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, ShoppingBag } from "lucide-react";
+import { Menu, X, ShoppingBag, ChevronDown } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { LogoLockup } from "./LogoMark";
+import { fetchEspeciales, fallbackEspeciales, type Especial } from "@/data/especiales";
 
 interface NavLink {
   label: string;
@@ -12,13 +13,15 @@ interface NavLink {
   to?: string;
 }
 
+// Links fijos del header. Los especiales (Umami, Pacífico, etc.) ya NO van uno
+// por uno: ahora se listan dinámicamente en el desplegable "Especiales".
 const NAV_LINKS: NavLink[] = [
-  { label: "Umami del Sur", anchor: "umami" },
-  { label: "Pacífico", anchor: "pacifico" },
   { label: "Omakase", to: "/omakase" },
   { label: "Kiku Libre", to: "/sushi-libre" },
-  { label: "Itamae", anchor: "itamae" },
 ];
+
+// Etiqueta legible de un especial (título + acento), ej. "Umami del Sur".
+const especialLabel = (e: Especial) => [e.title, e.titleAccent].filter(Boolean).join(" ").trim();
 
 // Lee la cantidad total de items del carrito persistido en localStorage.
 // El catalogo (/pedidos) guarda en 'kiku-cart' un array { product, quantity }.
@@ -38,6 +41,10 @@ const readCartCount = (): number => {
 const NavbarV2 = () => {
   const [open, setOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const [especiales, setEspeciales] = useState<Especial[]>([]);
+  const [espOpen, setEspOpen] = useState(false);       // desplegable desktop
+  const [espOpenMobile, setEspOpenMobile] = useState(false);
+  const espCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const location = useLocation();
   const { scrollY } = useScroll();
   const navOpacity = useTransform(scrollY, [0, 80], [0.4, 0.95]);
@@ -46,6 +53,15 @@ const NavbarV2 = () => {
   // En la home los anchors son #seccion; en otras paginas, /#seccion.
   const isHome = location.pathname === "/" || location.pathname === "/preview";
   const anchorHref = (id: string) => (isHome ? `#${id}` : `/#${id}`);
+
+  // Cargar la lista de especiales activos (misma fuente que la home).
+  useEffect(() => {
+    let alive = true;
+    fetchEspeciales()
+      .then((data) => { if (alive) setEspeciales(data); })
+      .catch(() => { if (alive) setEspeciales(fallbackEspeciales); });
+    return () => { alive = false; };
+  }, []);
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
@@ -70,6 +86,19 @@ const NavbarV2 = () => {
   // La bolsita lleva al carrito; con #cart, /pedidos abre el panel del pedido.
   const cartHref = cartCount > 0 ? "/pedidos#cart" : "/pedir";
 
+  const linkCls =
+    "text-[11px] uppercase tracking-[0.24em] text-v2-text/80 hover:text-v2-champagne transition-colors duration-300";
+
+  // Hover-intent para el desplegable de escritorio (no se cierra al cruzar el gap).
+  const openEsp = () => {
+    if (espCloseTimer.current) clearTimeout(espCloseTimer.current);
+    setEspOpen(true);
+  };
+  const closeEspSoon = () => {
+    if (espCloseTimer.current) clearTimeout(espCloseTimer.current);
+    espCloseTimer.current = setTimeout(() => setEspOpen(false), 140);
+  };
+
   return (
     <>
       <motion.header
@@ -90,40 +119,74 @@ const NavbarV2 = () => {
 
           {/* Desktop links */}
           <ul className="hidden lg:flex items-center gap-11 ml-auto mr-10">
-            {NAV_LINKS.map((link) => (
-              <li key={link.label}>
-                {link.to ? (
-                  <Link
-                    to={link.to}
-                    className="text-[11px] uppercase tracking-[0.24em] text-v2-text/80 hover:text-v2-champagne transition-colors duration-300"
-                  >
-                    {link.label}
-                  </Link>
-                ) : (
-                  <a
-                    href={anchorHref(link.anchor!)}
-                    className="text-[11px] uppercase tracking-[0.24em] text-v2-text/80 hover:text-v2-champagne transition-colors duration-300"
-                  >
-                    {link.label}
-                  </a>
-                )}
-              </li>
-            ))}
+            {/* Omakase, Kiku Libre */}
             <li>
-              <Link
-                to="/carta"
-                className="text-[11px] uppercase tracking-[0.24em] text-v2-text/80 hover:text-v2-champagne transition-colors duration-300"
-              >
-                Carta
-              </Link>
+              <Link to="/omakase" className={linkCls}>Omakase</Link>
             </li>
             <li>
-              <Link
-                to="/pedir"
-                className="text-[11px] uppercase tracking-[0.24em] text-v2-text/80 hover:text-v2-champagne transition-colors duration-300"
+              <Link to="/sushi-libre" className={linkCls}>Kiku Libre</Link>
+            </li>
+
+            {/* Especiales — desplegable con la lista cargada */}
+            {especiales.length > 0 && (
+              <li
+                className="relative"
+                onMouseEnter={openEsp}
+                onMouseLeave={closeEspSoon}
               >
-                Pedir
-              </Link>
+                <button
+                  type="button"
+                  onClick={() => setEspOpen((v) => !v)}
+                  aria-expanded={espOpen}
+                  className={`${linkCls} inline-flex items-center gap-1.5`}
+                >
+                  Especiales
+                  <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${espOpen ? "rotate-180" : ""}`} />
+                </button>
+
+                <motion.div
+                  initial={false}
+                  animate={{
+                    opacity: espOpen ? 1 : 0,
+                    y: espOpen ? 0 : -8,
+                    pointerEvents: espOpen ? "auto" : "none",
+                  }}
+                  transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                  className="absolute right-0 top-full pt-4 w-64"
+                >
+                  <div className="rounded-xl border border-v2-champagne/15 bg-v2-bg/95 backdrop-blur-xl shadow-2xl overflow-hidden py-2">
+                    {especiales.map((e) => (
+                      <a
+                        key={e.id}
+                        href={anchorHref(e.id)}
+                        onClick={() => setEspOpen(false)}
+                        className="block px-4 py-2.5 text-[11px] uppercase tracking-[0.2em] text-v2-text/80 hover:text-v2-champagne hover:bg-v2-champagne/5 transition-colors"
+                      >
+                        {especialLabel(e)}
+                      </a>
+                    ))}
+                    <a
+                      href={anchorHref("especiales")}
+                      onClick={() => setEspOpen(false)}
+                      className="block px-4 py-2.5 mt-1 border-t border-v2-champagne/10 text-[10px] uppercase tracking-[0.24em] text-v2-champagne/70 hover:text-v2-champagne hover:bg-v2-champagne/5 transition-colors"
+                    >
+                      Ver todos
+                    </a>
+                  </div>
+                </motion.div>
+              </li>
+            )}
+
+            {/* Itamae */}
+            <li>
+              <a href={anchorHref("itamae")} className={linkCls}>Itamae</a>
+            </li>
+
+            <li>
+              <Link to="/carta" className={linkCls}>Carta</Link>
+            </li>
+            <li>
+              <Link to="/pedir" className={linkCls}>Pedir</Link>
             </li>
           </ul>
 
@@ -170,44 +233,80 @@ const NavbarV2 = () => {
           pointerEvents: open ? "auto" : "none",
         }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className="fixed inset-0 z-40 bg-v2-bg/97 backdrop-blur-xl lg:hidden"
+        className="fixed inset-0 z-40 bg-v2-bg/97 backdrop-blur-xl lg:hidden overflow-y-auto"
       >
-        <div className="h-full flex flex-col justify-center items-start px-10 gap-6">
-          {NAV_LINKS.map((link, i) => (
+        <div className="min-h-full flex flex-col justify-center items-start px-10 gap-6 py-24">
+          {/* Omakase + Kiku Libre */}
+          {NAV_LINKS.filter((l) => l.to).map((link, i) => (
             <motion.div
               key={link.label}
               initial={{ x: -20, opacity: 0 }}
-              animate={{
-                x: open ? 0 : -20,
-                opacity: open ? 1 : 0,
-              }}
+              animate={{ x: open ? 0 : -20, opacity: open ? 1 : 0 }}
               transition={{ delay: open ? 0.1 + i * 0.06 : 0, duration: 0.5 }}
             >
-              {link.to ? (
-                <Link
-                  to={link.to}
-                  onClick={() => setOpen(false)}
-                  className="font-display text-4xl text-v2-text hover:text-v2-champagne transition-colors"
-                >
-                  {link.label}
-                </Link>
-              ) : (
-                <a
-                  href={anchorHref(link.anchor!)}
-                  onClick={() => setOpen(false)}
-                  className="font-display text-4xl text-v2-text hover:text-v2-champagne transition-colors"
-                >
-                  {link.label}
-                </a>
-              )}
+              <Link
+                to={link.to!}
+                onClick={() => setOpen(false)}
+                className="font-display text-4xl text-v2-text hover:text-v2-champagne transition-colors"
+              >
+                {link.label}
+              </Link>
             </motion.div>
           ))}
+
+          {/* Especiales — acordeón con la lista cargada */}
+          {especiales.length > 0 && (
+            <motion.div
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: open ? 0 : -20, opacity: open ? 1 : 0 }}
+              transition={{ delay: open ? 0.1 + 2 * 0.06 : 0, duration: 0.5 }}
+              className="w-full"
+            >
+              <button
+                type="button"
+                onClick={() => setEspOpenMobile((v) => !v)}
+                className="font-display text-4xl text-v2-text hover:text-v2-champagne transition-colors inline-flex items-center gap-3"
+              >
+                Especiales
+                <ChevronDown className={`w-6 h-6 transition-transform duration-300 ${espOpenMobile ? "rotate-180" : ""}`} />
+              </button>
+              {espOpenMobile && (
+                <div className="mt-4 flex flex-col gap-3 pl-1 border-l border-v2-champagne/15">
+                  {especiales.map((e) => (
+                    <a
+                      key={e.id}
+                      href={anchorHref(e.id)}
+                      onClick={() => setOpen(false)}
+                      className="pl-4 text-xl text-v2-text/85 hover:text-v2-champagne transition-colors uppercase tracking-[0.12em]"
+                    >
+                      {especialLabel(e)}
+                    </a>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* Itamae */}
+          <motion.div
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: open ? 0 : -20, opacity: open ? 1 : 0 }}
+            transition={{ delay: open ? 0.1 + 3 * 0.06 : 0, duration: 0.5 }}
+          >
+            <a
+              href={anchorHref("itamae")}
+              onClick={() => setOpen(false)}
+              className="font-display text-4xl text-v2-text hover:text-v2-champagne transition-colors"
+            >
+              Itamae
+            </a>
+          </motion.div>
 
           {/* Carta Salón */}
           <motion.div
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: open ? 0 : -20, opacity: open ? 1 : 0 }}
-            transition={{ delay: open ? 0.1 + NAV_LINKS.length * 0.06 : 0, duration: 0.5 }}
+            transition={{ delay: open ? 0.1 + 4 * 0.06 : 0, duration: 0.5 }}
           >
             <Link
               to="/carta"
@@ -222,7 +321,7 @@ const NavbarV2 = () => {
           <motion.div
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: open ? 0 : -20, opacity: open ? 1 : 0 }}
-            transition={{ delay: open ? 0.1 + (NAV_LINKS.length + 1) * 0.06 : 0, duration: 0.5 }}
+            transition={{ delay: open ? 0.1 + 5 * 0.06 : 0, duration: 0.5 }}
           >
             <Link
               to="/pedir"
@@ -237,7 +336,7 @@ const NavbarV2 = () => {
           <motion.div
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: open ? 0 : -20, opacity: open ? 1 : 0 }}
-            transition={{ delay: open ? 0.1 + (NAV_LINKS.length + 2) * 0.06 : 0, duration: 0.5 }}
+            transition={{ delay: open ? 0.1 + 6 * 0.06 : 0, duration: 0.5 }}
           >
             <Link
               to={cartHref}

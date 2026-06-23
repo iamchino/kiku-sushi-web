@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import {
   Calendar, Clock, Users, User, Loader2, Phone, Mail,
   Salad, Accessibility, MessageSquare, ArrowLeft, ArrowRight, CheckCircle2,
-  Sparkles, AlertTriangle, Info, Plus, ChevronLeft, ChevronRight, Gift,
+  Sparkles, AlertTriangle, Info, Plus, ChevronLeft, ChevronRight, Gift, Hourglass,
 } from "lucide-react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import { useSearchParams } from "react-router-dom";
@@ -501,6 +501,12 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [submitting, setSubmitting] = useState(false);
 
+  // Lista de espera (cuando no hay cupo para la fecha)
+  const [waitName, setWaitName] = useState("");
+  const [waitTel, setWaitTel] = useState("");
+  const [waitSending, setWaitSending] = useState(false);
+  const [waitDone, setWaitDone] = useState(false);
+
   // Cupos por slot (refetch cada vez que cambia la fecha)
   const [slots, setSlots] = useState<SlotInfo[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
@@ -560,18 +566,23 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
 
   const cupoLibreEnSlot = (h: string): number => {
     const s = slotByHora(h);
-    if (!s) return isOmakase ? 6 : 28;
+    // Fallback antes de que carguen los cupos: salón 34, barra omakase 6.
+    if (!s) return isOmakase ? 6 : 34;
     return isOmakase ? s.cupo_barra : s.cupo_salon;
   };
 
   const slotDisponible = (h: string): boolean => cupoLibreEnSlot(h) >= peopleInt;
 
-  const omakaseBloqueado =
-    isOmakase && slots.length > 0 && slots[0]?.hay_omakase === true;
+  // Asientos de omakase libres ese día (la barra es de 6 y admite varias
+  // reservas mientras sumen <= 6). Como el cupo es por día, todos los slots
+  // tienen el mismo valor.
+  const omakaseLibres = isOmakase
+    ? (slots.length > 0 ? (slots[0]?.cupo_barra ?? 6) : 6)
+    : 0;
+  // Bloqueado para ESTE grupo si no entran sus comensales en lo que queda.
+  const omakaseBloqueado = isOmakase && slots.length > 0 && omakaseLibres < peopleInt;
 
-  const horariosDisponibles = HORARIOS_WEB.filter((t) =>
-    isOmakase ? !omakaseBloqueado : cupoLibreEnSlot(t) >= peopleInt
-  );
+  const horariosDisponibles = HORARIOS_WEB.filter((t) => cupoLibreEnSlot(t) >= peopleInt);
 
   const sinCupoEnFecha = horariosDisponibles.length === 0;
 
@@ -588,6 +599,57 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [horariosKey, time]);
 
+  // Si cambia la fecha / experiencia / personas, reseteamos el "ya anotado".
+  useEffect(() => {
+    setWaitDone(false);
+  }, [date, tipo, people]);
+
+  // ─── Lista de espera ─────────────────────────────────────────────────────
+  const handleListaEspera = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (waitSending) return;
+    const n = waitName.trim();
+    const t = waitTel.trim();
+    if (!n) { toast.error("Falta tu nombre"); return; }
+    if (!t) {
+      toast.error("Falta tu teléfono", {
+        description: "Lo necesitamos para avisarte si se libera un lugar.",
+      });
+      return;
+    }
+    setWaitSending(true);
+    try {
+      const { error } = await supabase.rpc("crear_lista_espera", {
+        p_fecha:            date,
+        p_personas:         peopleInt,
+        p_cliente_nombre:   n,
+        p_cliente_telefono: t,
+        p_hora:             time ? time + ":00" : null,
+        p_cliente_email:    email.trim() || null,
+        p_notas:            notas.trim() || null,
+        p_tipo_experiencia: tipo || null,
+      });
+      if (error) {
+        toast.error("No pudimos anotarte", {
+          description: `${error.message}. Probá de nuevo en unos segundos.`,
+        });
+      } else {
+        setWaitDone(true);
+        setWaitName("");
+        setWaitTel("");
+        toast.success("¡Te anotamos en la lista de espera!", {
+          description: "Si se libera un lugar para esa fecha, Kiku te contacta por WhatsApp.",
+        });
+      }
+    } catch (err) {
+      toast.error("No pudimos anotarte", {
+        description: err instanceof Error ? err.message : "Probá de nuevo en unos segundos.",
+      });
+    } finally {
+      setWaitSending(false);
+    }
+  };
+
   // ─── Navegación entre pasos ─────────────────────────────────────────────
   const goToStep2 = () => {
     if (!tipo) {
@@ -603,8 +665,10 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
       return;
     }
     if (isOmakase && omakaseBloqueado) {
-      toast.error("Ya hay un omakase reservado para esa fecha", {
-        description: "Probá con otra fecha o elegí otra experiencia.",
+      toast.error("No quedan asientos de omakase para ese grupo", {
+        description: omakaseLibres > 0
+          ? `Quedan ${omakaseLibres} en la barra. Probá con menos personas, otra fecha o la lista de espera.`
+          : "La barra está completa. Probá con otra fecha o anotate en la lista de espera.",
       });
       return;
     }
@@ -635,8 +699,10 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
         return;
       }
       if (omakaseBloqueado) {
-        toast.error("Ya hay un omakase reservado para ese día", {
-          description: "Elegí otra fecha para vivir la experiencia en la barra.",
+        toast.error("No quedan asientos de omakase para ese grupo", {
+          description: omakaseLibres > 0
+            ? `Quedan ${omakaseLibres} en la barra. Probá con menos personas u otra fecha.`
+            : "La barra está completa para esa fecha. Elegí otra fecha.",
         });
         setStep(2);
         return;
@@ -847,13 +913,22 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
   // Bloque fecha + hora + personas con chips (paso 2 del wizard y bloque del singlePage)
   const renderDateBlock = () => (
     <div className="space-y-7">
-      {/* Aviso si omakase ya está ocupado ese día */}
+      {/* Aviso si la barra de omakase no tiene lugar para este grupo */}
       {omakaseBloqueado && (
         <div className="flex items-start gap-2.5 px-3 py-2.5 border border-v2-accent/40 bg-v2-accent/10 text-[11.5px] v2-text">
           <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-v2-accent" />
           <span>
-            <strong>Omakase ya reservado para esta fecha.</strong> El itamae ofrece un solo
-            omakase por día. Elegí otra fecha o reservá otra experiencia.
+            {omakaseLibres > 0 ? (
+              <>
+                <strong>Quedan {omakaseLibres} {omakaseLibres === 1 ? "asiento" : "asientos"} de omakase</strong> para
+                esta fecha. Probá con un grupo más chico, otra fecha o anotate en la lista de espera.
+              </>
+            ) : (
+              <>
+                <strong>La barra de omakase ya está completa para esta fecha</strong> (6 asientos). Elegí
+                otra fecha, otra experiencia o anotate en la lista de espera.
+              </>
+            )}
           </span>
         </div>
       )}
@@ -891,6 +966,63 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
         </SectionLabel>
         <ChipsPersonas value={people} onChange={setPeople} max={isOmakase ? 6 : 10} />
       </div>
+
+      {/* Lista de espera: aparece cuando no hay cupo para la fecha/personas */}
+      {!loadingSlots && sinCupoEnFecha && (
+        <div className="border border-v2-accent/35 bg-v2-accent/[0.07] p-4 sm:p-5">
+          {waitDone ? (
+            <div className="flex items-start gap-2.5 text-[12px] v2-text">
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5 text-v2-accent" />
+              <span>
+                <strong>¡Listo, te anotamos!</strong> Si se libera un lugar para el{" "}
+                {new Date(date + "T12:00:00").toLocaleDateString("es-AR", { day: "numeric", month: "long" })}, Kiku
+                te escribe por WhatsApp. También podés probar con otra fecha.
+              </span>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-start gap-2.5 mb-3">
+                <Hourglass className="w-4 h-4 flex-shrink-0 mt-0.5 text-v2-accent" />
+                <div>
+                  <p className="text-[13px] font-medium v2-text leading-snug">
+                    {isOmakase ? "Barra de omakase completa para esa fecha" : "Esa fecha está completa"}
+                  </p>
+                  <p className="text-[11.5px] v2-text-muted leading-relaxed mt-0.5">
+                    Dejanos tus datos y te anotamos en la lista de espera. Si se libera un lugar para
+                    esa fecha, te contactamos por WhatsApp.
+                  </p>
+                </div>
+              </div>
+              <form onSubmit={handleListaEspera} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2.5">
+                <input
+                  type="text"
+                  value={waitName}
+                  onChange={(e) => setWaitName(e.target.value)}
+                  placeholder="Tu nombre"
+                  aria-label="Tu nombre para la lista de espera"
+                  className="bg-v2-bg/60 border border-v2-champagne/20 px-3.5 py-2.5 text-sm v2-text placeholder:text-v2-text-dim outline-none focus:border-v2-accent transition-colors"
+                />
+                <input
+                  type="tel"
+                  value={waitTel}
+                  onChange={(e) => setWaitTel(e.target.value)}
+                  placeholder="Tu teléfono / WhatsApp"
+                  aria-label="Tu teléfono para la lista de espera"
+                  className="bg-v2-bg/60 border border-v2-champagne/20 px-3.5 py-2.5 text-sm v2-text placeholder:text-v2-text-dim outline-none focus:border-v2-accent transition-colors"
+                />
+                <button
+                  type="submit"
+                  disabled={waitSending}
+                  className="inline-flex items-center justify-center gap-2 bg-v2-champagne text-v2-bg px-4 py-2.5 text-sm font-medium hover:opacity-90 disabled:opacity-60 transition-opacity whitespace-nowrap"
+                >
+                  {waitSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Hourglass className="w-4 h-4" />}
+                  Anotarme
+                </button>
+              </form>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 
@@ -1181,6 +1313,12 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
                   <span>
                     Mesa <strong className="text-v2-text">confirmada</strong> al enviar · seguimos por WhatsApp.
                   </span>
+                </p>
+
+                <p className="text-[11px] v2-text-muted mt-3 leading-relaxed rounded-lg border border-v2-champagne/15 bg-v2-champagne/[0.03] px-3 py-2.5">
+                  Las reservas son <strong className="text-v2-text">no reembolsables</strong>. En caso de
+                  inconvenientes, podrá solicitarse un cambio de fecha sujeto a disponibilidad y previa
+                  evaluación de la organización.
                 </p>
 
                 <div className="flex flex-col-reverse md:flex-row md:items-center md:justify-between gap-4 mt-7">

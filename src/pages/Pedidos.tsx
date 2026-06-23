@@ -138,11 +138,26 @@ const Pedidos = () => {
   const [catalogData, setCatalogData] = useState<CatalogCategory[]>(fallbackData);
   const [loading, setLoading] = useState(true);
 
+  // Costo de envío base, configurable desde el dashboard (tabla envio_config).
+  // Si no se puede leer, cae al valor por defecto de $3500.
+  const [costoEnvioBase, setCostoEnvioBase] = useState(3500);
+
   useEffect(() => {
     fetchCatalogFromSheet()
       .then((data) => setCatalogData(data))
       .catch(() => setCatalogData(fallbackData))
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    supabase
+      .from("envio_config")
+      .select("base")
+      .eq("id", 1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.base != null) setCostoEnvioBase(Math.max(0, Math.round(Number(data.base))) || 3500);
+      });
   }, []);
 
   // Deep-link desde un Especial "Pedir": /pedidos?producto=<menu_items.id>
@@ -250,7 +265,7 @@ const Pedidos = () => {
     setEnviando(true);
     try {
       const subtotal = cart.reduce((s, i) => s + parsePrice(i.product.price) * i.quantity, 0);
-      const envio   = orderMode === "delivery" ? 3500 : 0;
+      const envio   = orderMode === "delivery" ? costoEnvioBase : 0;
       const total   = subtotal + envio;
 
       const { data: pedido, error: e1 } = await supabase
@@ -259,6 +274,7 @@ const Pedidos = () => {
           canal:             orderMode === "delivery" ? "delivery" : "takeaway",
           origen:            "web",
           total,
+          costo_envio:       envio,
           cliente_nombre:    nombre.trim(),
           cliente_telefono:  telefono.trim(),
           cliente_direccion: orderMode === "delivery" ? direccion.trim() : null,
@@ -330,7 +346,8 @@ const Pedidos = () => {
                 </div>
                 <h3 className="font-display text-2xl text-v2-text mb-2">Delivery</h3>
                 <p className="text-sm v2-text-muted mb-1">Lo enviamos a tu domicilio</p>
-                <p className="text-xs text-v2-champagne">Costo de envío: $3.500 según distancia</p>
+                <p className="text-xs text-v2-champagne">Costo de envío: desde ${costoEnvioBase.toLocaleString("es-AR")}</p>
+                <p className="text-[11px] v2-text-muted mt-0.5">Valor de envío sujeto a modificación según la distancia.</p>
               </button>
 
               <button
@@ -739,14 +756,19 @@ const Pedidos = () => {
                   <span className="font-semibold text-v2-text">${cart.reduce((s,i) => s + parsePrice(i.product.price)*i.quantity,0).toLocaleString("es-AR")}</span>
                 </div>
                 {orderMode === "delivery" && (
-                  <div className="flex items-center justify-between mb-2 text-sm">
-                    <span className="v2-text-muted">Envío</span>
-                    <span className="font-semibold text-v2-text">$3.500</span>
-                  </div>
+                  <>
+                    <div className="flex items-center justify-between mb-1 text-sm">
+                      <span className="v2-text-muted">Envío</span>
+                      <span className="font-semibold text-v2-text">${costoEnvioBase.toLocaleString("es-AR")}</span>
+                    </div>
+                    <p className="v2-text-muted text-[11px] leading-snug mb-2">
+                      Valor de envío sujeto a modificación según la distancia.
+                    </p>
+                  </>
                 )}
                 <div className="flex items-center justify-between mb-5 text-sm font-bold">
                   <span className="text-v2-text">Total</span>
-                  <span className="text-v2-champagne">${(cart.reduce((s,i) => s + parsePrice(i.product.price)*i.quantity,0) + (orderMode==="delivery"?3500:0)).toLocaleString("es-AR")}</span>
+                  <span className="text-v2-champagne">${(cart.reduce((s,i) => s + parsePrice(i.product.price)*i.quantity,0) + (orderMode==="delivery"?costoEnvioBase:0)).toLocaleString("es-AR")}</span>
                 </div>
                 <button
                   onClick={() => { setCartOpen(false); setStep("checkout"); }}
