@@ -11,6 +11,8 @@ export interface CartaItem {
   id: string
   name: string
   description: string
+  /** Texto destacado opcional, en recuadro debajo de la descripción */
+  highlight?: string
   price?: string
   image?: string
   category: string
@@ -33,7 +35,7 @@ export async function fetchCartaFromSheet(): Promise<CartaSection[]> {
   try {
     const { data, error } = await supabase
       .from('menu_items')
-      .select('id, categoria, subtitulo, nombre, descripcion, precio, imagen_url, etiqueta, picante, vegano, vegetariano, sin_tacc')
+      .select('id, categoria, subtitulo, nombre, descripcion, descripcion_destacada, precio, imagen_url, etiqueta, picante, vegano, vegetariano, sin_tacc')
       .eq('tipo', 'carta')
       .eq('activo', true)
       .order('orden', { ascending: true })
@@ -74,6 +76,7 @@ function groupToSections(rows: any[]): CartaSection[] {
       id: row.id,
       name: row.nombre,
       description: row.descripcion || '',
+      highlight: row.descripcion_destacada || undefined,
       price: formatPrecio(row.precio),
       image: row.imagen_url || undefined,
       category: row.categoria,

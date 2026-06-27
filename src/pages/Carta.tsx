@@ -234,9 +234,16 @@ const Carta = () => {
                               )}
                             </div>
                             {item.description && (
-                              <p className="text-sm md:text-base v2-text-muted leading-relaxed mt-1.5 max-w-xl">
+                              <p className="text-base md:text-lg v2-text-muted leading-relaxed mt-1.5 max-w-xl whitespace-pre-line">
                                 {item.description}
                               </p>
+                            )}
+                            {item.highlight && (
+                              <div className="mt-2 inline-block rounded-lg border border-v2-champagne/35 bg-v2-champagne/10 px-3 py-1.5">
+                                <p className="text-sm md:text-base font-medium text-v2-champagne leading-snug whitespace-pre-line">
+                                  {item.highlight}
+                                </p>
+                              </div>
                             )}
                           </div>
 
@@ -314,9 +321,16 @@ const Carta = () => {
               )}
               <h3 className="font-display text-2xl text-v2-text mb-2">{zoomItem.name}</h3>
               {zoomItem.description && (
-                <p className="text-base v2-text-muted leading-relaxed mb-4">
+                <p className="text-lg v2-text-muted leading-relaxed mb-4 whitespace-pre-line">
                   {zoomItem.description}
                 </p>
+              )}
+              {zoomItem.highlight && (
+                <div className="mb-4 rounded-xl border border-v2-champagne/35 bg-v2-champagne/10 px-4 py-3">
+                  <p className="text-base font-medium text-v2-champagne leading-snug whitespace-pre-line">
+                    {zoomItem.highlight}
+                  </p>
+                </div>
               )}
               {zoomItem.price && (
                 <span className="text-2xl md:text-3xl font-display font-medium tracking-tight text-v2-champagne">

@@ -11,6 +11,8 @@ export interface CatalogProduct {
   id: string
   name: string
   description: string
+  /** Texto destacado opcional, en recuadro debajo de la descripción */
+  highlight?: string
   /** Precio flexible: "$12.500" o "5p: $12.500 / 9p: $23.200" */
   price: string
   image?: string
@@ -35,7 +37,7 @@ export async function fetchCatalogFromSheet(): Promise<CatalogCategory[]> {
   try {
     const { data, error } = await supabase
       .from('menu_items')
-      .select('id, categoria, subtitulo, nombre, descripcion, precio, imagen_url, etiqueta, picante, vegano, vegetariano, sin_tacc')
+      .select('id, categoria, subtitulo, nombre, descripcion, descripcion_destacada, precio, imagen_url, etiqueta, picante, vegano, vegetariano, sin_tacc')
       .eq('tipo', 'delivery')
       .eq('activo', true)
       .order('orden', { ascending: true })
@@ -85,6 +87,7 @@ function groupToCategories(rows: any[]): CatalogCategory[] {
       id: row.id,
       name: row.nombre,
       description: row.descripcion || '',
+      highlight: row.descripcion_destacada || undefined,
       price: row.precio || '',
       image: row.imagen_url || undefined,
       category: row.categoria,

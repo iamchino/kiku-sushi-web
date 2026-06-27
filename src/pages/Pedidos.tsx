@@ -595,9 +595,16 @@ const Pedidos = () => {
                             {vegBadges}
                           </div>
                           {product.description && (
-                            <p className="text-xs v2-text-muted leading-relaxed mt-1 max-w-xl">
+                            <p className="text-base md:text-lg v2-text-muted leading-relaxed mt-1 max-w-xl whitespace-pre-line">
                               {product.description}
                             </p>
+                          )}
+                          {product.highlight && (
+                            <div className="mt-2 inline-block rounded-lg border border-v2-champagne/35 bg-v2-champagne/10 px-3 py-1.5">
+                              <p className="text-sm md:text-base font-medium text-v2-champagne leading-snug whitespace-pre-line">
+                                {product.highlight}
+                              </p>
+                            </div>
                           )}
                         </div>
                         <span className="text-base font-display text-v2-champagne whitespace-nowrap shrink-0">
@@ -639,9 +646,17 @@ const Pedidos = () => {
                           <h3 className="font-display text-xl text-v2-text">{product.name}</h3>
                           {vegBadges}
                         </div>
-                        <p className="text-xs v2-text-muted leading-relaxed mb-4 flex-1">
+                        <p className="text-base md:text-lg v2-text-muted leading-relaxed mb-3 whitespace-pre-line">
                           {product.description}
                         </p>
+
+                        {product.highlight && (
+                          <div className="mb-4 rounded-lg border border-v2-champagne/35 bg-v2-champagne/10 px-3.5 py-2.5">
+                            <p className="text-sm md:text-base font-medium text-v2-champagne leading-snug whitespace-pre-line">
+                              {product.highlight}
+                            </p>
+                          </div>
+                        )}
 
                         <div className="flex items-center justify-between mt-auto">
                           <span className="text-base font-display text-v2-champagne">
@@ -933,9 +948,16 @@ const Pedidos = () => {
                 </span>
               )}
               <h3 className="font-display text-2xl text-v2-text mb-2">{zoomProduct.name}</h3>
-              <p className="text-sm v2-text-muted leading-relaxed mb-4">
+              <p className="text-lg v2-text-muted leading-relaxed mb-4 whitespace-pre-line">
                 {zoomProduct.description}
               </p>
+              {zoomProduct.highlight && (
+                <div className="mb-4 rounded-xl border border-v2-champagne/35 bg-v2-champagne/10 px-4 py-3">
+                  <p className="text-base font-medium text-v2-champagne leading-snug whitespace-pre-line">
+                    {zoomProduct.highlight}
+                  </p>
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <span className="text-lg font-display text-v2-champagne">
                   {formatPrice(zoomProduct.price)}

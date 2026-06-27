@@ -259,7 +259,7 @@ const NavbarV2 = () => {
           pointerEvents: open ? "auto" : "none",
         }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className="fixed inset-0 z-40 bg-v2-bg/97 backdrop-blur-xl lg:hidden overflow-y-auto"
+        className="fixed inset-0 z-40 bg-v2-bg/[0.98] backdrop-blur-xl lg:hidden overflow-y-auto"
       >
         <div className="min-h-full flex flex-col justify-center items-start px-10 gap-6 py-24">
           {/* Omakase + Kiku Libre */}
@@ -297,13 +297,13 @@ const NavbarV2 = () => {
                 <ChevronDown className={`w-6 h-6 transition-transform duration-300 ${espOpenMobile ? "rotate-180" : ""}`} />
               </button>
               {espOpenMobile && (
-                <div className="mt-4 flex flex-col gap-3 pl-1 border-l border-v2-champagne/15">
+                <div className="mt-4 flex flex-col gap-3 pl-1 border-l border-v2-champagne/30">
                   {especiales.map((e) => (
                     <a
                       key={e.id}
                       href={anchorHref(e.id)}
                       onClick={() => setOpen(false)}
-                      className="pl-4 text-xl text-v2-text/85 hover:text-v2-champagne transition-colors uppercase tracking-[0.12em]"
+                      className="pl-4 text-xl text-v2-champagne/95 hover:text-v2-text transition-colors uppercase tracking-[0.12em]"
                     >
                       {especialLabel(e)}
                     </a>

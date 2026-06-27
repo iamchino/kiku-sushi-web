@@ -35,6 +35,8 @@ export interface Especial {
   title: string
   titleAccent: string
   description: string
+  /** Texto destacado opcional, en recuadro debajo de la descripción */
+  highlight?: string
   pasos?: Paso[]
   precio?: string
   /** Línea de autor, ej: "— Chef Selection · Marcelo Castro —" */
@@ -128,6 +130,7 @@ function mapRow(row: any): Especial {
     title: row.titulo,
     titleAccent: row.titulo_acento || '',
     description: row.descripcion || '',
+    ...(row.descripcion_destacada ? { highlight: row.descripcion_destacada } : {}),
     ...(pasos.length > 0 ? { pasos } : {}),
     precio: formatPrecio(row.precio, row.precio_nota),
     ...(row.firma ? { firma: row.firma } : {}),

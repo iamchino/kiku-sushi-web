@@ -52,9 +52,17 @@ const EspecialTexto = ({ e }: { e: Especial }) => (
       )}
     </h3>
 
-    <p className="font-display text-lg md:text-xl v2-text-muted leading-[1.7] font-light mb-8 whitespace-pre-line">
+    <p className="font-display text-xl md:text-2xl lg:text-[28px] v2-text-muted leading-[1.6] font-light mb-8 whitespace-pre-line">
       {e.description}
     </p>
+
+    {e.highlight && (
+      <div className="mb-8 rounded-xl border border-v2-champagne/35 bg-v2-champagne/10 px-5 py-4">
+        <p className="text-base md:text-lg font-medium text-v2-champagne leading-snug whitespace-pre-line">
+          {e.highlight}
+        </p>
+      </div>
+    )}
 
     {e.pasos && (
       <div className="mb-8 space-y-4">
