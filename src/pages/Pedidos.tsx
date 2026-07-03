@@ -17,15 +17,37 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 //   Viernes y sábado: 19:30 → 01:00 (esa madrugada cae en sábado y domingo)
 // Domingo (salvo 00:00–01:00) y lunes: cerrado.
 // Se calcula siempre en hora de Argentina, sin importar la zona del dispositivo.
-const kikuAbierto = (): { abierto: boolean; motivo: string } => {
+
+type OrderMode = "delivery" | "takeaway" | null;
+
+// Aperturas especiales SOLO para retiro en local (takeaway).
+// Fecha "YYYY-MM-DD" (hora Argentina) → minuto de apertura de ese día.
+// Al pasar la fecha el horario vuelve solo a la normalidad (19:30): no hay que revertir nada a mano.
+const APERTURA_TAKEAWAY_ESPECIAL: Record<string, number> = {
+  "2026-07-03": 17 * 60 + 30,   // Argentina juega: retiro en local desde las 17:30
+};
+
+// "YYYY-MM-DD" en hora Argentina para una fecha dada.
+const fechaArg = (d: Date): string =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+// Minuto de apertura de un día según el modo. Takeaway puede tener apertura especial (ej. 17:30);
+// delivery (y el default) siempre 19:30.
+const aperturaMin = (fecha: string, mode?: OrderMode): number =>
+  (mode === "takeaway" && APERTURA_TAKEAWAY_ESPECIAL[fecha] != null)
+    ? APERTURA_TAKEAWAY_ESPECIAL[fecha]
+    : 19 * 60 + 30;
+
+const kikuAbierto = (mode?: OrderMode): { abierto: boolean; motivo: string } => {
   const arg = new Date(
     new Date().toLocaleString("en-US", { timeZone: "America/Argentina/Buenos_Aires" })
   );
   const dow = arg.getDay();                       // 0=Dom .. 6=Sáb
   const mins = arg.getHours() * 60 + arg.getMinutes();
+  const apertura = aperturaMin(fechaArg(arg), mode);
 
-  const noche = [2, 3, 4, 5, 6].includes(dow) && mins >= 19 * 60 + 30;  // 19:30 en adelante
-  const madrugada = [6, 0].includes(dow) && mins <= 60;                 // hasta 01:00 (sáb y dom)
+  const noche = [2, 3, 4, 5, 6].includes(dow) && mins >= apertura;     // desde la apertura del día
+  const madrugada = [6, 0].includes(dow) && mins <= 60;                // hasta 01:00 (sáb y dom)
 
   if (noche || madrugada) return { abierto: true, motivo: "" };
   if (dow === 1) return { abierto: false, motivo: "Hoy (lunes) estamos cerrados." };
@@ -36,7 +58,7 @@ const kikuAbierto = (): { abierto: boolean; motivo: string } => {
 };
 
 // ¿Un horario "YYYY-MM-DDTHH:MM" (hora Argentina) cae dentro de atención?
-const horarioPedidoValido = (value: string): boolean => {
+const horarioPedidoValido = (value: string, mode?: OrderMode): boolean => {
   if (!value) return false;
   const [datePart, timePart] = value.split("T");
   if (!datePart || !timePart) return false;
@@ -44,7 +66,8 @@ const horarioPedidoValido = (value: string): boolean => {
   const [hh, mm] = timePart.split(":").map(Number);
   const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay();  // weekday TZ-independiente
   const mins = hh * 60 + mm;
-  return ([2, 3, 4, 5, 6].includes(dow) && mins >= 19 * 60 + 30)
+  const apertura = aperturaMin(datePart, mode);
+  return ([2, 3, 4, 5, 6].includes(dow) && mins >= apertura)
       || ([6, 0].includes(dow) && mins <= 60);
 };
 
@@ -95,12 +118,14 @@ const Pedidos = () => {
   const [cartOpen, setCartOpen] = useState(false);
   const [zoomProduct, setZoomProduct] = useState<CatalogProduct | null>(null);
 
-  // Estado de apertura del local (se refresca cada 30s para abrir/cerrar solo).
-  const [estadoLocal, setEstadoLocal] = useState(kikuAbierto);
+  // Estado de apertura del local (depende del modo: takeaway puede abrir antes en fechas especiales).
+  // Se refresca cada 30s y al cambiar de modo, para abrir/cerrar solo.
+  const [estadoLocal, setEstadoLocal] = useState(() => kikuAbierto(initialMode));
   useEffect(() => {
-    const id = setInterval(() => setEstadoLocal(kikuAbierto()), 30000);
+    setEstadoLocal(kikuAbierto(orderMode));
+    const id = setInterval(() => setEstadoLocal(kikuAbierto(orderMode)), 30000);
     return () => clearInterval(id);
-  }, []);
+  }, [orderMode]);
 
   // Cerrar la imagen ampliada con Escape
   useEffect(() => {
@@ -247,13 +272,13 @@ const Pedidos = () => {
     if (orderMode === "delivery" && !direccion.trim()) return;
 
     // ¿Cuándo? Si está cerrado ahora, se obliga a programar.
-    const est = kikuAbierto();
+    const est = kikuAbierto(orderMode);
     const debeProgramar = !est.abierto || cuando === "programar";
     let programadoPara: string | null = null;
     if (debeProgramar) {
       if (!programadoLocal) { setErrorMsg("Elegí el día y la hora para tu pedido."); return; }
-      if (!horarioPedidoValido(programadoLocal)) {
-        setErrorMsg("Ese horario está fuera de atención (Mar–Jue 19:30–00:00, Vie–Sáb 19:30–01:00).");
+      if (!horarioPedidoValido(programadoLocal, orderMode)) {
+        setErrorMsg("Ese horario está fuera de nuestro horario de atención.");
         return;
       }
       const t = programadoTimeMs(programadoLocal);
@@ -847,6 +872,11 @@ const Pedidos = () => {
                     />
                     <p className="text-[11px] v2-text-dim mt-1.5">
                       Atención: Mar–Jue 19:30–00:00 · Vie–Sáb 19:30–01:00.
+                      {orderMode === "takeaway" &&
+                        APERTURA_TAKEAWAY_ESPECIAL[fechaArg(new Date(
+                          new Date().toLocaleString("en-US", { timeZone: "America/Argentina/Buenos_Aires" })
+                        ))] != null &&
+                        " Hoy el retiro en local abre 17:30."}
                     </p>
                   </div>
                 )}
