@@ -8,6 +8,7 @@ import { motion, AnimatePresence, useInView } from "framer-motion";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { useOmakasePrecio, formatPesos } from "@/hooks/useOmakasePrecio";
 
 /**
  * Form de reserva V2 — flujo wizard por pasos.
@@ -58,7 +59,7 @@ const EXPERIENCIAS: Experiencia[] = [
     label: "Omakase",
     overline: "おまかせ",
     description: "Diez pasos de cocina en vivo en la barra del itamae.",
-    badge: "$65.000 p/p",
+    badge: "$70.000 p/p",
     dias: [5, 6],
     diasLabel: "Viernes y sábado",
   },
@@ -472,6 +473,7 @@ const SummaryPill = ({ icon, label }: { icon: React.ReactNode; label: string }) 
 
 const ReservationFormV2 = ({ hideHeader = false }: Props) => {
   const today = new Date().toISOString().split("T")[0];
+  const omakasePrecio = useOmakasePrecio();
 
   // Experiencia
   // Si la URL trae ?experiencia=..., la card llega pre-seleccionada
@@ -849,6 +851,8 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {EXPERIENCIAS.map((exp) => {
         const selected = tipo === exp.id;
+        // El precio del Omakase se administra desde el dashboard (web_config).
+        const badge = exp.id === "omakase" ? `${formatPesos(omakasePrecio)} p/p` : exp.badge;
         return (
           <button
             key={exp.id}
@@ -890,9 +894,9 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
                   <h4 className="font-display text-lg md:text-xl text-v2-text leading-tight">
                     {exp.label}
                   </h4>
-                  {exp.badge && (
+                  {badge && (
                     <span className="text-[9px] tracking-[0.18em] uppercase px-1.5 py-0.5 bg-v2-champagne/15 text-v2-champagne border border-v2-champagne/30">
-                      {exp.badge}
+                      {badge}
                     </span>
                   )}
                 </div>

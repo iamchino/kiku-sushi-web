@@ -5,6 +5,7 @@ import { motion, useInView, useScroll, useTransform } from "framer-motion";
 import NavbarV2 from "@/components/kiku-v2/NavbarV2";
 import FooterV2 from "@/components/kiku-v2/FooterV2";
 import { useLenisScroll } from "@/hooks/useLenisScroll";
+import { useOmakasePrecio, formatPesos } from "@/hooks/useOmakasePrecio";
 
 import omakaseHero from "@/assets/omakase-hero.webp";
 import omakase1 from "@/assets/omakase-1.webp";
@@ -103,6 +104,7 @@ const PASOS = [
 
 const Omakase = () => {
   useLenisScroll();
+  const omakasePrecio = useOmakasePrecio();
 
   useEffect(() => {
     document.body.classList.add("v2-root");
@@ -391,7 +393,7 @@ const Omakase = () => {
                 — おまかせ —
               </span>
               <p className="font-display text-4xl md:text-5xl text-v2-champagne mb-3">
-                $65.000
+                {formatPesos(omakasePrecio)}
               </p>
               <p className="text-[10px] v2-text-muted uppercase tracking-[0.3em] mb-3">
                 por persona · bebida y postre incluidos

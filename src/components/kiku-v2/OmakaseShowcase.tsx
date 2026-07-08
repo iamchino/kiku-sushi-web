@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import omakaseSectionBg from "@/assets/omakase-section-bg.webp";
+import { useOmakasePrecio, formatPesos } from "@/hooks/useOmakasePrecio";
 
 /**
  * OmakaseShowcase — la estrella de Kiku.
@@ -10,6 +11,7 @@ import omakaseSectionBg from "@/assets/omakase-section-bg.webp";
  * líneas premium decorativas. Fondo: OMAK1HERO (omakase-section-bg.webp).
  */
 const OmakaseShowcase = () => {
+  const omakasePrecio = useOmakasePrecio();
   const ref = useRef<HTMLElement>(null);
   const inViewRef = useRef<HTMLDivElement>(null);
   const inView = useInView(inViewRef, { once: true, margin: "-120px" });
@@ -118,7 +120,7 @@ const OmakaseShowcase = () => {
             Conocer la experiencia
             <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-400" />
           </Link>
-          <span className="font-display text-xl text-v2-champagne whitespace-nowrap">$65.000 por persona</span>
+          <span className="font-display text-xl text-v2-champagne whitespace-nowrap">{formatPesos(omakasePrecio)} por persona</span>
         </motion.div>
       </div>
     </section>
