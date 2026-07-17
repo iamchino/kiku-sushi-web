@@ -33,3 +33,12 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+
+# Vite: archivos temporales de config
+vite.config.*.timestamp-*.mjs
+vite.config.*.timestamp-*
+
+# Scratch
+*.tmp
+*.bak
+*.orig
