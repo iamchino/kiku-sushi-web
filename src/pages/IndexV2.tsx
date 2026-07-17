@@ -4,7 +4,7 @@ import { motion, useScroll, useSpring } from "framer-motion";
 import { useLenisScroll } from "@/hooks/useLenisScroll";
 import NavbarV2 from "@/components/kiku-v2/NavbarV2";
 import HeroV2 from "@/components/kiku-v2/HeroV2";
-import RamenShowcase from "@/components/kiku-v2/RamenShowcase";
+import NovedadShowcase from "@/components/kiku-v2/NovedadShowcase";
 import OmakaseShowcase from "@/components/kiku-v2/OmakaseShowcase";
 import EspecialesSection from "@/components/kiku-v2/EspecialesSection";
 import KikuLibreShowcase from "@/components/kiku-v2/KikuLibreShowcase";
@@ -17,7 +17,7 @@ import FooterV2 from "@/components/kiku-v2/FooterV2";
  * Index V2 — la nueva landing.
  * Estructura:
  *   Hero (video + parallax)
- *   Ramen — showcase full-width, editable desde el dashboard (se auto-oculta)
+ *   Nuevo — el plato del momento, editable desde el dashboard (se auto-oculta)
  *   Omakase — showcase full-width (la estrella)
  *   Especiales de Kiku — scroll horizontal (Umami del Sur · Pacífico y Patagonia · Kiku Otoñal)
  *   Kiku Libre — showcase full-width (foto propia de fondo)
@@ -68,9 +68,9 @@ const IndexV2 = () => {
       <NavbarV2 />
       <HeroV2 />
 
-      {/* Ramen — lo nuevo. Contenido y visibilidad se manejan desde
-          el dashboard (/menu → tab "Ramen"). Si está apagada, no renderiza nada. */}
-      <RamenShowcase />
+      {/* El plato del momento. Contenido y visibilidad se manejan desde el
+          dashboard (/menu → tab "Nuevo"). Si está apagada, no renderiza nada. */}
+      <NovedadShowcase />
 
       {/* La estrella de Kiku */}
       <OmakaseShowcase />
