@@ -1,20 +1,23 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
-// Sección Ramen del home. Se administra desde el dashboard
-// (/menu → tab "Ramen") en la tabla web_config (fila única id=1).
+// Sección "Nuevo" del home: el plato del momento. Se administra desde el
+// dashboard (/menu → tab "Nuevo") en la tabla web_config (fila única id=1).
+//
+// Es un contenedor genérico a propósito: hoy es el ramen, mañana puede ser
+// otra cosa. Todo el contenido (título, copy, fotos, precio) es editable.
 //
 // A diferencia del Omakase o los Especiales, acá no hay fallback hardcodeado:
 // si no hay datos o la sección está apagada, la web simplemente no la muestra.
 // Es contenido que todavía no existe, así que "nada" es el estado correcto.
 
-export interface RamenImagen {
+export interface NovedadImagen {
   url: string;
   /** Texto alternativo. Puede venir vacío. */
   alt: string;
 }
 
-export interface RamenConfig {
+export interface NovedadConfig {
   activo: boolean;
   overline: string;
   titulo: string;
@@ -23,11 +26,11 @@ export interface RamenConfig {
   /** Precio en pesos. 0 = no mostrar precio. */
   precio: number;
   /** Entre 2 y 5 imágenes. Se muestran en carrusel; la primera además va de fondo. */
-  imagenes: RamenImagen[];
+  imagenes: NovedadImagen[];
 }
 
-export interface UseRamenResult {
-  ramen: RamenConfig | null;
+export interface UseNovedadResult {
+  novedad: NovedadConfig | null;
   loading: boolean;
 }
 
@@ -36,7 +39,7 @@ export const formatPesos = (n: number): string =>
   `$${Number(n || 0).toLocaleString("es-AR")}`;
 
 /** Normaliza el jsonb de imágenes, descartando cualquier entrada sin url. */
-const parseImagenes = (raw: unknown): RamenImagen[] => {
+const parseImagenes = (raw: unknown): NovedadImagen[] => {
   if (!Array.isArray(raw)) return [];
   return raw
     .filter((im): im is Record<string, unknown> => Boolean(im) && typeof im === "object")
@@ -48,13 +51,13 @@ const parseImagenes = (raw: unknown): RamenImagen[] => {
 };
 
 /**
- * Lee la config de la sección Ramen desde Supabase.
+ * Lee la config de la sección "Nuevo" desde Supabase.
  * Devuelve `null` mientras carga, si falla la consulta, si la sección está
  * apagada, o si el contenido está incompleto (sin descripción o con menos de
  * 2 fotos). En todos esos casos la sección no debe renderizarse.
  */
-export function useRamen(): UseRamenResult {
-  const [ramen, setRamen] = useState<RamenConfig | null>(null);
+export function useNovedad(): UseNovedadResult {
+  const [novedad, setNovedad] = useState<NovedadConfig | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -62,7 +65,7 @@ export function useRamen(): UseRamenResult {
     supabase
       .from("web_config")
       .select(
-        "ramen_activo, ramen_overline, ramen_titulo, ramen_titulo_accent, ramen_descripcion, ramen_precio, ramen_imagenes"
+        "novedad_activo, novedad_overline, novedad_titulo, novedad_titulo_accent, novedad_descripcion, novedad_precio, novedad_imagenes"
       )
       .eq("id", 1)
       .maybeSingle()
@@ -70,23 +73,23 @@ export function useRamen(): UseRamenResult {
         if (!alive) return;
         setLoading(false);
 
-        if (error || !data || !data.ramen_activo) return;
+        if (error || !data || !data.novedad_activo) return;
 
-        const imagenes = parseImagenes(data.ramen_imagenes);
-        const descripcion = (data.ramen_descripcion ?? "").trim();
+        const imagenes = parseImagenes(data.novedad_imagenes);
+        const descripcion = (data.novedad_descripcion ?? "").trim();
 
         // Guarda de seguridad: aunque la base tiene un CHECK equivalente, si por
         // lo que sea llega contenido a medias preferimos no renderizar nada
         // antes que mostrar una sección rota en producción.
         if (!descripcion || imagenes.length < 2) return;
 
-        setRamen({
+        setNovedad({
           activo: true,
-          overline: (data.ramen_overline ?? "").trim(),
-          titulo: (data.ramen_titulo ?? "Ramen").trim(),
-          tituloAccent: (data.ramen_titulo_accent ?? "").trim(),
+          overline: (data.novedad_overline ?? "").trim(),
+          titulo: (data.novedad_titulo ?? "").trim(),
+          tituloAccent: (data.novedad_titulo_accent ?? "").trim(),
           descripcion,
-          precio: Number(data.ramen_precio ?? 0),
+          precio: Number(data.novedad_precio ?? 0),
           imagenes,
         });
       });
@@ -95,5 +98,5 @@ export function useRamen(): UseRamenResult {
     };
   }, []);
 
-  return { ramen, loading };
+  return { novedad, loading };
 }

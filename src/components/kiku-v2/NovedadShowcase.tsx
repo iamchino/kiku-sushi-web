@@ -3,14 +3,18 @@ import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import useEmblaCarousel from "embla-carousel-react";
-import { useRamen, formatPesos, type RamenConfig } from "@/hooks/useRamen";
+import { useNovedad, formatPesos, type NovedadConfig } from "@/hooks/useNovedad";
 
 /**
- * RamenShowcase — primera sección del home, justo debajo del hero.
+ * NovedadShowcase — primera sección del home, justo debajo del hero.
+ *
+ * Es "el plato del momento": un contenedor genérico. Hoy muestra el ramen;
+ * cuando el ramen deje de ser novedad, se cambia el contenido desde el
+ * dashboard y pasa a ser otra cosa, sin tocar este archivo.
  *
  * Mismo lenguaje que OmakaseShowcase / KikuLibreShowcase (parallax + reveal),
  * con una diferencia: acá el contenido es 100% editable desde el dashboard
- * (/menu → tab "Ramen"), incluidas las fotos.
+ * (/menu → tab "Nuevo"), incluidas las fotos.
  *
  * Las fotos van en un carrusel (embla) que acepta de 2 a 5 y se adapta a las
  * que haya: con 3 muestra 3, sin huecos ni relleno. La primera además va de
@@ -22,17 +26,17 @@ import { useRamen, formatPesos, type RamenConfig } from "@/hooks/useRamen";
  */
 /**
  * Wrapper: decide si hay algo que mostrar. Los hooks de animación viven en
- * RamenShowcaseInner y no en este componente a propósito — si useScroll()
+ * NovedadShowcaseInner y no en este componente a propósito — si useScroll()
  * apuntara a un ref que nunca se monta (sección apagada), framer-motion
  * emite un warning en la consola de todos los visitantes del home.
  */
-const RamenShowcase = () => {
-  const { ramen } = useRamen();
-  if (!ramen) return null;
-  return <RamenShowcaseInner ramen={ramen} />;
+const NovedadShowcase = () => {
+  const { novedad } = useNovedad();
+  if (!novedad) return null;
+  return <NovedadShowcaseInner novedad={novedad} />;
 };
 
-const RamenShowcaseInner = ({ ramen }: { ramen: RamenConfig }) => {
+const NovedadShowcaseInner = ({ novedad }: { novedad: NovedadConfig }) => {
   const ref = useRef<HTMLElement>(null);
   const inViewRef = useRef<HTMLDivElement>(null);
   const inView = useInView(inViewRef, { once: true, margin: "-120px" });
@@ -75,7 +79,7 @@ const RamenShowcaseInner = ({ ramen }: { ramen: RamenConfig }) => {
   const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
   const scrollTo = useCallback((i: number) => emblaApi?.scrollTo(i), [emblaApi]);
 
-  const fotos = ramen.imagenes;
+  const fotos = novedad.imagenes;
   const principal = fotos[0];
   // Con 2 fotos las flechas y los puntos aportan poco ruido y sí orientación;
   // los dejamos siempre, pero solo si de verdad hay más de una.
@@ -84,7 +88,7 @@ const RamenShowcaseInner = ({ ramen }: { ramen: RamenConfig }) => {
   return (
     <section
       ref={ref}
-      id="ramen"
+      id="novedad"
       className="relative min-h-[92svh] md:min-h-screen flex items-center overflow-hidden v2-bg-base"
     >
       {/* Foto principal de fondo, con parallax */}
@@ -121,14 +125,14 @@ const RamenShowcaseInner = ({ ramen }: { ramen: RamenConfig }) => {
         <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,46%)] gap-14 lg:gap-16 items-center">
           {/* Columna de texto */}
           <div>
-            {ramen.overline && (
+            {novedad.overline && (
               <motion.span
                 initial={{ opacity: 0 }}
                 animate={inView ? { opacity: 1 } : {}}
                 transition={{ duration: 1 }}
                 className="font-jp text-xs tracking-[0.45em] text-v2-champagne mb-8 block"
               >
-                — {ramen.overline} —
+                — {novedad.overline} —
               </motion.span>
             )}
 
@@ -139,11 +143,11 @@ const RamenShowcaseInner = ({ ramen }: { ramen: RamenConfig }) => {
               className="font-display font-light leading-[0.88] tracking-[-0.03em] mb-10"
               style={{ fontSize: "clamp(56px, 8vw, 128px)" }}
             >
-              {ramen.titulo}
-              {ramen.tituloAccent && (
+              {novedad.titulo}
+              {novedad.tituloAccent && (
                 <>
                   {" "}
-                  <span className="font-normal v2-gradient-text">{ramen.tituloAccent}</span>
+                  <span className="font-normal v2-gradient-text">{novedad.tituloAccent}</span>
                 </>
               )}
             </motion.h2>
@@ -154,7 +158,7 @@ const RamenShowcaseInner = ({ ramen }: { ramen: RamenConfig }) => {
               transition={{ duration: 1, delay: 0.35 }}
               className="text-base leading-[1.85] v2-text-muted max-w-xl mb-12"
             >
-              {ramen.descripcion}
+              {novedad.descripcion}
             </motion.p>
 
             <motion.div
@@ -170,9 +174,9 @@ const RamenShowcaseInner = ({ ramen }: { ramen: RamenConfig }) => {
                 Ver la carta
                 <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
               </Link>
-              {ramen.precio > 0 && (
+              {novedad.precio > 0 && (
                 <span className="font-display text-xl text-v2-champagne whitespace-nowrap">
-                  {formatPesos(ramen.precio)}
+                  {formatPesos(novedad.precio)}
                 </span>
               )}
             </motion.div>
@@ -200,7 +204,7 @@ const RamenShowcaseInner = ({ ramen }: { ramen: RamenConfig }) => {
                     >
                       <img
                         src={im.url}
-                        alt={im.alt || `${ramen.titulo} ${ramen.tituloAccent}`.trim() || "Ramen"}
+                        alt={im.alt || `${novedad.titulo} ${novedad.tituloAccent}`.trim() || "Plato nuevo de Kiku"}
                         className="w-full h-[300px] md:h-[420px] lg:h-[480px] object-cover"
                         loading={i === 0 ? "eager" : "lazy"}
                       />
@@ -263,4 +267,4 @@ const RamenShowcaseInner = ({ ramen }: { ramen: RamenConfig }) => {
   );
 };
 
-export default RamenShowcase;
+export default NovedadShowcase;

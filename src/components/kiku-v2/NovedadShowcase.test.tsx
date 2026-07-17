@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 /**
- * Tests de la sección Ramen del home.
+ * Tests de la sección "Nuevo" del home (el plato del momento).
  *
  * Lo que importa acá no es que renderice lindo, sino que respete las dos reglas
  * que la hacen segura de tener en producción con contenido a medio cargar:
@@ -15,9 +15,9 @@ import { MemoryRouter } from "react-router-dom";
 // El hook consulta Supabase; acá lo mockeamos entero para controlar el input.
 // No usamos importActual: cargar el módulo real arrastra src/lib/supabase.ts,
 // que tira si faltan las env vars — y en un test unitario no queremos esa red.
-const mockUseRamen = vi.fn();
-vi.mock("@/hooks/useRamen", () => ({
-  useRamen: () => mockUseRamen(),
+const mockUseNovedad = vi.fn();
+vi.mock("@/hooks/useNovedad", () => ({
+  useNovedad: () => mockUseNovedad(),
   formatPesos: (n: number) => `$${Number(n || 0).toLocaleString("es-AR")}`,
 }));
 
@@ -28,15 +28,15 @@ vi.mock("embla-carousel-react", () => ({
   default: () => [vi.fn(), undefined],
 }));
 
-import RamenShowcase from "@/components/kiku-v2/RamenShowcase";
+import NovedadShowcase from "@/components/kiku-v2/NovedadShowcase";
 
 const fotos = (n: number) =>
   Array.from({ length: n }, (_, i) => ({
-    url: `https://example.test/ramen-${i + 1}.webp`,
+    url: `https://example.test/novedad-${i + 1}.webp`,
     alt: `Foto ${i + 1}`,
   }));
 
-const ramenBase = {
+const novedadBase = {
   activo: true,
   overline: "ラーメン",
   titulo: "Ramen",
@@ -49,7 +49,7 @@ const ramenBase = {
 const renderShowcase = () =>
   render(
     <MemoryRouter>
-      <RamenShowcase />
+      <NovedadShowcase />
     </MemoryRouter>
   );
 
@@ -58,26 +58,26 @@ const fotosDelCarrusel = () =>
   screen.queryAllByRole("img").filter((img) => !img.hasAttribute("aria-hidden"));
 
 beforeEach(() => {
-  mockUseRamen.mockReset();
+  mockUseNovedad.mockReset();
 });
 
-describe("RamenShowcase — cuándo NO debe aparecer", () => {
+describe("NovedadShowcase — cuándo NO debe aparecer", () => {
   it("no renderiza nada si la sección está apagada", () => {
-    mockUseRamen.mockReturnValue({ ramen: null, loading: false });
+    mockUseNovedad.mockReturnValue({ novedad: null, loading: false });
     const { container } = renderShowcase();
     expect(container).toBeEmptyDOMElement();
   });
 
   it("no renderiza nada mientras carga", () => {
-    mockUseRamen.mockReturnValue({ ramen: null, loading: true });
+    mockUseNovedad.mockReturnValue({ novedad: null, loading: true });
     const { container } = renderShowcase();
     expect(container).toBeEmptyDOMElement();
   });
 });
 
-describe("RamenShowcase — contenido", () => {
+describe("NovedadShowcase — contenido", () => {
   it("muestra título, descripción y precio formateado en pesos", () => {
-    mockUseRamen.mockReturnValue({ ramen: ramenBase, loading: false });
+    mockUseNovedad.mockReturnValue({ novedad: novedadBase, loading: false });
     renderShowcase();
 
     expect(screen.getByRole("heading")).toHaveTextContent("Ramen de Kiku");
@@ -86,7 +86,7 @@ describe("RamenShowcase — contenido", () => {
   });
 
   it("oculta el precio si es 0 — útil mientras todavía no está definido", () => {
-    mockUseRamen.mockReturnValue({ ramen: { ...ramenBase, precio: 0 }, loading: false });
+    mockUseNovedad.mockReturnValue({ novedad: { ...novedadBase, precio: 0 }, loading: false });
     renderShowcase();
 
     expect(screen.queryByText(/^\$/)).not.toBeInTheDocument();
@@ -95,22 +95,22 @@ describe("RamenShowcase — contenido", () => {
   });
 
   it("omite el overline japonés si viene vacío", () => {
-    mockUseRamen.mockReturnValue({ ramen: { ...ramenBase, overline: "" }, loading: false });
+    mockUseNovedad.mockReturnValue({ novedad: { ...novedadBase, overline: "" }, loading: false });
     renderShowcase();
     expect(screen.queryByText(/—\s*ラーメン\s*—/)).not.toBeInTheDocument();
   });
 });
 
-describe("RamenShowcase — el carrusel se adapta a las fotos que haya", () => {
+describe("NovedadShowcase — el carrusel se adapta a las fotos que haya", () => {
   it.each([2, 3, 4, 5])("con %i fotos renderiza exactamente %i slides", (n) => {
-    mockUseRamen.mockReturnValue({ ramen: { ...ramenBase, imagenes: fotos(n) }, loading: false });
+    mockUseNovedad.mockReturnValue({ novedad: { ...novedadBase, imagenes: fotos(n) }, loading: false });
     renderShowcase();
 
     expect(fotosDelCarrusel()).toHaveLength(n);
   });
 
   it("usa el alt cargado desde el dashboard en cada foto", () => {
-    mockUseRamen.mockReturnValue({ ramen: { ...ramenBase, imagenes: fotos(3) }, loading: false });
+    mockUseNovedad.mockReturnValue({ novedad: { ...novedadBase, imagenes: fotos(3) }, loading: false });
     renderShowcase();
 
     expect(screen.getByAltText("Foto 1")).toBeInTheDocument();
@@ -118,8 +118,8 @@ describe("RamenShowcase — el carrusel se adapta a las fotos que haya", () => {
   });
 
   it("cae a un alt derivado del título si la foto no trae alt", () => {
-    mockUseRamen.mockReturnValue({
-      ramen: { ...ramenBase, imagenes: [{ url: "a.webp", alt: "" }, { url: "b.webp", alt: "" }] },
+    mockUseNovedad.mockReturnValue({
+      novedad: { ...novedadBase, imagenes: [{ url: "a.webp", alt: "" }, { url: "b.webp", alt: "" }] },
       loading: false,
     });
     renderShowcase();
@@ -128,7 +128,7 @@ describe("RamenShowcase — el carrusel se adapta a las fotos que haya", () => {
   });
 
   it("muestra los controles de navegación cuando hay más de una foto", () => {
-    mockUseRamen.mockReturnValue({ ramen: { ...ramenBase, imagenes: fotos(4) }, loading: false });
+    mockUseNovedad.mockReturnValue({ novedad: { ...novedadBase, imagenes: fotos(4) }, loading: false });
     renderShowcase();
 
     expect(screen.getByLabelText("Foto anterior")).toBeInTheDocument();
@@ -136,7 +136,7 @@ describe("RamenShowcase — el carrusel se adapta a las fotos que haya", () => {
   });
 
   it("la primera foto carga en eager y las demás en lazy (es la que se ve al bajar del hero)", () => {
-    mockUseRamen.mockReturnValue({ ramen: { ...ramenBase, imagenes: fotos(3) }, loading: false });
+    mockUseNovedad.mockReturnValue({ novedad: { ...novedadBase, imagenes: fotos(3) }, loading: false });
     renderShowcase();
 
     const imgs = fotosDelCarrusel();
