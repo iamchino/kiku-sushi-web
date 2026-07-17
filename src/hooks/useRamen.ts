@@ -22,7 +22,7 @@ export interface RamenConfig {
   descripcion: string;
   /** Precio en pesos. 0 = no mostrar precio. */
   precio: number;
-  /** Entre 2 y 3 imágenes. La primera es la principal (fondo). */
+  /** Entre 2 y 5 imágenes. Se muestran en carrusel; la primera además va de fondo. */
   imagenes: RamenImagen[];
 }
 
