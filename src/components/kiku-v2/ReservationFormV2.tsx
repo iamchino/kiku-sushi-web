@@ -36,7 +36,7 @@ interface Props {
 
 // ─── Experiencias disponibles ─────────────────────────────────────────────
 interface Experiencia {
-  id: "carta_abierta" | "omakase" | "umami_del_sur" | "pacifico_y_patagonia" | "kiku_libre" | "pasta_nikkei";
+  id: string;  // "carta_abierta" | "omakase" | "kiku_libre" | slug de un especial
   label: string;
   overline: string;     // kanji o tagline en japonés
   description: string;  // micro descripción
@@ -45,7 +45,9 @@ interface Experiencia {
   diasLabel: string;    // texto corto de días para mostrar en la card
 }
 
-const EXPERIENCIAS: Experiencia[] = [
+// Experiencias FIJAS: siempre disponibles, no dependen de la lista de
+// especiales. Sus días son estables (coinciden con la validación del backend).
+const FIJAS: Experiencia[] = [
   {
     id: "carta_abierta",
     label: "Carta abierta",
@@ -72,6 +74,11 @@ const EXPERIENCIAS: Experiencia[] = [
     dias: [3, 4],
     diasLabel: "Miércoles y jueves",
   },
+];
+
+// Rotativas de respaldo: se usan solo si la BD no responde. En operación normal
+// las rotativas salen de la tabla `especiales` (gestionadas desde el dashboard).
+const ROTATIVAS_FALLBACK: Experiencia[] = [
   {
     id: "umami_del_sur",
     label: "Umami del Sur",
@@ -90,16 +97,52 @@ const EXPERIENCIAS: Experiencia[] = [
     dias: [2],
     diasLabel: "Martes",
   },
-  {
-    id: "pasta_nikkei",
-    label: "Pasta Nikkei",
-    overline: "日系 パスタ",
-    description: "Pasta negra con tinta de calamar, mejillones y langostinos.",
-    badge: "$30.000 p/p",
-    dias: [5, 6],
-    diasLabel: "Viernes y sábado",
-  },
 ];
+
+// ids de las fijas, para deduplicar contra especiales.
+const IDS_FIJAS = new Set(FIJAS.map((f) => f.id));
+
+const DIAS_CORTOS = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
+
+// [2] → "Martes" · [2,3] → "mar y mié" · [2,3,4] → "mar, mié, jue" · [] → "Según disponibilidad"
+export const diasToLabel = (dias: number[]): string => {
+  if (!dias || dias.length === 0) return "Según disponibilidad";
+  const uno = ["Domingos", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábados"];
+  const orden = [1, 2, 3, 4, 5, 6, 0];
+  const ord = orden.filter((d) => dias.includes(d));
+  if (ord.length === 1) return uno[ord[0]];
+  return ord.map((d) => DIAS_CORTOS[d]).join(", ");
+};
+
+// Fila de `especiales` (solo las reservables) → card de experiencia.
+export interface EspecialRow {
+  experiencia: string;
+  titulo: string | null;
+  titulo_acento: string | null;
+  overline: string | null;
+  descripcion: string | null;
+  precio: number | null;
+  precio_nota: string | null;
+  dias: number[] | null;
+  cta_tipo: string | null;
+}
+export const mapEspecial = (r: EspecialRow): Experiencia => {
+  const dias = Array.isArray(r.dias) ? r.dias : [];
+  const label = [r.titulo, r.titulo_acento].filter(Boolean).join(" ").trim() || r.experiencia;
+  const badge =
+    r.precio != null && Number(r.precio) > 0
+      ? `$${Number(r.precio).toLocaleString("es-AR")}${r.precio_nota ? " " + r.precio_nota : " p/p"}`
+      : undefined;
+  return {
+    id: r.experiencia,
+    label,
+    overline: r.overline || "",
+    description: r.descripcion || "",
+    badge,
+    dias,
+    diasLabel: diasToLabel(dias),
+  };
+};
 
 // Local abierto martes a sábado (0=Dom .. 6=Sáb). Domingo y Lunes cerrado.
 const DIAS_ABIERTOS = [2, 3, 4, 5, 6];
@@ -123,8 +166,8 @@ const primeraFechaValida = (desdeIso: string, permitidos: number[]): string => {
 // ─── Horarios disponibles para reserva online ─────────────────────────────
 // Hasta las 22:00 con mesa asignada. 22:30 y 23:00 también se pueden reservar
 // pero quedan registrados como ORDEN DE LLEGADA (sin mesa fija).
-const HORARIOS_WEB = ["20:00", "20:30", "21:00", "21:30", "22:00", "22:30", "23:00"] as const;
-const HORARIOS_ORDEN_LLEGADA = new Set<string>(["22:30", "23:00"]);
+const HORARIOS_WEB_FALLBACK: string[] = ["20:00", "20:30", "21:00", "21:30", "22:00", "22:30", "23:00"];
+const ORDEN_LLEGADA_FALLBACK = new Set<string>(["22:30", "23:00"]);
 
 // Cantidad de días que se muestran en el strip horizontal de fechas.
 // Para fechas más allá, el chip "Otra fecha" abre el picker nativo.
@@ -362,11 +405,12 @@ const ChipsFecha = ({
 
 // ─── Grid de chips de hora ────────────────────────────────────────────────
 const ChipsHora = ({
-  value, onChange, horarios,
+  value, onChange, horarios, ordenSet,
 }: {
   value: string;
   onChange: (t: string) => void;
   horarios: readonly string[];
+  ordenSet: Set<string>;
 }) => {
   if (horarios.length === 0) {
     return (
@@ -381,7 +425,7 @@ const ChipsHora = ({
     <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
       {horarios.map((t) => {
         const selected = t === value;
-        const esOrden = HORARIOS_ORDEN_LLEGADA.has(t);
+        const esOrden = ordenSet.has(t);
         return (
           <button
             key={t}
@@ -467,6 +511,35 @@ const SummaryPill = ({ icon, label }: { icon: React.ReactNode; label: string }) 
   </span>
 );
 
+// ─── Lógica pura de días/horarios (testeable) ─────────────────────────────
+type DiasCfg = Record<number, { mediodia: boolean; noche: boolean }>;
+type SlotsCfg = { mediodia: string[]; noche: string[]; orden: string[] };
+
+// Días de la semana con alguna franja habilitada. Si no hay config, fallback.
+export const diasAbiertosDe = (diasCfg: DiasCfg | null, fallback: number[]): number[] => {
+  if (!diasCfg) return fallback;
+  const ds = Object.entries(diasCfg)
+    .filter(([, v]) => v.mediodia || v.noche)
+    .map(([k]) => Number(k));
+  return ds.length ? ds : fallback;
+};
+
+// Horarios candidatos para una fecha ISO, según las franjas de ese día.
+export const horariosDeFecha = (
+  cfg: SlotsCfg | null,
+  diasCfg: DiasCfg | null,
+  iso: string,
+  fallback: string[],
+): string[] => {
+  const dow = weekdayOf(iso);
+  if (!cfg || !diasCfg || !diasCfg[dow]) return fallback;
+  const d = diasCfg[dow];
+  let out: string[] = [];
+  if (d.mediodia) out = out.concat(cfg.mediodia);
+  if (d.noche) out = out.concat(cfg.noche, cfg.orden);
+  return Array.from(new Set(out)).sort();
+};
+
 // ════════════════════════════════════════════════════════════════════════════
 // COMPONENTE PRINCIPAL
 // ════════════════════════════════════════════════════════════════════════════
@@ -479,10 +552,13 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
   // Si la URL trae ?experiencia=..., la card llega pre-seleccionada
   const [searchParams] = useSearchParams();
   const experienciaParam = searchParams.get("experiencia");
-  const initialTipo: Experiencia["id"] | "" = EXPERIENCIAS.some((x) => x.id === experienciaParam)
-    ? (experienciaParam as Experiencia["id"])
-    : "";
-  const [tipo, setTipo] = useState<Experiencia["id"] | "">(initialTipo);
+  const [tipo, setTipo] = useState<string>(experienciaParam ?? "");
+
+  // Experiencias y horarios se cargan de Supabase (gestionados desde el dash).
+  // Arrancan con los valores de respaldo para que el form nunca quede vacío.
+  const [experiencias, setExperiencias] = useState<Experiencia[]>([...FIJAS, ...ROTATIVAS_FALLBACK]);
+  const [cfg, setCfg] = useState<{ mediodia: string[]; noche: string[]; orden: string[] } | null>(null);
+  const [diasCfg, setDiasCfg] = useState<Record<number, { mediodia: boolean; noche: boolean }> | null>(null);
 
   // Fecha / hora / personas
   const [date, setDate] = useState(today);
@@ -536,15 +612,84 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
     return () => { cancelled = true; };
   }, [date]);
 
+  // ─── Config de reservas (experiencias + horarios) desde Supabase ─────────
+  // Filosofía de especiales.ts: si algo falla, quedan los valores de respaldo.
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const [expRes, cfgRes, diasRes] = await Promise.all([
+        supabase
+          .from("especiales")
+          .select("experiencia,titulo,titulo_acento,overline,descripcion,precio,precio_nota,dias,cta_tipo")
+          .eq("activo", true)
+          .order("orden", { ascending: true }),
+        supabase
+          .from("reservas_config")
+          .select("mediodia_slots,noche_slots,orden_llegada_slots")
+          .eq("id", 1)
+          .maybeSingle(),
+        supabase.from("reservas_dias").select("dow,mediodia,noche"),
+      ]);
+      if (!alive) return;
+
+      // Experiencias = fijas + especiales reservables activos (dedup por id).
+      if (!expRes.error && Array.isArray(expRes.data)) {
+        const rot = (expRes.data as EspecialRow[])
+          .filter((r) => (r.cta_tipo ?? "reservar") === "reservar" && r.experiencia && !IDS_FIJAS.has(r.experiencia))
+          .map(mapEspecial);
+        setExperiencias([...FIJAS, ...rot]);
+      }
+
+      if (!cfgRes.error && cfgRes.data) {
+        setCfg({
+          mediodia: cfgRes.data.mediodia_slots || [],
+          noche: cfgRes.data.noche_slots || [],
+          orden: cfgRes.data.orden_llegada_slots || [],
+        });
+      }
+
+      if (!diasRes.error && Array.isArray(diasRes.data)) {
+        const m: Record<number, { mediodia: boolean; noche: boolean }> = {};
+        for (const r of diasRes.data) m[r.dow] = { mediodia: !!r.mediodia, noche: !!r.noche };
+        setDiasCfg(m);
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  // Si la experiencia pre-elegida (?experiencia=) ya no existe, la limpiamos.
+  useEffect(() => {
+    if (tipo && !experiencias.some((x) => x.id === tipo)) setTipo("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [experiencias]);
+
+  // Días que el local abre para reservar (alguna franja habilitada).
+  const openWeekdays = diasAbiertosDe(diasCfg, DIAS_ABIERTOS);
+
+  // Turnos por orden de llegada (para marcar los chips).
+  const ordenLlegadaSet = new Set<string>(
+    cfg?.orden?.length ? cfg.orden : Array.from(ORDEN_LLEGADA_FALLBACK),
+  );
+
+  // Horarios candidatos para una fecha: según las franjas habilitadas ese día.
+  const horariosDelDia = (iso: string): string[] =>
+    horariosDeFecha(cfg, diasCfg, iso, HORARIOS_WEB_FALLBACK);
+
   // ─── Derivados ─────────────────────────────────────────────────────────
   const peopleInt = parseInt(people, 10) || 2;
   const isOmakase = tipo === "omakase";
   const requiereSeña = tipo !== "" && tipo !== "carta_abierta";
 
   // Días en los que se puede reservar la experiencia elegida.
-  // Si todavía no eligió, usamos los días que el local abre (mar–sáb).
-  const allowedWeekdays =
-    EXPERIENCIAS.find((x) => x.id === tipo)?.dias ?? DIAS_ABIERTOS;
+  // = días de la experiencia ∩ días que el local abre. Sin experiencia elegida,
+  // o experiencia sin días propios, usamos todos los días abiertos.
+  const expSel = experiencias.find((x) => x.id === tipo);
+  const allowedWeekdays = (() => {
+    if (!expSel) return openWeekdays;
+    const dias = expSel.dias && expSel.dias.length ? expSel.dias : openWeekdays;
+    const inter = dias.filter((d) => openWeekdays.includes(d));
+    return inter.length ? inter : openWeekdays;
+  })();
 
   // Si la fecha actual no es un día válido para la experiencia (o es dom/lun),
   // la corregimos automáticamente a la primera fecha válida.
@@ -567,7 +712,9 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
     slots.find((s) => (s.hora || "").slice(0, 5) === h);
 
   const cupoLibreEnSlot = (h: string): number => {
-    const s = slotByHora(h);
+    // El cupo es POR DÍA (uniforme entre slots). Si el slot exacto no vino en la
+    // respuesta (ej. turnos de mediodía), usamos cualquiera del día.
+    const s = slotByHora(h) ?? slots[0];
     // Fallback antes de que carguen los cupos: salón 34, barra omakase 6.
     if (!s) return isOmakase ? 6 : 34;
     return isOmakase ? s.cupo_barra : s.cupo_salon;
@@ -584,7 +731,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
   // Bloqueado para ESTE grupo si no entran sus comensales en lo que queda.
   const omakaseBloqueado = isOmakase && slots.length > 0 && omakaseLibres < peopleInt;
 
-  const horariosDisponibles = HORARIOS_WEB.filter((t) => cupoLibreEnSlot(t) >= peopleInt);
+  const horariosDisponibles = horariosDelDia(date).filter((t) => cupoLibreEnSlot(t) >= peopleInt);
 
   const sinCupoEnFecha = horariosDisponibles.length === 0;
 
@@ -595,7 +742,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
       if (time !== "") setTime("");
       return;
     }
-    if (!horariosDisponibles.includes(time as typeof HORARIOS_WEB[number])) {
+    if (!horariosDisponibles.includes(time)) {
       setTime(horariosDisponibles[0]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -849,7 +996,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
   // Cards verticales de tipo de experiencia
   const renderExperienciaCards = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      {EXPERIENCIAS.map((exp) => {
+      {experiencias.map((exp) => {
         const selected = tipo === exp.id;
         // El precio del Omakase se administra desde el dashboard (web_config).
         const badge = exp.id === "omakase" ? `${formatPesos(omakasePrecio)} p/p` : exp.badge;
@@ -949,8 +1096,8 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
         >
           Hora
         </SectionLabel>
-        <ChipsHora value={time} onChange={setTime} horarios={horariosDisponibles} />
-        {!sinCupoEnFecha && HORARIOS_ORDEN_LLEGADA.has(time) && (
+        <ChipsHora value={time} onChange={setTime} horarios={horariosDisponibles} ordenSet={ordenLlegadaSet} />
+        {!sinCupoEnFecha && ordenLlegadaSet.has(time) && (
           <div className="mt-3 flex items-start gap-2 text-[10.5px] v2-text-muted leading-relaxed">
             <Info className="w-3 h-3 flex-shrink-0 mt-0.5 text-v2-champagne/70" />
             <span>
@@ -1126,7 +1273,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
     </div>
   );
 
-  const tipoLabel = EXPERIENCIAS.find((x) => x.id === tipo)?.label || "";
+  const tipoLabel = experiencias.find((x) => x.id === tipo)?.label || "";
   const fechaShort = date
     ? new Date(date + "T00:00:00").toLocaleDateString("es-AR", { day: "numeric", month: "short" })
     : "";
