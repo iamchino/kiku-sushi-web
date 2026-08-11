@@ -4,8 +4,10 @@ import { Search, Loader2, UtensilsCrossed, X, Flame, Leaf, Sprout, WheatOff } fr
 import NavbarV2 from "@/components/kiku-v2/NavbarV2";
 import FooterV2 from "@/components/kiku-v2/FooterV2";
 import { fallbackCartaData, fetchCartaFromSheet, type CartaSection, type CartaItem } from "@/data/cartaSalon";
+import { useLibreConfig, formatPesos } from "@/hooks/useLibreConfig";
 
 const Carta = () => {
+  const libreCfg = useLibreConfig();
   const [sections, setSections] = useState<CartaSection[]>(fallbackCartaData);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -77,7 +79,7 @@ const Carta = () => {
           Nuestra propuesta nikkei completa para disfrutar en el salón.
         </p>
         <p className="text-[13px] md:text-sm uppercase tracking-[0.24em] text-v2-champagne/80 flex items-center justify-center gap-2 mt-5">
-          <UtensilsCrossed className="w-4 h-4" /> Cubiertos $3.500
+          <UtensilsCrossed className="w-4 h-4" /> Cubiertos {formatPesos(libreCfg.cubierto_precio)}
         </p>
       </section>
 
@@ -267,9 +269,9 @@ const Carta = () => {
       <section className="px-6 pb-2">
         <div className="max-w-3xl mx-auto border-t border-v2-champagne/10 pt-8">
           <ul className="text-sm md:text-base leading-[1.9] v2-text-dim space-y-1">
-            <li>· Servicio de mesa: $3.500 · solo a la carta de salón.</li>
+            <li>· Servicio de mesa: {formatPesos(libreCfg.cubierto_precio)} · solo a la carta de salón.</li>
             <li>· El consumo de sal en exceso es perjudicial para la salud.</li>
-            <li>· Este establecimiento garantiza a cada comensal un vaso de agua potable de 375 ml sin cargo.</li>
+            <li>· {libreCfg.agua_texto}</li>
           </ul>
         </div>
       </section>
