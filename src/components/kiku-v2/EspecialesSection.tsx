@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform, useInView, type MotionValue } from "framer-motion";
 import { ChevronRight, ChevronLeft } from "lucide-react";
+import { useLibreConfig, formatPesos as fmtLibre } from "@/hooks/useLibreConfig";
 
 import { fetchEspeciales, fallbackEspeciales, type Especial } from "@/data/especiales";
 
@@ -303,6 +304,7 @@ function agrupar(lista: Especial[]): Bloque[] {
 }
 
 const EspecialesSection = () => {
+  const libreCfg = useLibreConfig();
   const headerRef = useRef<HTMLDivElement>(null);
   const headerInView = useInView(headerRef, { once: true, margin: "-100px" });
 
@@ -365,9 +367,9 @@ const EspecialesSection = () => {
       {/* Aclaraciones */}
       <div className="relative z-10 max-w-[1440px] mx-auto px-6 md:px-14 pb-20">
         <p className="text-[13px] md:text-[14px] leading-[2] v2-text-dim max-w-2xl border-t border-v2-champagne/10 pt-6">
-          Servicio de mesa: $3.500 · solo a la carta de salón.
+          Servicio de mesa: {fmtLibre(libreCfg.cubierto_precio)} · solo a la carta de salón.
           El consumo de sal en exceso es perjudicial para la salud.
-          Este establecimiento garantiza a cada comensal un vaso de agua potable de 375 ml sin cargo.
+          {libreCfg.agua_texto}
         </p>
       </div>
 

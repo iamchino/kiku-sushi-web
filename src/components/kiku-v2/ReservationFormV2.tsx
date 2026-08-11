@@ -8,6 +8,7 @@ import { motion, AnimatePresence, useInView } from "framer-motion";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { useLibreConfig, formatPesos as fmtPesos } from "@/hooks/useLibreConfig";
 import { useOmakasePrecio, formatPesos } from "@/hooks/useOmakasePrecio";
 
 /**
@@ -547,6 +548,7 @@ export const horariosDeFecha = (
 const ReservationFormV2 = ({ hideHeader = false }: Props) => {
   const today = new Date().toISOString().split("T")[0];
   const omakasePrecio = useOmakasePrecio();
+  const libreCfg = useLibreConfig();
 
   // Experiencia
   // Si la URL trae ?experiencia=..., la card llega pre-seleccionada
@@ -958,7 +960,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
         <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-v2-champagne" />
         <span>
           Solo a la carta se agrega un{" "}
-          <strong className="text-v2-text">servicio de mesa de $3.500</strong>.
+          <strong className="text-v2-text">servicio de mesa de {fmtPesos(libreCfg.cubierto_precio)}</strong>.
         </span>
       </div>
     );
@@ -970,7 +972,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
             <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-v2-accent" />
             <span>
               Te bloqueamos la mesa al enviar. Coordinamos la{" "}
-              <strong className="text-v2-text">seña de $20.000 por persona</strong> por WhatsApp
+              <strong className="text-v2-text">seña de {fmtPesos(libreCfg.libre_sena)} por persona</strong> por WhatsApp
               para asegurar el cupo.
             </span>
           </div>
@@ -984,7 +986,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
           <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-v2-champagne" />
           <span>
             Los menús con precio fijo se aseguran con una{" "}
-            <strong className="text-v2-text">seña de $20.000 por persona</strong> que
+            <strong className="text-v2-text">seña de {fmtPesos(libreCfg.libre_sena)} por persona</strong> que
             coordinamos por WhatsApp.
           </span>
         </div>
@@ -999,7 +1001,9 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
       {experiencias.map((exp) => {
         const selected = tipo === exp.id;
         // El precio del Omakase se administra desde el dashboard (web_config).
-        const badge = exp.id === "omakase" ? `${formatPesos(omakasePrecio)} p/p` : exp.badge;
+        const badge = exp.id === "omakase" ? `${formatPesos(omakasePrecio)} p/p`
+          : exp.id === "kiku_libre" ? `${formatPesos(libreCfg.libre_precio)} p/p`
+          : exp.badge;
         return (
           <button
             key={exp.id}

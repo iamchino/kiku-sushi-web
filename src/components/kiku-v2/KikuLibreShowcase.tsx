@@ -10,7 +10,10 @@ import kikuLibreBg from "@/assets/kiku-libre-section-bg.webp";
  * imagen menos apagada: el plato es el protagonista.
  * Fondo: kiku libre.jpg (kiku-libre-section-bg.webp).
  */
+import { useLibreConfig, formatPesos } from "@/hooks/useLibreConfig";
+
 const KikuLibreShowcase = () => {
+  const cfg = useLibreConfig();
   const ref = useRef<HTMLElement>(null);
   const inViewRef = useRef<HTMLDivElement>(null);
   const inView = useInView(inViewRef, { once: true, margin: "-120px" });
@@ -106,7 +109,7 @@ const KikuLibreShowcase = () => {
             Ver detalles
             <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-400" />
           </Link>
-          <span className="font-display text-xl text-v2-champagne whitespace-nowrap">$53.500 por persona</span>
+          <span className="font-display text-xl text-v2-champagne whitespace-nowrap">{formatPesos(cfg.libre_precio)} por persona</span>
         </motion.div>
       </div>
     </section>

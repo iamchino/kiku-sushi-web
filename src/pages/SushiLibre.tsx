@@ -5,6 +5,7 @@ import { motion, useInView } from "framer-motion";
 import NavbarV2 from "@/components/kiku-v2/NavbarV2";
 import FooterV2 from "@/components/kiku-v2/FooterV2";
 import { useLenisScroll } from "@/hooks/useLenisScroll";
+import { useLibreConfig, formatPesos } from "@/hooks/useLibreConfig";
 import ambiance from "@/assets/ambiance.webp";
 
 /** Sección con reveal al entrar en viewport */
@@ -34,6 +35,7 @@ const CTA_CLASSES =
  */
 const SushiLibre = () => {
   useLenisScroll();
+  const cfg = useLibreConfig();
 
   useEffect(() => {
     document.body.classList.add("v2-root");
@@ -103,12 +105,12 @@ const SushiLibre = () => {
             className="inline-flex flex-col items-center v2-bg-card border border-v2-champagne/15 px-12 py-9 mb-10"
             style={{ borderRadius: "24px", boxShadow: "0 0 70px hsla(270, 50%, 50%, 0.22)" }}
           >
-            <p className="font-display text-4xl md:text-5xl text-v2-champagne mb-2">$53.500</p>
+            <p className="font-display text-4xl md:text-5xl text-v2-champagne mb-2">{formatPesos(cfg.libre_precio)}</p>
             <p className="text-[10px] v2-text-muted uppercase tracking-[0.3em]">
               por persona · no incluye bebida
             </p>
             <p className="text-[11px] v2-text-dim mt-2.5">
-              Efectivo o transferencia · Otro medio de pago consultar
+              {cfg.libre_pago_nota}
             </p>
           </motion.div>
 
@@ -256,7 +258,7 @@ const SushiLibre = () => {
               {
                 icon: Info,
                 iconClass: "text-v2-champagne",
-                title: "Seña de $20.000 por persona",
+                title: `Seña de ${formatPesos(cfg.libre_sena)} por persona`,
                 desc: "Para reservar se requiere una seña por persona. En caso de no asistir, la seña no es reembolsable.",
               },
               {
@@ -287,7 +289,7 @@ const SushiLibre = () => {
                 icon: AlertTriangle,
                 iconClass: "text-v2-champagne",
                 title: "Política anti-desperdicio",
-                desc: "Si al finalizar la cena quedan piezas de sushi sin consumir, se cobrará una multa de $1.000 por cada una. ¡Pedí con conciencia! 🍣",
+                desc: `Si al finalizar la cena quedan piezas de sushi sin consumir, se cobrará una multa de ${formatPesos(cfg.libre_multa_pieza)} por cada una. ¡Pedí con conciencia! 🍣`,
               },
             ].map((item, i) => (
               <Reveal key={item.title} delay={i * 0.08}>
@@ -343,9 +345,9 @@ const SushiLibre = () => {
               Reservar Kiku Libre
               <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
-            <p className="text-xs v2-text-dim mt-5">Seña de $20.000 por persona requerida</p>
+            <p className="text-xs v2-text-dim mt-5">Seña de {formatPesos(cfg.libre_sena)} por persona requerida</p>
             <p className="text-[11px] leading-[2] v2-text-dim mt-8 max-w-xl mx-auto">
-              El consumo de sal en exceso es perjudicial para la salud. Este establecimiento garantiza a cada comensal un vaso de agua potable de 375 ml sin cargo.
+              El consumo de sal en exceso es perjudicial para la salud. {" "}{cfg.agua_texto}
             </p>
           </Reveal>
         </div>
