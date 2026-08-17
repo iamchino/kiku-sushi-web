@@ -1017,7 +1017,7 @@ const Pedidos = () => {
               {orderMode === "delivery" && zonas.length > 0 && (
                 <div>
                   <label className="text-xs v2-text-muted mb-1 block">Zona de entrega *</label>
-                  <p className="text-[13px] v2-text-dim mb-2 leading-relaxed rounded-xl border border-v2-champagne/15 px-3 py-2">
+                  <p className="text-[13px] text-white mb-2 leading-relaxed rounded-xl border border-v2-champagne/15 px-3 py-2">
                     ⚠ El costo de envío depende de tu zona: el precio base cubre
                     Pellegrini – Avellaneda – el río; fuera de esa zona tiene recargo.
                     Elegí la tuya para ver el costo final.
