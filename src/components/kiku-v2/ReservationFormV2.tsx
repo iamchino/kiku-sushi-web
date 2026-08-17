@@ -170,6 +170,38 @@ const primeraFechaValida = (desdeIso: string, permitidos: number[]): string => {
 const HORARIOS_WEB_FALLBACK: string[] = ["20:00", "20:30", "21:00", "21:30", "22:00", "22:30", "23:00"];
 const ORDEN_LLEGADA_FALLBACK = new Set<string>(["22:30", "23:00"]);
 
+// ─── Menús del mediodía (KIKU MEDIODÍA) ────────────────────────────────────
+// Se eligen al reservar un horario de mediodía. La elección viaja en las
+// notas de la reserva, así cocina y salón la ven en el dashboard.
+const MENUS_MEDIODIA = [
+  {
+    id: "menu1",
+    nombre: "MENÚ 1 · SUSHI",
+    precio: 38000,
+    detalle: [
+      "Entrada: 2 u. de gyozas, korokkes o langostinos furai",
+      "Principal: 12 piezas de sushi clásicos o fusión",
+      "Bebida: gaseosa o agua",
+    ],
+  },
+  {
+    id: "menu2",
+    nombre: "MENÚ 2 · COCINA JAPO",
+    precio: 30000,
+    detalle: [
+      "Entrada: 2 u. de gyozas, korokkes o langostinos furai",
+      "Principal a elección: ramen chasu · yakimeshi de langostinos o cerdo · tonkatsu",
+      "Bebida: gaseosa o agua",
+    ],
+  },
+  {
+    id: "carta",
+    nombre: "CARTA HABITUAL",
+    precio: null,
+    detalle: ["Pedís en el local de nuestra carta de mediodía"],
+  },
+] as const;
+
 // Cantidad de días que se muestran en el strip horizontal de fechas.
 // Para fechas más allá, el chip "Otra fecha" abre el picker nativo.
 const DIAS_VISIBLES = 14;
@@ -406,18 +438,43 @@ const ChipsFecha = ({
 
 // ─── Grid de chips de hora ────────────────────────────────────────────────
 const ChipsHora = ({
-  value, onChange, horarios, ordenSet,
+  value, onChange, horarios, ordenSet, mediodiaSet,
 }: {
   value: string;
   onChange: (t: string) => void;
   horarios: readonly string[];
   ordenSet: Set<string>;
+  mediodiaSet?: Set<string>;
 }) => {
   if (horarios.length === 0) {
     return (
       <div className="text-center py-7 border border-v2-champagne/15 bg-v2-bg/30">
-        <p className="text-sm v2-text leading-relaxed">Sin cupos para esa fecha</p>
-        <p className="text-[11px] v2-text-muted mt-1">Probá con otra fecha</p>
+        <p className="text-base v2-text leading-relaxed">Sin cupos para esa fecha</p>
+        <p className="text-[13px] v2-text-muted mt-1">Probá con otra fecha</p>
+      </div>
+    );
+  }
+
+  // Si el día tiene turnos de mediodía, separamos con títulos MEDIODÍA / NOCHE.
+  const deMediodia = mediodiaSet ? horarios.filter((h) => mediodiaSet.has(h)) : [];
+  const deNoche = mediodiaSet ? horarios.filter((h) => !mediodiaSet.has(h)) : [...horarios];
+  if (deMediodia.length > 0) {
+    return (
+      <div className="space-y-4">
+        <div>
+          <p className="text-[12px] tracking-[0.3em] uppercase text-v2-champagne mb-2">
+            ☀ Mediodía
+          </p>
+          <ChipsHora value={value} onChange={onChange} horarios={deMediodia} ordenSet={ordenSet} />
+        </div>
+        {deNoche.length > 0 && (
+          <div>
+            <p className="text-[12px] tracking-[0.3em] uppercase text-v2-champagne mb-2">
+              ☾ Noche
+            </p>
+            <ChipsHora value={value} onChange={onChange} horarios={deNoche} ordenSet={ordenSet} />
+          </div>
+        )}
       </div>
     );
   }
@@ -436,10 +493,10 @@ const ChipsHora = ({
               selected ? CHIP_SELECTED : CHIP_IDLE
             }`}
           >
-            <span className="text-[15px] font-medium tracking-wide leading-none">{t}</span>
+            <span className="text-[17px] font-medium tracking-wide leading-none">{t}</span>
             {esOrden && (
               <span
-                className={`text-[8px] tracking-[0.18em] uppercase leading-none mt-1 ${
+                className={`text-[10px] tracking-[0.18em] uppercase leading-none mt-1 ${
                   selected ? "opacity-75" : "opacity-55"
                 }`}
               >
@@ -496,17 +553,17 @@ const SectionLabel = ({
   hint?: React.ReactNode;
 }) => (
   <div className="flex items-center justify-between mb-3">
-    <div className="flex items-center gap-2 text-[10px] tracking-[0.3em] uppercase v2-text-muted">
+    <div className="flex items-center gap-2 text-[12px] tracking-[0.3em] uppercase v2-text-muted">
       <span className="text-v2-champagne">{icon}</span>
       {children}
     </div>
-    {hint && <span className="text-[10px] tracking-[0.2em] uppercase v2-text-dim">{hint}</span>}
+    {hint && <span className="text-[12px] tracking-[0.2em] uppercase v2-text-dim">{hint}</span>}
   </div>
 );
 
 // ─── Pill read-only para el resumen del paso 3 ────────────────────────────
 const SummaryPill = ({ icon, label }: { icon: React.ReactNode; label: string }) => (
-  <span className="inline-flex items-center gap-1.5 text-[11px] tracking-wide px-2.5 py-1.5 border border-v2-champagne/25 bg-v2-bg/50 text-v2-text">
+  <span className="inline-flex items-center gap-1.5 text-[13px] tracking-wide px-2.5 py-1.5 border border-v2-champagne/25 bg-v2-bg/50 text-v2-text">
     <span className="text-v2-champagne">{icon}</span>
     {label}
   </span>
@@ -566,6 +623,8 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
   const [date, setDate] = useState(today);
   const [time, setTime] = useState("20:30");
   const [people, setPeople] = useState("2");
+  // Menú elegido para reservas de mediodía ("" = todavía no aplica)
+  const [menuMediodia, setMenuMediodia] = useState("");
 
   // Datos cliente
   const [name, setName] = useState("");
@@ -673,6 +732,10 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
     cfg?.orden?.length ? cfg.orden : Array.from(ORDEN_LLEGADA_FALLBACK),
   );
 
+  // Turnos de mediodía (para agrupar los horarios y ofrecer los menús).
+  const mediodiaSet = new Set<string>(cfg?.mediodia ?? []);
+  const timeEsMediodia = mediodiaSet.has(time);
+
   // Horarios candidatos para una fecha: según las franjas habilitadas ese día.
   const horariosDelDia = (iso: string): string[] =>
     horariosDeFecha(cfg, diasCfg, iso, HORARIOS_WEB_FALLBACK);
@@ -754,6 +817,14 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
   useEffect(() => {
     setWaitDone(false);
   }, [date, tipo, people]);
+
+  // Menú de mediodía: por defecto "carta habitual" al entrar a un turno de
+  // mediodía; se limpia al volver a un horario de noche.
+  useEffect(() => {
+    if (timeEsMediodia && !menuMediodia) setMenuMediodia("carta");
+    if (!timeEsMediodia && menuMediodia) setMenuMediodia("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeEsMediodia]);
 
   // ─── Lista de espera ─────────────────────────────────────────────────────
   const handleListaEspera = async (e: React.FormEvent) => {
@@ -902,7 +973,17 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
         p_cliente_nombre:   cleanName,
         p_cliente_telefono: cleanTel,
         p_cliente_email:    email.trim() || null,
-        p_notas:            (notas.trim() || (people === "10+" ? "Grupo de 10 o más personas" : null)) || null,
+        p_notas:            (() => {
+          const partes: string[] = [];
+          // Menú de mediodía elegido → visible en el dashboard y para cocina.
+          if (timeEsMediodia && menuMediodia && menuMediodia !== "carta") {
+            const m = MENUS_MEDIODIA.find((x) => x.id === menuMediodia);
+            if (m) partes.push(`${m.nombre}${m.precio ? ` ($${m.precio.toLocaleString("es-AR")})` : ""}`);
+          }
+          if (people === "10+") partes.push("Grupo de 10 o más personas");
+          if (notas.trim()) partes.push(notas.trim());
+          return partes.length ? partes.join(" · ") : null;
+        })(),
         p_origen:           "web",
         p_duracion_min:     90,
         p_auto_confirmar:   true,
@@ -956,7 +1037,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
   const renderAvisoConfirmacion = () => {
     // Servicio de mesa: aplica únicamente a la carta de salón
     const avisoCubiertos = tipo === "carta_abierta" && (
-      <div className="mt-2.5 flex items-start gap-2.5 px-3.5 py-3 border border-v2-champagne/20 bg-v2-bg/50 text-[11.5px] v2-text-muted leading-relaxed">
+      <div className="mt-2.5 flex items-start gap-2.5 px-3.5 py-3 border border-v2-champagne/20 bg-v2-bg/50 text-[13px] v2-text-muted leading-relaxed">
         <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-v2-champagne" />
         <span>
           Solo a la carta se agrega un{" "}
@@ -968,7 +1049,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
     if (requiereSeña) {
       return (
         <>
-          <div className="mt-5 flex items-start gap-2.5 px-3.5 py-3 border border-v2-accent/40 bg-v2-accent/10 text-[11.5px] v2-text leading-relaxed">
+          <div className="mt-5 flex items-start gap-2.5 px-3.5 py-3 border border-v2-accent/40 bg-v2-accent/10 text-[13px] v2-text leading-relaxed">
             <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-v2-accent" />
             <span>
               Te bloqueamos la mesa al enviar. Coordinamos la{" "}
@@ -982,7 +1063,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
     }
     return (
       <>
-        <div className="mt-5 flex items-start gap-2.5 px-3.5 py-3 border border-v2-champagne/20 bg-v2-bg/50 text-[11.5px] v2-text-muted leading-relaxed">
+        <div className="mt-5 flex items-start gap-2.5 px-3.5 py-3 border border-v2-champagne/20 bg-v2-bg/50 text-[13px] v2-text-muted leading-relaxed">
           <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-v2-champagne" />
           <span>
             Los menús con precio fijo se aseguran con una{" "}
@@ -1038,7 +1119,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
               </span>
 
               <div className="flex-1 min-w-0">
-                <p className="font-jp text-[10px] tracking-[0.3em] text-v2-champagne/80 mb-1">
+                <p className="font-jp text-[12px] tracking-[0.3em] text-v2-champagne/80 mb-1">
                   {exp.overline}
                 </p>
                 <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -1051,10 +1132,10 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
                     </span>
                   )}
                 </div>
-                <p className="text-[12px] v2-text-muted leading-relaxed">
+                <p className="text-[14px] v2-text-muted leading-relaxed">
                   {exp.description}
                 </p>
-                <p className="mt-2 inline-flex items-center gap-1.5 text-[10px] tracking-[0.12em] uppercase text-v2-champagne/75">
+                <p className="mt-2 inline-flex items-center gap-1.5 text-[12px] tracking-[0.12em] uppercase text-v2-champagne/75">
                   <Calendar className="w-3 h-3" /> {exp.diasLabel}
                 </p>
               </div>
@@ -1070,7 +1151,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
     <div className="space-y-7">
       {/* Aviso si la barra de omakase no tiene lugar para este grupo */}
       {omakaseBloqueado && (
-        <div className="flex items-start gap-2.5 px-3 py-2.5 border border-v2-accent/40 bg-v2-accent/10 text-[11.5px] v2-text">
+        <div className="flex items-start gap-2.5 px-3 py-2.5 border border-v2-accent/40 bg-v2-accent/10 text-[13px] v2-text">
           <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-v2-accent" />
           <span>
             {omakaseLibres > 0 ? (
@@ -1100,9 +1181,9 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
         >
           Hora
         </SectionLabel>
-        <ChipsHora value={time} onChange={setTime} horarios={horariosDisponibles} ordenSet={ordenLlegadaSet} />
+        <ChipsHora value={time} onChange={setTime} horarios={horariosDisponibles} ordenSet={ordenLlegadaSet} mediodiaSet={mediodiaSet} />
         {!sinCupoEnFecha && ordenLlegadaSet.has(time) && (
-          <div className="mt-3 flex items-start gap-2 text-[10.5px] v2-text-muted leading-relaxed">
+          <div className="mt-3 flex items-start gap-2 text-[12px] v2-text-muted leading-relaxed">
             <Info className="w-3 h-3 flex-shrink-0 mt-0.5 text-v2-champagne/70" />
             <span>
               A partir de las 22:30 te tomamos la reserva pero te atendemos por{" "}
@@ -1111,6 +1192,50 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
           </div>
         )}
       </div>
+
+      {/* KIKU MEDIODÍA: elección de menú cuando el horario es de mediodía */}
+      {timeEsMediodia && (
+        <div>
+          <SectionLabel icon={<Clock className="w-3 h-3" />}>Menú de mediodía</SectionLabel>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            {MENUS_MEDIODIA.map((m) => {
+              const sel = menuMediodia === m.id;
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => setMenuMediodia(m.id)}
+                  className={`text-left border p-3.5 transition-all active:scale-[0.99] ${
+                    sel
+                      ? "border-v2-champagne bg-v2-champagne/10"
+                      : "border-v2-champagne/20 bg-v2-bg/40 hover:border-v2-champagne/45"
+                  }`}
+                >
+                  <p className={`text-[13px] tracking-[0.14em] font-semibold ${sel ? "text-v2-champagne" : "v2-text"}`}>
+                    {m.nombre}
+                  </p>
+                  {m.precio !== null && (
+                    <p className="text-[15px] font-medium v2-text mt-1">
+                      ${m.precio.toLocaleString("es-AR")}
+                    </p>
+                  )}
+                  <ul className="mt-2 space-y-1">
+                    {m.detalle.map((d, i) => (
+                      <li key={i} className="text-[13px] v2-text-muted leading-relaxed">
+                        {d}
+                      </li>
+                    ))}
+                  </ul>
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-[12px] v2-text-muted mt-2 leading-relaxed">
+            El menú elegido queda anotado en tu reserva. Si preferís decidir en el
+            local, elegí &quot;Carta habitual&quot;.
+          </p>
+        </div>
+      )}
 
       <div>
         <SectionLabel
@@ -1126,7 +1251,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
       {!loadingSlots && sinCupoEnFecha && (
         <div className="border border-v2-accent/35 bg-v2-accent/[0.07] p-4 sm:p-5">
           {waitDone ? (
-            <div className="flex items-start gap-2.5 text-[12px] v2-text">
+            <div className="flex items-start gap-2.5 text-[14px] v2-text">
               <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5 text-v2-accent" />
               <span>
                 <strong>¡Listo, te anotamos!</strong> Si se libera un lugar para el{" "}
@@ -1139,10 +1264,10 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
               <div className="flex items-start gap-2.5 mb-3">
                 <Hourglass className="w-4 h-4 flex-shrink-0 mt-0.5 text-v2-accent" />
                 <div>
-                  <p className="text-[13px] font-medium v2-text leading-snug">
+                  <p className="text-[15px] font-medium v2-text leading-snug">
                     {isOmakase ? "Barra de omakase completa para esa fecha" : "Esa fecha está completa"}
                   </p>
-                  <p className="text-[11.5px] v2-text-muted leading-relaxed mt-0.5">
+                  <p className="text-[13px] v2-text-muted leading-relaxed mt-0.5">
                     Dejanos tus datos y te anotamos en la lista de espera. Si se libera un lugar para
                     esa fecha, te contactamos por WhatsApp.
                   </p>
@@ -1155,7 +1280,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
                   onChange={(e) => setWaitName(e.target.value)}
                   placeholder="Tu nombre"
                   aria-label="Tu nombre para la lista de espera"
-                  className="bg-v2-bg/60 border border-v2-champagne/20 px-3.5 py-2.5 text-sm v2-text placeholder:text-v2-text-dim outline-none focus:border-v2-accent transition-colors"
+                  className="bg-v2-bg/60 border border-v2-champagne/20 px-3.5 py-2.5 text-base v2-text placeholder:text-v2-text-dim outline-none focus:border-v2-accent transition-colors"
                 />
                 <input
                   type="tel"
@@ -1163,12 +1288,12 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
                   onChange={(e) => setWaitTel(e.target.value)}
                   placeholder="Tu teléfono / WhatsApp"
                   aria-label="Tu teléfono para la lista de espera"
-                  className="bg-v2-bg/60 border border-v2-champagne/20 px-3.5 py-2.5 text-sm v2-text placeholder:text-v2-text-dim outline-none focus:border-v2-accent transition-colors"
+                  className="bg-v2-bg/60 border border-v2-champagne/20 px-3.5 py-2.5 text-base v2-text placeholder:text-v2-text-dim outline-none focus:border-v2-accent transition-colors"
                 />
                 <button
                   type="submit"
                   disabled={waitSending}
-                  className="inline-flex items-center justify-center gap-2 bg-v2-champagne text-v2-bg px-4 py-2.5 text-sm font-medium hover:opacity-90 disabled:opacity-60 transition-opacity whitespace-nowrap"
+                  className="inline-flex items-center justify-center gap-2 bg-v2-champagne text-v2-bg px-4 py-2.5 text-base font-medium hover:opacity-90 disabled:opacity-60 transition-opacity whitespace-nowrap"
                 >
                   {waitSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Hourglass className="w-4 h-4" />}
                   Anotarme
@@ -1191,7 +1316,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
           onChange={(e) => setName(e.target.value)}
           placeholder="Tu nombre"
           required
-          className="w-full bg-transparent outline-none text-sm font-normal v2-text placeholder:text-v2-text-dim"
+          className="w-full bg-transparent outline-none text-base font-normal v2-text placeholder:text-v2-text-dim"
         />
       </Field>
 
@@ -1202,7 +1327,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
           onChange={(e) => setTelefono(e.target.value)}
           placeholder="(+54) 341 1234567"
           required
-          className="w-full bg-transparent outline-none text-sm font-normal v2-text placeholder:text-v2-text-dim"
+          className="w-full bg-transparent outline-none text-base font-normal v2-text placeholder:text-v2-text-dim"
         />
       </Field>
 
@@ -1216,7 +1341,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="email@ejemplo.com"
           required={aceptaMarketing}
-          className="w-full bg-transparent outline-none text-sm font-normal v2-text placeholder:text-v2-text-dim"
+          className="w-full bg-transparent outline-none text-base font-normal v2-text placeholder:text-v2-text-dim"
         />
       </Field>
 
@@ -1225,7 +1350,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
           type="date"
           value={cumple}
           onChange={(e) => setCumple(e.target.value)}
-          className="w-full bg-transparent outline-none text-sm font-normal v2-text placeholder:text-v2-text-dim [color-scheme:dark]"
+          className="w-full bg-transparent outline-none text-base font-normal v2-text placeholder:text-v2-text-dim [color-scheme:dark]"
         />
       </Field>
 
@@ -1237,9 +1362,9 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
           onChange={(e) => setAceptaMarketing(e.target.checked)}
           className="mt-0.5 h-4 w-4 flex-shrink-0 accent-v2-champagne cursor-pointer"
         />
-        <span className="text-[12px] v2-text-muted leading-relaxed">
+        <span className="text-[14px] v2-text-muted leading-relaxed">
           Quiero recibir <strong className="text-v2-text">promos y novedades</strong> de Kiku.
-          <span className="block text-[10.5px] v2-text-dim mt-0.5">
+          <span className="block text-[12px] v2-text-dim mt-0.5">
             Usamos tu email y, si lo cargás, tu cumpleaños solo para enviarte beneficios. Podés darte de baja cuando quieras.
           </span>
         </span>
@@ -1251,7 +1376,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
           value={restricciones}
           onChange={(e) => setRestricciones(e.target.value)}
           placeholder="ej. vegetariano, celíaco, alergia al maní"
-          className="w-full bg-transparent outline-none text-sm font-normal v2-text placeholder:text-v2-text-dim"
+          className="w-full bg-transparent outline-none text-base font-normal v2-text placeholder:text-v2-text-dim"
         />
       </Field>
 
@@ -1261,7 +1386,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
           value={accesibilidad}
           onChange={(e) => setAccesibilidad(e.target.value)}
           placeholder="ej. silla de ruedas, planta baja"
-          className="w-full bg-transparent outline-none text-sm font-normal v2-text placeholder:text-v2-text-dim"
+          className="w-full bg-transparent outline-none text-base font-normal v2-text placeholder:text-v2-text-dim"
         />
       </Field>
 
@@ -1271,7 +1396,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
           onChange={(e) => setNotas(e.target.value)}
           placeholder="Ocasión especial, cumpleaños, etc."
           rows={3}
-          className="w-full bg-transparent outline-none text-sm font-normal v2-text placeholder:text-v2-text-dim resize-none"
+          className="w-full bg-transparent outline-none text-base font-normal v2-text placeholder:text-v2-text-dim resize-none"
         />
       </Field>
     </div>
@@ -1297,7 +1422,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
     <button
       type="submit"
       disabled={submitting}
-      className="bg-v2-champagne text-v2-bg font-semibold tracking-[0.28em] uppercase text-[11px] px-7 py-3.5 hover:bg-v2-text hover:-translate-y-px transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98]"
+      className="bg-v2-champagne text-v2-bg font-semibold tracking-[0.28em] uppercase text-[13px] px-7 py-3.5 hover:bg-v2-text hover:-translate-y-px transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98]"
     >
       {submitting ? (
         <><Loader2 className="w-4 h-4 animate-spin" /> Registrando</>
@@ -1312,7 +1437,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
     <button
       type="button"
       onClick={onClick}
-      className="w-full bg-v2-champagne text-v2-bg font-semibold tracking-[0.28em] uppercase text-[11px] px-6 py-3.5 hover:bg-v2-text hover:-translate-y-px transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
+      className="w-full bg-v2-champagne text-v2-bg font-semibold tracking-[0.28em] uppercase text-[13px] px-6 py-3.5 hover:bg-v2-text hover:-translate-y-px transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
     >
       Continuar <ArrowRight className="w-4 h-4" />
     </button>
@@ -1324,7 +1449,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="text-[11px] tracking-[0.28em] uppercase v2-text-muted hover:text-v2-champagne transition-colors flex items-center gap-2 self-start disabled:opacity-50"
+      className="text-[13px] tracking-[0.28em] uppercase v2-text-muted hover:text-v2-champagne transition-colors flex items-center gap-2 self-start disabled:opacity-50"
     >
       <ArrowLeft className="w-4 h-4" /> Atrás
     </button>
@@ -1360,7 +1485,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
               initial={{ opacity: 0 }}
               animate={inView ? { opacity: 1 } : {}}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="font-jp text-xs tracking-[0.4em] text-v2-champagne mb-5 block text-center"
+              className="font-jp text-sm tracking-[0.4em] text-v2-champagne mb-5 block text-center"
             >
               — ご予約 —
             </motion.span>
@@ -1383,7 +1508,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
           initial={{ opacity: 0 }}
           animate={inView ? { opacity: 1 } : {}}
           transition={{ duration: 0.8, delay: hideHeader ? 0 : 0.45 }}
-          className="flex items-center justify-center gap-3 mb-7 text-[10px] tracking-[0.3em] uppercase"
+          className="flex items-center justify-center gap-3 mb-7 text-[12px] tracking-[0.3em] uppercase"
         >
           <StepDot active={step >= 1} done={step > 1} label="Experiencia" />
           <span className="w-6 h-px bg-v2-champagne/20" />
@@ -1428,11 +1553,11 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
               >
                 <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
-                  <div className="text-[10px] tracking-[0.3em] uppercase v2-text-muted flex items-center gap-2.5">
+                  <div className="text-[12px] tracking-[0.3em] uppercase v2-text-muted flex items-center gap-2.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-v2-accent animate-pulse-glow" />
                     Elegí cuándo querés venir
                   </div>
-                  <div className="text-[10px] tracking-[0.2em] uppercase v2-text-dim">
+                  <div className="text-[12px] tracking-[0.2em] uppercase v2-text-dim">
                     {tipoLabel}
                   </div>
                 </div>
@@ -1463,14 +1588,14 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
                 </SectionLabel>
                 {renderClientFields()}
 
-                <p className="text-[11px] v2-text-muted mt-5 flex items-start gap-2 leading-relaxed">
+                <p className="text-[13px] v2-text-muted mt-5 flex items-start gap-2 leading-relaxed">
                   <span className="w-1.5 h-1.5 rounded-full bg-v2-accent animate-pulse-glow mt-1.5 flex-shrink-0" />
                   <span>
                     Mesa <strong className="text-v2-text">confirmada</strong> al enviar · seguimos por WhatsApp.
                   </span>
                 </p>
 
-                <p className="text-[11px] v2-text-muted mt-3 leading-relaxed rounded-lg border border-v2-champagne/15 bg-v2-champagne/[0.03] px-3 py-2.5">
+                <p className="text-[13px] v2-text-muted mt-3 leading-relaxed rounded-lg border border-v2-champagne/15 bg-v2-champagne/[0.03] px-3 py-2.5">
                   Las reservas son <strong className="text-v2-text">no reembolsables</strong>. En caso de
                   inconvenientes, podrá solicitarse un cambio de fecha sujeto a disponibilidad y previa
                   evaluación de la organización.
@@ -1523,7 +1648,7 @@ const Field = ({
     </span>
     {children}
     {hint && (
-      <span className="text-[10px] v2-text-dim/80 mt-1">{hint}</span>
+      <span className="text-[12px] v2-text-dim/80 mt-1">{hint}</span>
     )}
   </label>
 );
