@@ -256,6 +256,14 @@ const Pedidos = () => {
   const zonaElegida = zonas.find((z) => z.id === zonaSel) || null;
   const costoEnvio = costoEnvioBase + (zonaElegida?.recargo ?? 0);
 
+  // Con el checkout abierto, el scroll es del modal — no de la página de atrás.
+  useEffect(() => {
+    if (step !== "checkout") return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [step]);
+
   // Deep-link desde un Especial "Pedir": /pedidos?producto=<menu_items.id>
   // Una vez cargado el catálogo, prefiltramos por el nombre de ese producto
   // para que el usuario aterrice directo en el ítem listo para agregar.
@@ -917,14 +925,14 @@ const Pedidos = () => {
       {step === "checkout" && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-v2-bg/90 backdrop-blur-sm" onClick={() => setStep("catalog")} />
-          <div className="relative w-full max-w-md v2-bg-card border border-v2-champagne/15 rounded-2xl shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-v2-champagne/12">
+          <div className="relative w-full max-w-md v2-bg-card border border-v2-champagne/15 rounded-2xl shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-v2-champagne/12 flex-shrink-0">
               <h3 className="font-display text-2xl text-v2-text">Datos de contacto</h3>
               <button onClick={() => setStep("catalog")} className="w-8 h-8 rounded-full border border-v2-champagne/25 flex items-center justify-center text-v2-text-muted hover:text-v2-text">
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <form onSubmit={confirmarPedido} className="p-6 space-y-4">
+            <form onSubmit={confirmarPedido} className="p-6 space-y-4 flex-1 overflow-y-auto overscroll-contain">
               {/* ¿Cuándo lo querés? */}
               <div>
                 <label className="text-xs v2-text-muted mb-1 block">¿Cuándo lo querés?</label>
