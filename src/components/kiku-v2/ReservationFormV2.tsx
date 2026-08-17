@@ -1066,6 +1066,11 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
     // un trigger del backend dispara el webhook (Make/n8n/Zapier) que envía el
     // WhatsApp a Kiku automáticamente. El cliente ya no manda nada a mano.
     if (reservaId) {
+      // Meta Pixel: reserva concretada → evento de conversión "Schedule".
+      // Permite que las campañas de Meta optimicen por reservas, no solo visitas.
+      try {
+        (window as unknown as { fbq?: (...a: unknown[]) => void }).fbq?.("track", "Schedule");
+      } catch { /* pixel bloqueado o ausente: no afecta la reserva */ }
       const shortId = reservaId.slice(0, 8).toUpperCase();
       toast.success("¡Reserva confirmada!", {
         description: requiereSeña
