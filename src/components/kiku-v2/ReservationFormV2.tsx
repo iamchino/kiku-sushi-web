@@ -745,7 +745,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
 
   // Si la experiencia pre-elegida (?experiencia=) ya no existe, la limpiamos.
   useEffect(() => {
-    if (tipo && !experiencias.some((x) => x.id === tipo)) setTipo("");
+    if (tipo && tipo !== "kiku_mediodia" && !experiencias.some((x) => x.id === tipo)) setTipo("");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [experiencias]);
 
@@ -767,6 +767,33 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
     OPCION_CARTA,
   ];
 
+  // ── Tarjeta "Kiku Mediodía" ───────────────────────────────────────────────
+  // Exclusiva de la franja del mediodía. Todo sale de lo que se gestiona en el
+  // dashboard: días (reservas_dias), horarios (mediodia_slots) y el precio
+  // "desde" (el menú más barato). Si ningún día tiene mediodía, no aparece.
+  const diasMediodia = diasCfg
+    ? Object.entries(diasCfg).filter(([, v]) => v.mediodia).map(([k]) => Number(k))
+    : [];
+  const preciosMenus = (menusDb ?? MENUS_MEDIODIA_FALLBACK)
+    .map((m) => m.precio)
+    .filter((p): p is number => typeof p === "number" && p > 0);
+  const cardMediodia: Experiencia | null = diasMediodia.length > 0
+    ? {
+        id: "kiku_mediodia",
+        label: "Kiku Mediodía",
+        overline: "昼のキク",
+        description: "Almorzá con nuestros menús de mediodía a precio fijo, o con la carta habitual. Elegís el menú al reservar.",
+        badge: preciosMenus.length ? `desde $${Math.min(...preciosMenus).toLocaleString("es-AR")}` : undefined,
+        dias: diasMediodia,
+        diasLabel: diasToLabel(diasMediodia),
+      }
+    : null;
+  const isMediodiaExp = tipo === "kiku_mediodia";
+  // Lista final de tarjetas: la de mediodía va segunda, después de carta abierta.
+  const experienciasTodo: Experiencia[] = cardMediodia
+    ? [experiencias[0], cardMediodia, ...experiencias.slice(1)]
+    : experiencias;
+
   // Horarios candidatos para una fecha: según las franjas habilitadas ese día.
   const horariosDelDia = (iso: string): string[] =>
     horariosDeFecha(cfg, diasCfg, iso, HORARIOS_WEB_FALLBACK);
@@ -774,12 +801,12 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
   // ─── Derivados ─────────────────────────────────────────────────────────
   const peopleInt = parseInt(people, 10) || 2;
   const isOmakase = tipo === "omakase";
-  const requiereSeña = tipo !== "" && tipo !== "carta_abierta";
+  const requiereSeña = tipo !== "" && tipo !== "carta_abierta" && tipo !== "kiku_mediodia";
 
   // Días en los que se puede reservar la experiencia elegida.
   // = días de la experiencia ∩ días que el local abre. Sin experiencia elegida,
   // o experiencia sin días propios, usamos todos los días abiertos.
-  const expSel = experiencias.find((x) => x.id === tipo);
+  const expSel = experienciasTodo.find((x) => x.id === tipo);
   const allowedWeekdays = (() => {
     if (!expSel) return openWeekdays;
     const dias = expSel.dias && expSel.dias.length ? expSel.dias : openWeekdays;
@@ -827,7 +854,10 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
   // Bloqueado para ESTE grupo si no entran sus comensales en lo que queda.
   const omakaseBloqueado = isOmakase && slots.length > 0 && omakaseLibres < peopleInt;
 
-  const horariosDisponibles = horariosDelDia(date).filter((t) => cupoLibreEnSlot(t) >= peopleInt);
+  const horariosDisponibles = horariosDelDia(date)
+    .filter((t) => cupoLibreEnSlot(t) >= peopleInt)
+    // Con la tarjeta Kiku Mediodía elegida, solo se ofrecen turnos de mediodía.
+    .filter((t) => !isMediodiaExp || mediodiaSet.has(t));
 
   const sinCupoEnFecha = horariosDisponibles.length === 0;
 
@@ -880,7 +910,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
         p_hora:             time ? time + ":00" : null,
         p_cliente_email:    email.trim() || null,
         p_notas:            notas.trim() || null,
-        p_tipo_experiencia: tipo || null,
+        p_tipo_experiencia: (tipo === "kiku_mediodia" ? "carta_abierta" : tipo) || null,
       });
       if (error) {
         toast.error("No pudimos anotarte", {
@@ -1020,7 +1050,9 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
         p_auto_confirmar:   true,
         p_restricciones:    restricciones.trim() || null,
         p_accesibilidad:    accesibilidad.trim() || null,
-        p_tipo_experiencia: tipo,
+        // "kiku_mediodia" es una tarjeta del front: para el backend es carta
+        // abierta al mediodía (el menú elegido viaja en las notas).
+        p_tipo_experiencia: tipo === "kiku_mediodia" ? "carta_abierta" : tipo,
         p_cliente_cumple:   cumple || null,
         p_acepta_marketing: aceptaMarketing,
       });
@@ -1110,7 +1142,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
   // Cards verticales de tipo de experiencia
   const renderExperienciaCards = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      {experiencias.map((exp) => {
+      {experienciasTodo.map((exp) => {
         const selected = tipo === exp.id;
         // El precio del Omakase se administra desde el dashboard (web_config).
         const badge = exp.id === "omakase" ? `${formatPesos(omakasePrecio)} p/p`
@@ -1433,7 +1465,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
     </div>
   );
 
-  const tipoLabel = experiencias.find((x) => x.id === tipo)?.label || "";
+  const tipoLabel = experienciasTodo.find((x) => x.id === tipo)?.label || "";
   const fechaShort = date
     ? new Date(date + "T00:00:00").toLocaleDateString("es-AR", { day: "numeric", month: "short" })
     : "";
