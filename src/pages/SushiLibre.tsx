@@ -26,7 +26,7 @@ const Reveal = ({ children, className = "", delay = 0 }: { children: React.React
 };
 
 const CTA_CLASSES =
-  "group bg-v2-champagne text-v2-bg px-10 py-[17px] text-[11px] uppercase tracking-[0.3em] font-medium hover:bg-v2-text hover:-translate-y-0.5 transition-all duration-400 inline-flex items-center gap-3";
+  "group bg-v2-champagne text-v2-bg px-10 py-[17px] text-[13px] uppercase tracking-[0.3em] font-medium hover:bg-v2-text hover:-translate-y-0.5 transition-all duration-400 inline-flex items-center gap-3";
 
 /**
  * Kiku Libre — página V2.
@@ -106,10 +106,10 @@ const SushiLibre = () => {
             style={{ borderRadius: "24px", boxShadow: "0 0 70px hsla(270, 50%, 50%, 0.22)" }}
           >
             <p className="font-display text-4xl md:text-5xl text-v2-champagne mb-2">{formatPesos(cfg.libre_precio)}</p>
-            <p className="text-[10px] v2-text-muted uppercase tracking-[0.3em]">
+            <p className="text-[12px] v2-text-muted uppercase tracking-[0.3em]">
               por persona · no incluye bebida
             </p>
-            <p className="text-[11px] v2-text-dim mt-2.5">
+            <p className="text-[13px] v2-text-dim mt-2.5">
               {cfg.libre_pago_nota}
             </p>
           </motion.div>
@@ -346,7 +346,7 @@ const SushiLibre = () => {
               <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
             <p className="text-xs v2-text-dim mt-5">Seña de {formatPesos(cfg.libre_sena)} por persona requerida</p>
-            <p className="text-[11px] leading-[2] v2-text-dim mt-8 max-w-xl mx-auto">
+            <p className="text-[13px] leading-[2] v2-text-dim mt-8 max-w-xl mx-auto">
               El consumo de sal en exceso es perjudicial para la salud. {" "}{cfg.agua_texto}
             </p>
           </Reveal>

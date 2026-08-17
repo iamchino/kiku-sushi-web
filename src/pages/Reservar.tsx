@@ -40,7 +40,7 @@ const Reservar = () => {
           >
             <Link
               to="/"
-              className="inline-flex items-center gap-2 text-[11px] tracking-[0.28em] uppercase v2-text-muted hover:text-v2-champagne transition-colors"
+              className="inline-flex items-center gap-2 text-[13px] tracking-[0.28em] uppercase v2-text-muted hover:text-v2-champagne transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" /> Volver al inicio
             </Link>

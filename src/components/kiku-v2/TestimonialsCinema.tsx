@@ -106,7 +106,7 @@ const TestimonialsCinema = () => {
                       />
                     ))}
                   </div>
-                  <span className="text-[10px] tracking-[0.35em] uppercase text-v2-champagne/60">
+                  <span className="text-[12px] tracking-[0.35em] uppercase text-v2-champagne/60">
                     {t.highlight}
                   </span>
                 </div>
@@ -122,7 +122,7 @@ const TestimonialsCinema = () => {
                 <p className="font-display text-xl text-v2-champagne leading-none mb-2">
                   {t.name}
                 </p>
-                <p className="text-[10px] tracking-[0.3em] uppercase v2-text-muted">
+                <p className="text-[12px] tracking-[0.3em] uppercase v2-text-muted">
                   {t.role}
                 </p>
               </figcaption>

@@ -105,7 +105,7 @@ const NavbarV2 = () => {
   const cartHref = cartCount > 0 ? "/pedidos#cart" : "/pedir";
 
   const linkCls =
-    "text-[11px] uppercase tracking-[0.24em] text-v2-text/80 hover:text-v2-champagne transition-colors duration-300";
+    "text-[13px] uppercase tracking-[0.24em] text-v2-text/80 hover:text-v2-champagne transition-colors duration-300";
 
   // Hover-intent para el desplegable de escritorio (no se cierra al cruzar el gap).
   const openEsp = () => {
@@ -178,7 +178,7 @@ const NavbarV2 = () => {
                         key={e.id}
                         href={anchorHref(e.id)}
                         onClick={() => setEspOpen(false)}
-                        className="block px-4 py-2.5 text-[11px] uppercase tracking-[0.2em] text-v2-text/80 hover:text-v2-champagne hover:bg-v2-champagne/5 transition-colors"
+                        className="block px-4 py-2.5 text-[13px] uppercase tracking-[0.2em] text-v2-text/80 hover:text-v2-champagne hover:bg-v2-champagne/5 transition-colors"
                       >
                         {especialLabel(e)}
                       </a>
@@ -186,7 +186,7 @@ const NavbarV2 = () => {
                     <a
                       href={anchorHref("especiales")}
                       onClick={() => setEspOpen(false)}
-                      className="block px-4 py-2.5 mt-1 border-t border-v2-champagne/10 text-[10px] uppercase tracking-[0.24em] text-v2-champagne/70 hover:text-v2-champagne hover:bg-v2-champagne/5 transition-colors"
+                      className="block px-4 py-2.5 mt-1 border-t border-v2-champagne/10 text-[12px] uppercase tracking-[0.24em] text-v2-champagne/70 hover:text-v2-champagne hover:bg-v2-champagne/5 transition-colors"
                     >
                       Ver todos
                     </a>
@@ -217,7 +217,7 @@ const NavbarV2 = () => {
             >
               <ShoppingBag className="w-[22px] h-[22px]" />
               {cartCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-v2-champagne text-v2-bg text-[10px] font-semibold flex items-center justify-center">
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-v2-champagne text-v2-bg text-[12px] font-semibold flex items-center justify-center">
                   {cartCount}
                 </span>
               )}
@@ -226,7 +226,7 @@ const NavbarV2 = () => {
             {/* Reserve CTA */}
             <Link
               to="/reservar"
-              className="hidden md:inline-flex bg-v2-champagne text-v2-bg px-7 py-3 text-[11px] uppercase tracking-[0.24em] font-medium hover:bg-v2-text hover:-translate-y-px transition-all duration-300"
+              className="hidden md:inline-flex bg-v2-champagne text-v2-bg px-7 py-3 text-[13px] uppercase tracking-[0.24em] font-medium hover:bg-v2-text hover:-translate-y-px transition-all duration-300"
             >
               Reservá
             </Link>

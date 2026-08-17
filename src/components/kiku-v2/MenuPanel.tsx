@@ -121,7 +121,7 @@ const MenuPanel = ({
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 1, delay: 0.55 }}
             href={ctaHref}
-            className="group inline-flex items-center gap-3 text-[11px] uppercase tracking-[0.3em] text-v2-champagne pb-1.5 border-b border-v2-champagne/24 hover:border-v2-champagne transition-all"
+            className="group inline-flex items-center gap-3 text-[13px] uppercase tracking-[0.3em] text-v2-champagne pb-1.5 border-b border-v2-champagne/24 hover:border-v2-champagne transition-all"
           >
             {ctaLabel}
             <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-400" />

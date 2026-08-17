@@ -27,7 +27,7 @@ const FooterV2 = () => (
       </div>
 
       <div>
-        <h4 className="font-body text-[10px] tracking-[0.3em] uppercase text-v2-champagne mb-5 font-medium">
+        <h4 className="font-body text-[12px] tracking-[0.3em] uppercase text-v2-champagne mb-5 font-medium">
           Visitanos
         </h4>
         <ul className="text-[13px] v2-text-muted leading-[2] list-none">
@@ -57,7 +57,7 @@ const FooterV2 = () => (
         </ul>
         <Link
           to="/trabaja-con-nosotros"
-          className="font-body text-[10px] tracking-[0.3em] uppercase text-v2-champagne font-medium mt-6 inline-block hover:text-v2-text transition-colors"
+          className="font-body text-[12px] tracking-[0.3em] uppercase text-v2-champagne font-medium mt-6 inline-block hover:text-v2-text transition-colors"
         >
           Trabajá con nosotros
         </Link>
@@ -79,7 +79,7 @@ const FooterV2 = () => (
       ]} />
     </div>
 
-    <div className="relative z-10 max-w-[1440px] mx-auto mt-8 flex flex-wrap justify-between items-center gap-3 text-[11px] v2-text-dim">
+    <div className="relative z-10 max-w-[1440px] mx-auto mt-8 flex flex-wrap justify-between items-center gap-3 text-[13px] v2-text-dim">
       <span>© {new Date().getFullYear()} Kiku Sushi · Todos los derechos reservados</span>
       <span className="font-jp text-v2-champagne/55">いただきます</span>
     </div>
@@ -96,7 +96,7 @@ interface ColItem {
 function FooterCol({ title, items }: { title: string; items: (string | ColItem)[] }) {
   return (
     <div>
-      <h4 className="font-body text-[10px] tracking-[0.3em] uppercase text-v2-champagne mb-5 font-medium">
+      <h4 className="font-body text-[12px] tracking-[0.3em] uppercase text-v2-champagne mb-5 font-medium">
         {title}
       </h4>
       <ul className="text-[13px] v2-text-muted leading-[2] list-none">

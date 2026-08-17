@@ -101,13 +101,13 @@ const TrabajaConNosotros = () => {
           >
             <a
               href={MAILTO}
-              className="group bg-v2-champagne text-v2-bg px-10 py-[17px] text-[11px] uppercase tracking-[0.3em] font-medium hover:bg-v2-text hover:-translate-y-0.5 transition-all duration-400 inline-flex items-center gap-3"
+              className="group bg-v2-champagne text-v2-bg px-10 py-[17px] text-[13px] uppercase tracking-[0.3em] font-medium hover:bg-v2-text hover:-translate-y-0.5 transition-all duration-400 inline-flex items-center gap-3"
             >
               <Mail className="w-4 h-4" />
               Enviar mi mail
               <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </a>
-            <p className="text-[12px] v2-text-dim">
+            <p className="text-[13px] v2-text-dim">
               o escribinos directo a{" "}
               <a
                 href={MAILTO}

@@ -34,7 +34,7 @@ const Navbar = () => {
         </a>
 
         {/* Desktop Menu */}
-        <ul className="hidden md:flex items-center gap-8 text-[11px] lg:text-xs uppercase tracking-[0.2em] text-foreground/80 ml-auto">
+        <ul className="hidden md:flex items-center gap-8 text-[13px] lg:text-xs uppercase tracking-[0.2em] text-foreground/80 ml-auto">
           <li><a href="/carta"       className="hover:text-foreground transition-colors">Carta</a></li>
           <li><a href="/pedidos"     className="hover:text-foreground transition-colors">Pedidos</a></li>
           <li><a href="/#experiencia"className="hover:text-foreground transition-colors">Omakase</a></li>
@@ -50,7 +50,7 @@ const Navbar = () => {
         >
           <ShoppingBag className="w-5 h-5 text-foreground/80" />
           {cartCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-accent text-white text-[9px] font-bold flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-accent text-white text-[11px] font-bold flex items-center justify-center">
               {cartCount > 9 ? "9+" : cartCount}
             </span>
           )}
@@ -67,7 +67,7 @@ const Navbar = () => {
         <div className="md:hidden absolute top-full left-0 right-0 bg-background/95 backdrop-blur-xl border-b border-border/50 py-6 px-6 flex flex-col gap-6 text-sm uppercase tracking-[0.2em] text-foreground/80 shadow-2xl">
           <a href="/carta"        className="hover:text-foreground transition-colors" onClick={() => setIsOpen(false)}>Carta</a>
           <a href="/pedidos"      className="hover:text-foreground transition-colors" onClick={() => setIsOpen(false)}>
-            Pedidos {cartCount > 0 && <span className="ml-2 px-1.5 py-0.5 rounded-full bg-accent text-white text-[9px] font-bold">{cartCount}</span>}
+            Pedidos {cartCount > 0 && <span className="ml-2 px-1.5 py-0.5 rounded-full bg-accent text-white text-[11px] font-bold">{cartCount}</span>}
           </a>
           <a href="/#experiencia" className="hover:text-foreground transition-colors" onClick={() => setIsOpen(false)}>Omakase</a>
           <a href="/sushi-libre"  className="hover:text-foreground transition-colors" onClick={() => setIsOpen(false)}>Sushi Libre</a>

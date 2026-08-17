@@ -102,7 +102,7 @@ const Carta = () => {
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
             <button
               onClick={() => setActiveSection(null)}
-              className={`shrink-0 px-4 py-2 rounded-full text-[11px] uppercase tracking-[0.18em] border transition-all ${
+              className={`shrink-0 px-4 py-2 rounded-full text-[13px] uppercase tracking-[0.18em] border transition-all ${
                 !activeSection
                   ? "bg-v2-champagne text-v2-bg border-transparent"
                   : "border-v2-champagne/20 text-v2-text-muted hover:border-v2-champagne/50 hover:text-v2-text"
@@ -114,7 +114,7 @@ const Carta = () => {
               <button
                 key={s.name}
                 onClick={() => scrollToSection(s.name)}
-                className={`shrink-0 px-4 py-2 rounded-full text-[11px] uppercase tracking-[0.18em] border transition-all whitespace-nowrap ${
+                className={`shrink-0 px-4 py-2 rounded-full text-[13px] uppercase tracking-[0.18em] border transition-all whitespace-nowrap ${
                   activeSection === s.name
                     ? "bg-v2-champagne text-v2-bg border-transparent"
                     : "border-v2-champagne/20 text-v2-text-muted hover:border-v2-champagne/50 hover:text-v2-text"
@@ -196,7 +196,7 @@ const Carta = () => {
                                 {item.name}
                               </h3>
                               {item.badge && (
-                                <span className="px-2 py-0.5 rounded-full border border-v2-champagne/30 text-v2-champagne text-[9px] uppercase tracking-widest font-semibold">
+                                <span className="px-2 py-0.5 rounded-full border border-v2-champagne/30 text-v2-champagne text-[11px] uppercase tracking-widest font-semibold">
                                   {item.badge}
                                 </span>
                               )}
@@ -225,7 +225,7 @@ const Carta = () => {
                                   )}
                                   {item.sinTacc && (
                                     <span
-                                      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border border-amber-400/40 text-amber-300 text-[8px] uppercase tracking-wider"
+                                      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border border-amber-400/40 text-amber-300 text-[11px] uppercase tracking-wider"
                                       title="Sin TACC"
                                       aria-label="Sin TACC"
                                     >
@@ -284,7 +284,7 @@ const Carta = () => {
         </p>
         <Link
           to="/reservar"
-          className="inline-flex items-center bg-v2-champagne text-v2-bg px-9 py-4 text-[11px] uppercase tracking-[0.24em] font-medium hover:bg-v2-text hover:-translate-y-px transition-all duration-300"
+          className="inline-flex items-center bg-v2-champagne text-v2-bg px-9 py-4 text-[13px] uppercase tracking-[0.24em] font-medium hover:bg-v2-text hover:-translate-y-px transition-all duration-300"
         >
           Reservá tu mesa
         </Link>
@@ -317,7 +317,7 @@ const Carta = () => {
 
             <div className="p-6">
               {zoomItem.badge && (
-                <span className="inline-block mb-2 px-2.5 py-0.5 rounded-full border border-v2-champagne/30 text-v2-champagne text-[10px] uppercase tracking-wider font-semibold">
+                <span className="inline-block mb-2 px-2.5 py-0.5 rounded-full border border-v2-champagne/30 text-v2-champagne text-[12px] uppercase tracking-wider font-semibold">
                   {zoomItem.badge}
                 </span>
               )}

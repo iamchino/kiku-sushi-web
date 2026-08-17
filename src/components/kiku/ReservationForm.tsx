@@ -191,7 +191,7 @@ const ReservationForm = ({ variant = "hero" }: Props) => {
         </button>
       </div>
 
-      <p className="text-[11px] text-muted-foreground mt-3 flex items-center gap-2">
+      <p className="text-[13px] text-muted-foreground mt-3 flex items-center gap-2">
         <span className="w-1.5 h-1.5 rounded-full bg-accent animate-blink" />
         Confirmación inmediata
       </p>
@@ -209,7 +209,7 @@ const Field = ({
   children: React.ReactNode;
 }) => (
   <label className="group flex flex-col gap-1 bg-input/60 border border-border hover:border-primary/50 transition-colors rounded-xl px-4 py-2.5 cursor-pointer">
-    <span className="text-[10px] uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+    <span className="text-[12px] uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
       <span className="text-accent">{icon}</span>
       {label}
     </span>

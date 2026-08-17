@@ -379,7 +379,7 @@ const ChipsFecha = ({
                 selected ? CHIP_SELECTED : CHIP_IDLE
               }`}
             >
-              <span className={`text-[9px] tracking-[0.22em] font-medium leading-none ${selected ? "opacity-80" : "opacity-65"}`}>
+              <span className={`text-[11px] tracking-[0.22em] font-medium leading-none ${selected ? "opacity-80" : "opacity-65"}`}>
                 {d.esHoy ? "HOY" : d.semana}
               </span>
               <span className="font-display text-[22px] leading-none mt-0.5">
@@ -399,7 +399,7 @@ const ChipsFecha = ({
             onClick={abrirPicker}
             className={`${CHIP_BASE} ${CHIP_TAP} flex-shrink-0 snap-start flex-col gap-0.5 w-[62px] h-[74px] ${CHIP_SELECTED}`}
           >
-            <span className="text-[9px] tracking-[0.22em] font-medium leading-none opacity-80">
+            <span className="text-[11px] tracking-[0.22em] font-medium leading-none opacity-80">
               {customFecha.toLocaleDateString("es-AR", { weekday: "short" }).replace(".", "").toUpperCase()}
             </span>
             <span className="font-display text-[22px] leading-none mt-0.5">
@@ -471,14 +471,14 @@ const ChipsHora = ({
     return (
       <div className="space-y-4">
         <div>
-          <p className="text-[12px] tracking-[0.3em] uppercase text-v2-champagne mb-2">
+          <p className="text-[13px] tracking-[0.3em] uppercase text-v2-champagne mb-2">
             ☀ Mediodía
           </p>
           <ChipsHora value={value} onChange={onChange} horarios={deMediodia} ordenSet={ordenSet} />
         </div>
         {deNoche.length > 0 && (
           <div>
-            <p className="text-[12px] tracking-[0.3em] uppercase text-v2-champagne mb-2">
+            <p className="text-[13px] tracking-[0.3em] uppercase text-v2-champagne mb-2">
               ☾ Noche
             </p>
             <ChipsHora value={value} onChange={onChange} horarios={deNoche} ordenSet={ordenSet} />
@@ -505,7 +505,7 @@ const ChipsHora = ({
             <span className="text-[17px] font-medium tracking-wide leading-none">{t}</span>
             {esOrden && (
               <span
-                className={`text-[10px] tracking-[0.18em] uppercase leading-none mt-1 ${
+                className={`text-[12px] tracking-[0.18em] uppercase leading-none mt-1 ${
                   selected ? "opacity-75" : "opacity-55"
                 }`}
               >
@@ -562,11 +562,11 @@ const SectionLabel = ({
   hint?: React.ReactNode;
 }) => (
   <div className="flex items-center justify-between mb-3">
-    <div className="flex items-center gap-2 text-[12px] tracking-[0.3em] uppercase v2-text-muted">
+    <div className="flex items-center gap-2 text-[13px] tracking-[0.3em] uppercase v2-text-muted">
       <span className="text-v2-champagne">{icon}</span>
       {children}
     </div>
-    {hint && <span className="text-[12px] tracking-[0.2em] uppercase v2-text-dim">{hint}</span>}
+    {hint && <span className="text-[13px] tracking-[0.2em] uppercase v2-text-dim">{hint}</span>}
   </div>
 );
 
@@ -1150,7 +1150,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
               </span>
 
               <div className="flex-1 min-w-0">
-                <p className="font-jp text-[12px] tracking-[0.3em] text-v2-champagne/80 mb-1">
+                <p className="font-jp text-[13px] tracking-[0.3em] text-v2-champagne/80 mb-1">
                   {exp.overline}
                 </p>
                 <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -1158,7 +1158,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
                     {exp.label}
                   </h4>
                   {badge && (
-                    <span className="text-[9px] tracking-[0.18em] uppercase px-1.5 py-0.5 bg-v2-champagne/15 text-v2-champagne border border-v2-champagne/30">
+                    <span className="text-[11px] tracking-[0.18em] uppercase px-1.5 py-0.5 bg-v2-champagne/15 text-v2-champagne border border-v2-champagne/30">
                       {badge}
                     </span>
                   )}
@@ -1166,7 +1166,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
                 <p className="text-[14px] v2-text-muted leading-relaxed">
                   {exp.description}
                 </p>
-                <p className="mt-2 inline-flex items-center gap-1.5 text-[12px] tracking-[0.12em] uppercase text-v2-champagne/75">
+                <p className="mt-2 inline-flex items-center gap-1.5 text-[13px] tracking-[0.12em] uppercase text-v2-champagne/75">
                   <Calendar className="w-3 h-3" /> {exp.diasLabel}
                 </p>
               </div>
@@ -1214,7 +1214,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
         </SectionLabel>
         <ChipsHora value={time} onChange={setTime} horarios={horariosDisponibles} ordenSet={ordenLlegadaSet} mediodiaSet={mediodiaSet} />
         {!sinCupoEnFecha && ordenLlegadaSet.has(time) && (
-          <div className="mt-3 flex items-start gap-2 text-[12px] v2-text-muted leading-relaxed">
+          <div className="mt-3 flex items-start gap-2 text-[13px] v2-text-muted leading-relaxed">
             <Info className="w-3 h-3 flex-shrink-0 mt-0.5 text-v2-champagne/70" />
             <span>
               A partir de las 22:30 te tomamos la reserva pero te atendemos por{" "}
@@ -1261,7 +1261,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
               );
             })}
           </div>
-          <p className="text-[12px] v2-text-muted mt-2 leading-relaxed">
+          <p className="text-[13px] v2-text-muted mt-2 leading-relaxed">
             El menú elegido queda anotado en tu reserva. Si preferís decidir en el
             local, elegí &quot;Carta habitual&quot;.
           </p>
@@ -1395,7 +1395,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
         />
         <span className="text-[14px] v2-text-muted leading-relaxed">
           Quiero recibir <strong className="text-v2-text">promos y novedades</strong> de Kiku.
-          <span className="block text-[12px] v2-text-dim mt-0.5">
+          <span className="block text-[13px] v2-text-dim mt-0.5">
             Usamos tu email y, si lo cargás, tu cumpleaños solo para enviarte beneficios. Podés darte de baja cuando quieras.
           </span>
         </span>
@@ -1539,7 +1539,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
           initial={{ opacity: 0 }}
           animate={inView ? { opacity: 1 } : {}}
           transition={{ duration: 0.8, delay: hideHeader ? 0 : 0.45 }}
-          className="flex items-center justify-center gap-3 mb-7 text-[12px] tracking-[0.3em] uppercase"
+          className="flex items-center justify-center gap-3 mb-7 text-[13px] tracking-[0.3em] uppercase"
         >
           <StepDot active={step >= 1} done={step > 1} label="Experiencia" />
           <span className="w-6 h-px bg-v2-champagne/20" />
@@ -1584,11 +1584,11 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
               >
                 <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
-                  <div className="text-[12px] tracking-[0.3em] uppercase v2-text-muted flex items-center gap-2.5">
+                  <div className="text-[13px] tracking-[0.3em] uppercase v2-text-muted flex items-center gap-2.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-v2-accent animate-pulse-glow" />
                     Elegí cuándo querés venir
                   </div>
-                  <div className="text-[12px] tracking-[0.2em] uppercase v2-text-dim">
+                  <div className="text-[13px] tracking-[0.2em] uppercase v2-text-dim">
                     {tipoLabel}
                   </div>
                 </div>
@@ -1673,13 +1673,13 @@ const Field = ({
       full ? "md:col-span-2" : ""
     }`}
   >
-    <span className="text-[9px] uppercase tracking-[0.3em] v2-text-dim flex items-center gap-1.5">
+    <span className="text-[11px] uppercase tracking-[0.3em] v2-text-dim flex items-center gap-1.5">
       <span className="text-v2-accent">{icon}</span>
       {label}
     </span>
     {children}
     {hint && (
-      <span className="text-[12px] v2-text-dim/80 mt-1">{hint}</span>
+      <span className="text-[13px] v2-text-dim/80 mt-1">{hint}</span>
     )}
   </label>
 );

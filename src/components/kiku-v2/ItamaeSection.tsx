@@ -94,7 +94,7 @@ const ItamaeSection = () => {
               initial={{ opacity: 0 }}
               animate={inView ? { opacity: 1 } : {}}
               transition={{ duration: 0.8, delay: 0.3 }}
-              className="text-[10px] tracking-[0.4em] uppercase v2-text-accent mb-8 block"
+              className="text-[12px] tracking-[0.4em] uppercase v2-text-accent mb-8 block"
             >
               Noe Vera · Sushiwoman
             </motion.span>

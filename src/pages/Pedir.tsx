@@ -41,7 +41,7 @@ const Pedir = () => {
           >
             <Link
               to="/"
-              className="inline-flex items-center gap-2 text-[11px] tracking-[0.28em] uppercase v2-text-muted hover:text-v2-champagne transition-colors"
+              className="inline-flex items-center gap-2 text-[13px] tracking-[0.28em] uppercase v2-text-muted hover:text-v2-champagne transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" /> Volver al inicio
             </Link>
@@ -108,7 +108,7 @@ const Pedir = () => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6 }}
-          className="max-w-5xl mx-auto mt-10 md:mt-14 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-8 text-[11px] tracking-[0.24em] uppercase v2-text-muted"
+          className="max-w-5xl mx-auto mt-10 md:mt-14 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-8 text-[13px] tracking-[0.24em] uppercase v2-text-muted"
         >
           <span className="flex items-center gap-2">
             <Clock className="w-3.5 h-3.5 text-v2-champagne" />
@@ -164,7 +164,7 @@ const OptionCard = ({
         </div>
 
         {/* Overline editorial */}
-        <p className="text-[10px] tracking-[0.4em] uppercase text-v2-champagne/70 mb-3">
+        <p className="text-[12px] tracking-[0.4em] uppercase text-v2-champagne/70 mb-3">
           {overline}
         </p>
 
@@ -183,10 +183,10 @@ const OptionCard = ({
 
         {/* Footer row: highlight + arrow */}
         <div className="flex items-center justify-between pt-5 border-t border-v2-champagne/10">
-          <p className="text-[11px] tracking-[0.24em] uppercase text-v2-champagne font-medium">
+          <p className="text-[13px] tracking-[0.24em] uppercase text-v2-champagne font-medium">
             {highlight}
           </p>
-          <span className="flex items-center gap-2 text-[11px] tracking-[0.28em] uppercase v2-text-muted group-hover:text-v2-champagne transition-colors">
+          <span className="flex items-center gap-2 text-[13px] tracking-[0.28em] uppercase v2-text-muted group-hover:text-v2-champagne transition-colors">
             Continuar
             <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
           </span>

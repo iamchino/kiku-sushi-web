@@ -21,7 +21,7 @@ import { fetchEspeciales, fallbackEspeciales, type Especial } from "@/data/espec
 /** Botón CTA: link interno (router) o externo (URL libre). */
 const EspecialCta = ({ e }: { e: Especial }) => {
   const cls =
-    "group bg-v2-champagne text-v2-bg px-10 py-[17px] text-[11px] uppercase tracking-[0.3em] font-medium hover:bg-v2-text hover:-translate-y-0.5 transition-all duration-400 inline-flex items-center gap-3";
+    "group bg-v2-champagne text-v2-bg px-10 py-[17px] text-[13px] uppercase tracking-[0.3em] font-medium hover:bg-v2-text hover:-translate-y-0.5 transition-all duration-400 inline-flex items-center gap-3";
   const inner = (
     <>
       {e.ctaLabel}
@@ -69,7 +69,7 @@ const EspecialTexto = ({ e }: { e: Especial }) => (
       <div className="mb-8 space-y-4">
         {e.pasos.map((p) => (
           <div key={p.label} className="grid grid-cols-[96px_1fr] gap-5 pt-4 border-t border-v2-champagne/12">
-            <span className="text-[10px] tracking-[0.3em] uppercase text-v2-champagne/70 pt-1">{p.label}</span>
+            <span className="text-[12px] tracking-[0.3em] uppercase text-v2-champagne/70 pt-1">{p.label}</span>
             <div>
               <p className="text-sm leading-[1.8] v2-text-muted">{p.text}</p>
               {p.items && (
@@ -88,7 +88,7 @@ const EspecialTexto = ({ e }: { e: Especial }) => (
     )}
 
     {e.firma && (
-      <p className="font-jp text-[10px] tracking-[0.35em] uppercase text-v2-champagne/60 mb-8">{e.firma}</p>
+      <p className="font-jp text-[12px] tracking-[0.35em] uppercase text-v2-champagne/60 mb-8">{e.firma}</p>
     )}
 
     <div className="flex items-center gap-7 flex-wrap">

@@ -20,7 +20,7 @@ import omak2 from "@/assets/omak2.webp";
  */
 
 const CTA_CLASSES =
-  "group bg-v2-champagne text-v2-bg px-10 py-[17px] text-[11px] uppercase tracking-[0.3em] font-medium hover:bg-v2-text hover:-translate-y-0.5 transition-all duration-400 inline-flex items-center gap-3";
+  "group bg-v2-champagne text-v2-bg px-10 py-[17px] text-[13px] uppercase tracking-[0.3em] font-medium hover:bg-v2-text hover:-translate-y-0.5 transition-all duration-400 inline-flex items-center gap-3";
 
 /** Wrapper con reveal al entrar en viewport */
 const Reveal = ({
@@ -187,7 +187,7 @@ const Omakase = () => {
           transition={{ delay: 1.4, duration: 1 }}
           className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 z-10"
         >
-          <span className="text-[10px] tracking-[0.35em] uppercase v2-text-dim">
+          <span className="text-[12px] tracking-[0.35em] uppercase v2-text-dim">
             La historia
           </span>
           <motion.span
@@ -389,19 +389,19 @@ const Omakase = () => {
                 boxShadow: "0 0 70px hsla(270, 50%, 50%, 0.18)",
               }}
             >
-              <span className="font-jp text-[11px] tracking-[0.4em] text-v2-champagne block mb-5">
+              <span className="font-jp text-[13px] tracking-[0.4em] text-v2-champagne block mb-5">
                 — おまかせ —
               </span>
               <p className="font-display text-4xl md:text-5xl text-v2-champagne mb-3">
                 {formatPesos(omakasePrecio)}
               </p>
-              <p className="text-[10px] v2-text-muted uppercase tracking-[0.3em] mb-3">
+              <p className="text-[12px] v2-text-muted uppercase tracking-[0.3em] mb-3">
                 por persona · bebida y postre incluidos
               </p>
-              <p className="text-[11px] v2-text-dim mb-1">
+              <p className="text-[13px] v2-text-dim mb-1">
                 Efectivo o transferencia · Consultar por otro medio de pago
               </p>
-              <p className="text-[11px] v2-text-dim">
+              <p className="text-[13px] v2-text-dim">
                 Viernes y sábado · Hasta 6 personas por reserva
               </p>
             </div>
