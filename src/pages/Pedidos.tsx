@@ -211,9 +211,9 @@ const Pedidos = () => {
   useEffect(() => {
     setProgramadoLocal(programDate && programTime ? `${programDate}T${programTime}` : "");
   }, [programDate, programTime]);
-  // Zona de entrega elegida (delivery): define el costo de envío real.
-  const [zonas, setZonas] = useState<{ id: string; nombre: string; recargo: number }[]>([]);
-  const [zonaSel, setZonaSel] = useState("");
+  // Zona de envío (delivery): "base" = Pellegrini–Avellaneda–el Río (paga la
+  // base), "fuera" = el monto lo confirma el encargado al cerrar el pedido.
+  const [zonaTipo, setZonaTipo] = useState<"" | "base" | "fuera">("");
 
   // ─── Fetch catálogo (Supabase, tipo delivery) ──────────────────────────────
   const [catalogData, setCatalogData] = useState<CatalogCategory[]>(fallbackData);
@@ -239,22 +239,12 @@ const Pedidos = () => {
       .then(({ data }) => {
         if (data?.base != null) setCostoEnvioBase(Math.max(0, Math.round(Number(data.base))) || 3500);
       });
-    // Zonas de delivery (gestionadas en el dashboard): costo = base + recargo.
-    supabase
-      .from("envio_zonas")
-      .select("id,nombre,recargo,activo,orden")
-      .eq("activo", true)
-      .order("orden")
-      .then(({ data }) => {
-        if (Array.isArray(data)) {
-          setZonas(data.map((z) => ({ id: z.id, nombre: z.nombre, recargo: Math.max(0, Math.round(Number(z.recargo) || 0)) })));
-        }
-      });
   }, []);
 
-  // Costo de envío efectivo: base + recargo de la zona elegida.
-  const zonaElegida = zonas.find((z) => z.id === zonaSel) || null;
-  const costoEnvio = costoEnvioBase + (zonaElegida?.recargo ?? 0);
+  // Costo de envío efectivo. Fuera de zona arranca en $6.000 y el monto final
+  // lo confirma el encargado al cerrar el pedido (el cliente no paga por la web).
+  const ENVIO_FUERA_DESDE = 6000;
+  const costoEnvio = zonaTipo === "fuera" ? ENVIO_FUERA_DESDE : costoEnvioBase;
 
   // Con el checkout abierto, el scroll es del modal — no de la página de atrás.
   useEffect(() => {
@@ -348,9 +338,12 @@ const Pedidos = () => {
   const confirmarPedido = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nombre.trim() || !telefono.trim()) return;
-    if (orderMode === "delivery" && !direccion.trim()) return;
-    if (orderMode === "delivery" && zonas.length > 0 && !zonaElegida) {
-      setErrorMsg("Elegí tu zona de entrega para calcular el envío.");
+    if (orderMode === "delivery" && !zonaTipo) {
+      setErrorMsg("Elegí tu zona de envío.");
+      return;
+    }
+    if (orderMode === "delivery" && !direccion.trim()) {
+      setErrorMsg("Escribí tu dirección de entrega.");
       return;
     }
 
@@ -386,8 +379,17 @@ const Pedidos = () => {
           cliente_nombre:    nombre.trim(),
           cliente_telefono:  telefono.trim(),
           cliente_direccion: orderMode === "delivery" ? direccion.trim() : null,
-          envio_zona:        orderMode === "delivery" ? (zonaElegida?.nombre ?? null) : null,
-          notas:             notasExtra.trim() || null,
+          envio_zona:        orderMode === "delivery"
+                               ? (zonaTipo === "fuera"
+                                   ? "Fuera de zona — envío a confirmar"
+                                   : "Zona base (Pellegrini – Avellaneda – el Río)")
+                               : null,
+          notas:             [
+                               orderMode === "delivery" && zonaTipo === "fuera"
+                                 ? "⚠ ENVÍO FUERA DE ZONA: desde $6.000 — confirmar monto con el cliente."
+                                 : null,
+                               notasExtra.trim() || null,
+                             ].filter(Boolean).join("\n") || null,
           programado_para:   programadoPara,
         })
         .select("id, numero")
@@ -895,19 +897,23 @@ const Pedidos = () => {
                 {orderMode === "delivery" && (
                   <>
                     <div className="flex items-center justify-between mb-1 text-sm">
-                      <span className="v2-text-muted">Envío{zonaElegida ? ` · ${zonaElegida.nombre}` : ""}</span>
-                      <span className="font-semibold text-v2-text">${costoEnvio.toLocaleString("es-AR")}</span>
+                      <span className="v2-text-muted">
+                        Envío{zonaTipo === "fuera" ? " · fuera de zona" : zonaTipo === "base" ? " · zona base" : ""}
+                      </span>
+                      <span className="font-semibold text-v2-text">
+                        {zonaTipo === "fuera" ? "desde " : ""}${costoEnvio.toLocaleString("es-AR")}
+                      </span>
                     </div>
                     <p className="v2-text-muted text-[13px] leading-snug mb-2">
-                      {zonas.length > 0
-                        ? "El costo final se define según tu zona de entrega (la elegís al confirmar)."
-                        : "Valor de envío sujeto a modificación según la distancia."}
+                      {zonaTipo === "fuera"
+                        ? "El monto final del envío lo confirma el encargado al cerrar el pedido."
+                        : "El costo final depende de tu zona de envío (la elegís al confirmar)."}
                     </p>
                   </>
                 )}
                 <div className="flex items-center justify-between mb-5 text-sm font-bold">
                   <span className="text-v2-text">Total</span>
-                  <span className="text-v2-champagne">${(cart.reduce((s,i) => s + parsePrice(i.product.price)*i.quantity,0) + (orderMode==="delivery"?costoEnvio:0)).toLocaleString("es-AR")}</span>
+                  <span className="text-v2-champagne">{orderMode === "delivery" && zonaTipo === "fuera" ? "desde " : ""}${(cart.reduce((s,i) => s + parsePrice(i.product.price)*i.quantity,0) + (orderMode==="delivery"?costoEnvio:0)).toLocaleString("es-AR")}</span>
                 </div>
                 <button
                   onClick={() => { setCartOpen(false); setStep("checkout"); }}
@@ -1016,38 +1022,64 @@ const Pedidos = () => {
               </div>
               {orderMode === "delivery" && (
                 <div>
-                  <label className="text-xs v2-text-muted mb-1 block">Dirección de entrega *</label>
-                  <input value={direccion} onChange={e => setDireccion(e.target.value)} required
-                    className="w-full v2-bg-base border border-v2-champagne/15 rounded-xl px-4 py-3 text-sm text-v2-text outline-none focus:border-v2-champagne/50"
-                    placeholder="Calle y número, piso/depto" />
-                </div>
-              )}
-              {orderMode === "delivery" && zonas.length > 0 && (
-                <div>
-                  <label className="text-xs v2-text-muted mb-1 block">Zona de entrega *</label>
+                  <label className="text-xs v2-text-muted mb-1 block">Zona de envío *</label>
                   <p className="text-[13px] text-white mb-2 leading-relaxed rounded-xl border border-v2-champagne/15 px-3 py-2">
-                    ⚠ El costo de envío depende de tu zona: el precio base cubre
-                    Pellegrini – Avellaneda – el río; fuera de esa zona tiene recargo.
-                    Elegí la tuya para ver el costo final.
+                    El costo de envío depende de tu zona: el precio base cubre
+                    Pellegrini – Avellaneda – el Río; fuera de esa zona tiene recargo.
+                    Elegí tu zona de envío:
                   </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {zonas.map((z) => {
-                      const sel = zonaSel === z.id;
-                      return (
-                        <button key={z.id} type="button"
-                          onClick={() => { setZonaSel(z.id); setErrorMsg(null); }}
-                          className={`flex items-center justify-between gap-2 rounded-xl border px-4 py-3 text-sm transition-colors ${
-                            sel
-                              ? "bg-v2-champagne text-v2-bg border-v2-champagne font-medium"
-                              : "v2-bg-base text-v2-text border-v2-champagne/15 hover:border-v2-champagne/40"
-                          }`}>
-                          <span>{z.nombre}</span>
-                          <span className={sel ? "font-semibold" : "text-v2-champagne"}>
-                            ${(costoEnvioBase + z.recargo).toLocaleString("es-AR")}
-                          </span>
-                        </button>
-                      );
-                    })}
+                  <div className="space-y-2">
+                    {/* Zona base */}
+                    <div className={`rounded-xl border transition-colors ${
+                      zonaTipo === "base" ? "border-v2-champagne/60 v2-bg-base" : "border-v2-champagne/15"
+                    }`}>
+                      <button type="button"
+                        onClick={() => { setZonaTipo("base"); setErrorMsg(null); }}
+                        className="w-full flex items-center justify-between gap-2 px-4 py-3 text-sm text-left">
+                        <span className={zonaTipo === "base" ? "text-v2-text font-medium" : "text-v2-text"}>
+                          {zonaTipo === "base" ? "● " : "○ "}Zona base · Pellegrini – Avellaneda – el Río
+                        </span>
+                        <span className="text-v2-champagne font-semibold whitespace-nowrap">
+                          ${costoEnvioBase.toLocaleString("es-AR")}
+                        </span>
+                      </button>
+                      {zonaTipo === "base" && (
+                        <div className="px-4 pb-4">
+                          <label className="text-xs v2-text-muted mb-1 block">Dirección de entrega *</label>
+                          <input value={direccion} onChange={e => setDireccion(e.target.value)} required
+                            className="w-full v2-bg-base border border-v2-champagne/15 rounded-xl px-4 py-3 text-sm text-v2-text outline-none focus:border-v2-champagne/50"
+                            placeholder="Calle y número, piso/depto" />
+                        </div>
+                      )}
+                    </div>
+                    {/* Fuera de zona */}
+                    <div className={`rounded-xl border transition-colors ${
+                      zonaTipo === "fuera" ? "border-v2-champagne/60 v2-bg-base" : "border-v2-champagne/15"
+                    }`}>
+                      <button type="button"
+                        onClick={() => { setZonaTipo("fuera"); setErrorMsg(null); }}
+                        className="w-full flex items-center justify-between gap-2 px-4 py-3 text-sm text-left">
+                        <span className={zonaTipo === "fuera" ? "text-v2-text font-medium" : "text-v2-text"}>
+                          {zonaTipo === "fuera" ? "● " : "○ "}Fuera de zona
+                        </span>
+                        <span className="text-v2-champagne font-semibold whitespace-nowrap">
+                          desde ${ENVIO_FUERA_DESDE.toLocaleString("es-AR")}
+                        </span>
+                      </button>
+                      {zonaTipo === "fuera" && (
+                        <div className="px-4 pb-4 space-y-2">
+                          <label className="text-xs v2-text-muted mb-1 block">Dirección de entrega *</label>
+                          <input value={direccion} onChange={e => setDireccion(e.target.value)} required
+                            className="w-full v2-bg-base border border-v2-champagne/15 rounded-xl px-4 py-3 text-sm text-v2-text outline-none focus:border-v2-champagne/50"
+                            placeholder="Calle y número, localidad" />
+                          <p className="text-[13px] text-white leading-relaxed rounded-xl border border-v2-champagne/15 px-3 py-2">
+                            Envíos fuera de zona: a partir de ${ENVIO_FUERA_DESDE.toLocaleString("es-AR")}.
+                            El monto final del envío lo confirma el encargado al cerrar
+                            el pedido — nos comunicaremos con vos.
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
