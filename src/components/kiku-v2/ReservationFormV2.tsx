@@ -171,9 +171,24 @@ const HORARIOS_WEB_FALLBACK: string[] = ["20:00", "20:30", "21:00", "21:30", "22
 const ORDEN_LLEGADA_FALLBACK = new Set<string>(["22:30", "23:00"]);
 
 // ─── Menús del mediodía (KIKU MEDIODÍA) ────────────────────────────────────
-// Se eligen al reservar un horario de mediodía. La elección viaja en las
-// notas de la reserva, así cocina y salón la ven en el dashboard.
-const MENUS_MEDIODIA = [
+// Se gestionan desde el dashboard (Configuración → Reservas) y viven en
+// reservas_config.menus_mediodia. Estos son solo el RESPALDO si la base no
+// responde. La elección viaja en las notas de la reserva.
+type MenuMediodia = {
+  id: string;
+  nombre: string;
+  precio: number | null;
+  detalle: string[];
+};
+
+const OPCION_CARTA: MenuMediodia = {
+  id: "carta",
+  nombre: "CARTA HABITUAL",
+  precio: null,
+  detalle: ["Pedís en el local de nuestra carta de mediodía"],
+};
+
+const MENUS_MEDIODIA_FALLBACK: MenuMediodia[] = [
   {
     id: "menu1",
     nombre: "MENÚ 1 · SUSHI",
@@ -194,13 +209,7 @@ const MENUS_MEDIODIA = [
       "Bebida: gaseosa o agua",
     ],
   },
-  {
-    id: "carta",
-    nombre: "CARTA HABITUAL",
-    precio: null,
-    detalle: ["Pedís en el local de nuestra carta de mediodía"],
-  },
-] as const;
+];
 
 // Cantidad de días que se muestran en el strip horizontal de fechas.
 // Para fechas más allá, el chip "Otra fecha" abre el picker nativo.
@@ -625,6 +634,8 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
   const [people, setPeople] = useState("2");
   // Menú elegido para reservas de mediodía ("" = todavía no aplica)
   const [menuMediodia, setMenuMediodia] = useState("");
+  // Menús cargados desde el dashboard (null = usar respaldo)
+  const [menusDb, setMenusDb] = useState<MenuMediodia[] | null>(null);
 
   // Datos cliente
   const [name, setName] = useState("");
@@ -686,7 +697,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
           .order("orden", { ascending: true }),
         supabase
           .from("reservas_config")
-          .select("mediodia_slots,noche_slots,orden_llegada_slots")
+          .select("mediodia_slots,noche_slots,orden_llegada_slots,menus_mediodia")
           .eq("id", 1)
           .maybeSingle(),
         supabase.from("reservas_dias").select("dow,mediodia,noche"),
@@ -707,6 +718,20 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
           noche: cfgRes.data.noche_slots || [],
           orden: cfgRes.data.orden_llegada_slots || [],
         });
+        // Menús del mediodía gestionados desde el dashboard.
+        const crudos = (cfgRes.data as { menus_mediodia?: unknown }).menus_mediodia;
+        if (Array.isArray(crudos)) {
+          const limpios = crudos
+            .filter((m): m is Record<string, unknown> => !!m && typeof m === "object")
+            .filter((m) => m.activo !== false && typeof m.nombre === "string" && m.nombre)
+            .map((m, i) => ({
+              id: typeof m.id === "string" && m.id ? m.id : `menu-${i}`,
+              nombre: String(m.nombre),
+              precio: typeof m.precio === "number" ? m.precio : null,
+              detalle: Array.isArray(m.detalle) ? m.detalle.map(String) : [],
+            }));
+          setMenusDb(limpios);
+        }
       }
 
       if (!diasRes.error && Array.isArray(diasRes.data)) {
@@ -735,6 +760,12 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
   // Turnos de mediodía (para agrupar los horarios y ofrecer los menús).
   const mediodiaSet = new Set<string>(cfg?.mediodia ?? []);
   const timeEsMediodia = mediodiaSet.has(time);
+
+  // Menús a ofrecer: los del dashboard (o el respaldo) + "carta habitual".
+  const menusMediodia: MenuMediodia[] = [
+    ...(menusDb ?? MENUS_MEDIODIA_FALLBACK),
+    OPCION_CARTA,
+  ];
 
   // Horarios candidatos para una fecha: según las franjas habilitadas ese día.
   const horariosDelDia = (iso: string): string[] =>
@@ -977,7 +1008,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
           const partes: string[] = [];
           // Menú de mediodía elegido → visible en el dashboard y para cocina.
           if (timeEsMediodia && menuMediodia && menuMediodia !== "carta") {
-            const m = MENUS_MEDIODIA.find((x) => x.id === menuMediodia);
+            const m = menusMediodia.find((x) => x.id === menuMediodia);
             if (m) partes.push(`${m.nombre}${m.precio ? ` ($${m.precio.toLocaleString("es-AR")})` : ""}`);
           }
           if (people === "10+") partes.push("Grupo de 10 o más personas");
@@ -1198,7 +1229,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
         <div>
           <SectionLabel icon={<Clock className="w-3 h-3" />}>Menú de mediodía</SectionLabel>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-            {MENUS_MEDIODIA.map((m) => {
+            {menusMediodia.map((m) => {
               const sel = menuMediodia === m.id;
               return (
                 <button
