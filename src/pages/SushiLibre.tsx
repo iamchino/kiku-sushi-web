@@ -142,20 +142,15 @@ const SushiLibre = () => {
             </h2>
           </Reveal>
 
-          <div className="grid md:grid-cols-3 gap-6 md:gap-8">
+          <div className="grid md:grid-cols-2 gap-6 md:gap-8 max-w-3xl mx-auto">
             {[
               {
                 step: "01",
-                title: "Appetizer",
-                desc: "Arrancás con un escabeche de vegetales y langostinos ahumados para abrir el paladar.",
-              },
-              {
-                step: "02",
                 title: "Rondas de 10 piezas",
                 desc: "Variedades Kiku, Fusión y Exotic. Repetí todas las veces que quieras.",
               },
               {
-                step: "03",
+                step: "02",
                 title: "Sin límites",
                 desc: "Podés pedir otra ronda cuando termines la anterior. No hay tope de rondas.",
               },
@@ -346,7 +341,7 @@ const SushiLibre = () => {
               <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
             <p className="text-xs v2-text-dim mt-5">Seña de {formatPesos(cfg.libre_sena)} por persona requerida</p>
-            <p className="text-[13px] leading-[2] v2-text-dim mt-8 max-w-xl mx-auto">
+            <p className="text-base md:text-lg leading-[1.9] v2-text-muted mt-8 max-w-2xl mx-auto">
               El consumo de sal en exceso es perjudicial para la salud. {" "}{cfg.agua_texto}
             </p>
           </Reveal>

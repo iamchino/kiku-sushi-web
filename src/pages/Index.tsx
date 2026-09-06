@@ -203,20 +203,15 @@ const Index = () => {
             </a>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-5 reveal">
+          <div className="grid md:grid-cols-2 gap-5 reveal max-w-4xl mx-auto">
             {[
               {
                 step: "01",
-                title: "Appetizer",
-                desc: "Arrancás con un escabeche de vegetales y langostinos ahumados para abrir el paladar.",
-              },
-              {
-                step: "02",
                 title: "Rondas de 10 piezas",
                 desc: "Elegí entre las variedades Kiku, Fusión o Exotic. Repetí todas las veces que quieras.",
               },
               {
-                step: "03",
+                step: "02",
                 title: "Sin límites",
                 desc: "Podés pedir otra ronda cuando termines la anterior. No hay tope de rondas.",
               },

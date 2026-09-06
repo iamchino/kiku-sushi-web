@@ -366,7 +366,7 @@ const EspecialesSection = () => {
 
       {/* Aclaraciones */}
       <div className="relative z-10 max-w-[1440px] mx-auto px-6 md:px-14 pb-20">
-        <p className="text-[13px] md:text-[14px] leading-[2] v2-text-dim max-w-2xl border-t border-v2-champagne/10 pt-6">
+        <p className="text-base md:text-lg leading-[1.9] v2-text-muted max-w-3xl border-t border-v2-champagne/10 pt-6">
           Servicio de mesa: {fmtLibre(libreCfg.cubierto_precio)} · solo a la carta de salón.
           El consumo de sal en exceso es perjudicial para la salud.
           {libreCfg.agua_texto}

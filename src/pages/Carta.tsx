@@ -268,7 +268,7 @@ const Carta = () => {
       {/* ── Notas ── */}
       <section className="px-6 pb-2">
         <div className="max-w-3xl mx-auto border-t border-v2-champagne/10 pt-8">
-          <ul className="text-sm md:text-base leading-[1.9] v2-text-dim space-y-1">
+          <ul className="text-base md:text-xl leading-[1.9] v2-text-muted space-y-2">
             <li>· Servicio de mesa: {formatPesos(libreCfg.cubierto_precio)} · solo a la carta de salón.</li>
             <li>· El consumo de sal en exceso es perjudicial para la salud.</li>
             <li>· {libreCfg.agua_texto}</li>
