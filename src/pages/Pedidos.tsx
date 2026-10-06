@@ -365,50 +365,41 @@ const Pedidos = () => {
 
     setEnviando(true);
     try {
-      const subtotal = cart.reduce((s, i) => s + parsePrice(i.product.price) * i.quantity, 0);
-      const envio   = orderMode === "delivery" ? costoEnvio : 0;
-      const total   = subtotal + envio;
+      const envio = orderMode === "delivery" ? costoEnvio : 0;
 
-      const { data: pedido, error: e1 } = await supabase
-        .from("pedidos")
-        .insert({
-          canal:             orderMode === "delivery" ? "delivery" : "takeaway",
-          origen:            "web",
-          total,
-          costo_envio:       envio,
-          cliente_nombre:    nombre.trim(),
-          cliente_telefono:  telefono.trim(),
-          cliente_direccion: orderMode === "delivery" ? direccion.trim() : null,
-          envio_zona:        orderMode === "delivery"
+      // El pedido se crea por RPC (crear_pedido_web): la web ya no tiene
+      // permiso para escribir en las tablas. La base valida los datos y toma
+      // el precio real del menú para los productos que existen.
+      const { data: pedido, error: e1 } = await supabase.rpc("crear_pedido_web", {
+        p_canal:             orderMode === "delivery" ? "delivery" : "takeaway",
+        p_items:             cart.map((i) => ({
+          nombre:          i.product.name,
+          cantidad:        i.quantity,
+          precio_unitario: parsePrice(i.product.price),
+          menu_item_id:    UUID_RE.test(i.product.id) ? i.product.id : null,
+        })),
+        p_cliente_nombre:    nombre.trim(),
+        p_cliente_telefono:  telefono.trim(),
+        p_cliente_direccion: orderMode === "delivery" ? direccion.trim() : null,
+        p_envio_zona:        orderMode === "delivery"
                                ? (zonaTipo === "fuera"
                                    ? "Fuera de zona — envío a confirmar"
                                    : "Zona base (Pellegrini – Avellaneda – el Río)")
                                : null,
-          notas:             [
+        p_costo_envio:       envio,
+        p_notas:             [
                                orderMode === "delivery" && zonaTipo === "fuera"
                                  ? "⚠ ENVÍO FUERA DE ZONA: desde $6.000 — confirmar monto con el cliente."
                                  : null,
                                notasExtra.trim() || null,
                              ].filter(Boolean).join("\n") || null,
-          programado_para:   programadoPara,
-        })
-        .select("id, numero")
-        .single();
+        p_programado_para:   programadoPara,
+      });
 
       if (e1) throw e1;
       if (!pedido) throw new Error('Sin respuesta del servidor');
 
-      await supabase.from("pedido_items").insert(
-        cart.map((i) => ({
-          pedido_id:       pedido.id,
-          nombre:          i.product.name,
-          precio_unitario: parsePrice(i.product.price),
-          cantidad:        i.quantity,
-          menu_item_id:     UUID_RE.test(i.product.id) ? i.product.id : null,
-        }))
-      );
-
-      setPedidoNum(pedido.numero ?? null);
+      setPedidoNum((pedido as { numero?: number }).numero ?? null);
       setCart([]);
       localStorage.removeItem('kiku-cart');
       setCartOpen(false);
