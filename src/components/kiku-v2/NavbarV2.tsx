@@ -5,6 +5,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { LogoLockup } from "./LogoMark";
 import { fetchEspeciales, fallbackEspeciales, type Especial } from "@/data/especiales";
 import { supabase } from "@/lib/supabase";
+import { useMediodiaActivo } from "@/hooks/useMediodia";
 
 interface NavLink {
   label: string;
@@ -16,10 +17,12 @@ interface NavLink {
 
 // Links fijos del header. Los especiales (Umami, Pacífico, etc.) ya NO van uno
 // por uno: ahora se listan dinámicamente en el desplegable "Especiales".
+// "Mediodías" se agrega solo si la sección está prendida en el dashboard.
 const NAV_LINKS: NavLink[] = [
   { label: "Omakase", to: "/omakase" },
   { label: "Kiku Libre", to: "/sushi-libre" },
 ];
+const LINK_MEDIODIAS: NavLink = { label: "Mediodías", to: "/mediodias" };
 
 // Etiqueta legible de un especial (título + acento), ej. "Umami del Sur".
 const especialLabel = (e: Especial) => [e.title, e.titleAccent].filter(Boolean).join(" ").trim();
@@ -46,6 +49,8 @@ const NavbarV2 = () => {
   const [anuncio, setAnuncio] = useState<{ texto: string; activo: boolean }>({ texto: "", activo: false });
   const [espOpen, setEspOpen] = useState(false);       // desplegable desktop
   const [espOpenMobile, setEspOpenMobile] = useState(false);
+  const mediodiaActivo = useMediodiaActivo();
+  const navLinks = mediodiaActivo ? [...NAV_LINKS, LINK_MEDIODIAS] : NAV_LINKS;
   const espCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const location = useLocation();
   const { scrollY } = useScroll();
@@ -137,13 +142,12 @@ const NavbarV2 = () => {
 
           {/* Desktop links */}
           <ul className="hidden lg:flex items-center gap-11 ml-auto mr-10">
-            {/* Omakase, Kiku Libre */}
-            <li>
-              <Link to="/omakase" className={linkCls}>Omakase</Link>
-            </li>
-            <li>
-              <Link to="/sushi-libre" className={linkCls}>Kiku Libre</Link>
-            </li>
+            {/* Omakase, Kiku Libre, Mediodías (si está activa) */}
+            {navLinks.map((link) => (
+              <li key={link.label}>
+                <Link to={link.to!} className={linkCls}>{link.label}</Link>
+              </li>
+            ))}
 
             {/* Especiales — desplegable con la lista cargada */}
             {especiales.length > 0 && (
@@ -262,8 +266,8 @@ const NavbarV2 = () => {
         className="fixed inset-0 z-40 bg-v2-bg/[0.98] backdrop-blur-xl lg:hidden overflow-y-auto"
       >
         <div className="min-h-full flex flex-col justify-center items-start px-10 gap-6 py-24">
-          {/* Omakase + Kiku Libre */}
-          {NAV_LINKS.filter((l) => l.to).map((link, i) => (
+          {/* Omakase + Kiku Libre (+ Mediodías si está activa) */}
+          {navLinks.filter((l) => l.to).map((link, i) => (
             <motion.div
               key={link.label}
               initial={{ x: -20, opacity: 0 }}

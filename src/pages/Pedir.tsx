@@ -5,6 +5,7 @@ import { ArrowLeft, Truck, Store, ChevronRight, Clock, MapPin } from "lucide-rea
 import { useLenisScroll } from "@/hooks/useLenisScroll";
 import NavbarV2 from "@/components/kiku-v2/NavbarV2";
 import FooterV2 from "@/components/kiku-v2/FooterV2";
+import { useDiasAbiertos, rangoDiasCorto } from "@/lib/diasAbiertos";
 
 /**
  * Página dedicada al inicio del flujo de pedido (/pedir).
@@ -15,6 +16,9 @@ import FooterV2 from "@/components/kiku-v2/FooterV2";
  */
 const Pedir = () => {
   useLenisScroll();
+  // Días en que se toman pedidos: los que abre el local (Configuración → Reservas).
+  const dias = useDiasAbiertos();
+  const diasPedidos = rangoDiasCorto(dias.noche) || "Mar–Sáb";
 
   useEffect(() => {
     document.body.classList.add("v2-root");
@@ -112,7 +116,7 @@ const Pedir = () => {
         >
           <span className="flex items-center gap-2">
             <Clock className="w-3.5 h-3.5 text-v2-champagne" />
-            Mar–Dom · 20:00 – 00:00
+            {diasPedidos} · 19:30 – 00:00
           </span>
           <span className="hidden sm:inline-block w-px h-3 bg-v2-champagne/20" />
           <span className="flex items-center gap-2">

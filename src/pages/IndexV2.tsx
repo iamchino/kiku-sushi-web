@@ -8,6 +8,7 @@ import NovedadShowcase from "@/components/kiku-v2/NovedadShowcase";
 import OmakaseShowcase from "@/components/kiku-v2/OmakaseShowcase";
 import EspecialesSection from "@/components/kiku-v2/EspecialesSection";
 import KikuLibreShowcase from "@/components/kiku-v2/KikuLibreShowcase";
+import MediodiaShowcase from "@/components/kiku-v2/MediodiaShowcase";
 import ItamaeSection from "@/components/kiku-v2/ItamaeSection";
 import ReservationFormV2 from "@/components/kiku-v2/ReservationFormV2";
 import TestimonialsCinema from "@/components/kiku-v2/TestimonialsCinema";
@@ -21,6 +22,7 @@ import FooterV2 from "@/components/kiku-v2/FooterV2";
  *   Omakase — showcase full-width (la estrella)
  *   Especiales de Kiku — scroll horizontal (Umami del Sur · Pacífico y Patagonia · Kiku Otoñal)
  *   Kiku Libre — showcase full-width (foto propia de fondo)
+ *   Mediodías — el menú de mediodía del mes, editable desde el dashboard (se auto-oculta)
  *   Itamae
  *   Testimonios
  *   Form de reserva (Supabase + WhatsApp)
@@ -80,6 +82,10 @@ const IndexV2 = () => {
 
       {/* Kiku Libre — showcase full-width con foto propia */}
       <KikuLibreShowcase />
+
+      {/* Mediodías — menú del mes. Contenido y visibilidad desde el dashboard
+          (/menu → tab "Mediodías"). Si está apagada, no renderiza nada. */}
+      <MediodiaShowcase />
 
       <ItamaeSection />
       <TestimonialsCinema />

@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import NavbarV2 from "@/components/kiku-v2/NavbarV2";
 import { fallbackData, fetchCatalogFromSheet, type CatalogProduct, type CatalogCategory } from "@/data/catalog";
 import { supabase } from "@/lib/supabase";
+import { DIAS_NOCHE_FALLBACK, useDiasAbiertos, rangoDiasLargo, mensajeCerradoPedidos } from "@/lib/diasAbiertos";
 
 // Parsea precios en formato argentino: "$3.500" → 3500
 const parsePrice = (s: string) => parseInt(s.replace(/[$. ]/g, ''), 10) || 0;
@@ -13,9 +14,9 @@ const formatPrice = (s: string) => `$${parsePrice(s).toLocaleString("es-AR")}`;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // ─── Horario de atención de pedidos (hora Argentina) ───
-//   Martes a jueves: 19:30 → 00:00 (medianoche)
+//   Los días que abre el local (reservas_dias, dashboard): 19:30 → 00:00
 //   Viernes y sábado: 19:30 → 01:00 (esa madrugada cae en sábado y domingo)
-// Domingo (salvo 00:00–01:00) y lunes: cerrado.
+// Los demás días: cerrado (salvo la madrugada 00:00–01:00 de sáb y dom).
 // Se calcula siempre en hora de Argentina, sin importar la zona del dispositivo.
 
 type OrderMode = "delivery" | "takeaway" | null;
@@ -37,7 +38,12 @@ const aperturaMin = (fecha: string, mode: OrderMode, especiales: AperturasEspeci
     ? especiales[fecha]
     : 19 * 60 + 30;
 
-const kikuAbierto = (mode: OrderMode, especiales: AperturasEspeciales): { abierto: boolean; motivo: string } => {
+// Días en que se toman pedidos = días en que el local abre de noche. Salen de
+// reservas_dias (Configuración → Reservas en el dashboard); si la base no
+// responde, martes a sábado. Viernes y sábado la noche se extiende hasta la
+// 01:00 (la madrugada del día siguiente).
+
+const kikuAbierto = (mode: OrderMode, especiales: AperturasEspeciales, diasNoche: number[]): { abierto: boolean; motivo: string } => {
   const arg = new Date(
     new Date().toLocaleString("en-US", { timeZone: "America/Argentina/Buenos_Aires" })
   );
@@ -45,19 +51,15 @@ const kikuAbierto = (mode: OrderMode, especiales: AperturasEspeciales): { abiert
   const mins = arg.getHours() * 60 + arg.getMinutes();
   const apertura = aperturaMin(fechaArg(arg), mode, especiales);
 
-  const noche = [2, 3, 4, 5, 6].includes(dow) && mins >= apertura;     // desde la apertura del día
+  const noche = diasNoche.includes(dow) && mins >= apertura;           // desde la apertura del día
   const madrugada = [6, 0].includes(dow) && mins <= 60;                // hasta 01:00 (sáb y dom)
 
   if (noche || madrugada) return { abierto: true, motivo: "" };
-  if (dow === 1) return { abierto: false, motivo: "Hoy (lunes) estamos cerrados." };
-  return {
-    abierto: false,
-    motivo: "Por ahora estamos cerrados. Tomamos pedidos de martes a jueves de 19:30 a 00:00, y viernes y sábado de 19:30 a 01:00.",
-  };
+  return { abierto: false, motivo: mensajeCerradoPedidos(dow, diasNoche) };
 };
 
 // ¿Un horario "YYYY-MM-DDTHH:MM" (hora Argentina) cae dentro de atención?
-const horarioPedidoValido = (value: string, mode: OrderMode, especiales: AperturasEspeciales): boolean => {
+const horarioPedidoValido = (value: string, mode: OrderMode, especiales: AperturasEspeciales, diasNoche: number[]): boolean => {
   if (!value) return false;
   const [datePart, timePart] = value.split("T");
   if (!datePart || !timePart) return false;
@@ -66,7 +68,7 @@ const horarioPedidoValido = (value: string, mode: OrderMode, especiales: Apertur
   const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay();  // weekday TZ-independiente
   const mins = hh * 60 + mm;
   const apertura = aperturaMin(datePart, mode, especiales);
-  return ([2, 3, 4, 5, 6].includes(dow) && mins >= apertura)
+  return (diasNoche.includes(dow) && mins >= apertura)
       || ([6, 0].includes(dow) && mins <= 60);
 };
 
@@ -79,7 +81,7 @@ const dtLocalInput = (d: Date): string => {
 // Horarios elegibles (cada 30 min) para programar en una fecha dada, dentro
 // de la atención y respetando anticipación mínima (30 min) y máxima (3 días).
 // El cliente elige de una lista: no tipea nada.
-const slotsParaFecha = (fecha: string, mode: OrderMode, especiales: AperturasEspeciales): string[] => {
+const slotsParaFecha = (fecha: string, mode: OrderMode, especiales: AperturasEspeciales, diasNoche: number[]): string[] => {
   if (!fecha) return [];
   const p = (n: number) => String(n).padStart(2, "0");
   const [y, m, d] = fecha.split("-").map(Number);
@@ -90,8 +92,8 @@ const slotsParaFecha = (fecha: string, mode: OrderMode, especiales: AperturasEsp
   if ([6, 0].includes(dow)) {
     for (let t = 0; t <= 60; t += 30) out.push(`${p(Math.floor(t / 60))}:${p(t % 60)}`);
   }
-  // Noche del propio día (mar–sáb) desde la apertura.
-  if ([2, 3, 4, 5, 6].includes(dow)) {
+  // Noche del propio día (los días que abre el local) desde la apertura.
+  if (diasNoche.includes(dow)) {
     const ap = aperturaMin(fecha, mode, especiales);
     for (let t = ap; t <= 23 * 60 + 30; t += 30) out.push(`${p(Math.floor(t / 60))}:${p(t % 60)}`);
   }
@@ -165,14 +167,18 @@ const Pedidos = () => {
     return () => { vivo = false; };
   }, []);
 
-  // Estado de apertura del local (depende del modo y de los horarios especiales).
-  // Se refresca cada 30s, al cambiar de modo y cuando cargan los especiales.
-  const [estadoLocal, setEstadoLocal] = useState(() => kikuAbierto(initialMode, {}));
+  // Días en que abre el local (los mismos del form de reservas y del footer).
+  const diasAbiertos = useDiasAbiertos();
+  const diasNoche = diasAbiertos.noche;
+
+  // Estado de apertura del local (depende del modo, de los horarios especiales
+  // y de los días abiertos). Se refresca cada 30s y al cambiar cualquiera.
+  const [estadoLocal, setEstadoLocal] = useState(() => kikuAbierto(initialMode, {}, DIAS_NOCHE_FALLBACK));
   useEffect(() => {
-    setEstadoLocal(kikuAbierto(orderMode, especiales));
-    const id = setInterval(() => setEstadoLocal(kikuAbierto(orderMode, especiales)), 30000);
+    setEstadoLocal(kikuAbierto(orderMode, especiales, diasNoche));
+    const id = setInterval(() => setEstadoLocal(kikuAbierto(orderMode, especiales, diasNoche)), 30000);
     return () => clearInterval(id);
-  }, [orderMode, especiales]);
+  }, [orderMode, especiales, diasNoche]);
 
   // Cerrar la imagen ampliada con Escape
   useEffect(() => {
@@ -348,12 +354,12 @@ const Pedidos = () => {
     }
 
     // ¿Cuándo? Si está cerrado ahora, se obliga a programar.
-    const est = kikuAbierto(orderMode, especiales);
+    const est = kikuAbierto(orderMode, especiales, diasNoche);
     const debeProgramar = !est.abierto || cuando === "programar";
     let programadoPara: string | null = null;
     if (debeProgramar) {
       if (!programadoLocal) { setErrorMsg("Elegí el día y la hora para tu pedido."); return; }
-      if (!horarioPedidoValido(programadoLocal, orderMode, especiales)) {
+      if (!horarioPedidoValido(programadoLocal, orderMode, especiales, diasNoche)) {
         setErrorMsg("Ese horario está fuera de nuestro horario de atención.");
         return;
       }
@@ -980,15 +986,15 @@ const Pedidos = () => {
                           className="w-full v2-bg-base border border-v2-champagne/15 rounded-xl px-4 py-3 text-sm text-v2-text outline-none focus:border-v2-champagne/50 disabled:opacity-50"
                         >
                           <option value="">{programDate ? "Elegí la hora" : "Primero el día"}</option>
-                          {slotsParaFecha(programDate, orderMode, especiales).map((h) => (
+                          {slotsParaFecha(programDate, orderMode, especiales, diasNoche).map((h) => (
                             <option key={h} value={h}>{h} hs</option>
                           ))}
                         </select>
                       </div>
                     </div>
-                    {programDate && slotsParaFecha(programDate, orderMode, especiales).length === 0 && (
+                    {programDate && slotsParaFecha(programDate, orderMode, especiales, diasNoche).length === 0 && (
                       <p className="text-[13px] text-red-400">
-                        Ese día no tomamos pedidos — elegí otro (martes a sábado).
+                        Ese día no tomamos pedidos — elegí otro ({rangoDiasLargo(diasNoche)}).
                       </p>
                     )}
                     <p className="text-[13px] v2-text-dim">

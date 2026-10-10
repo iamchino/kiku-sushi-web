@@ -1,8 +1,24 @@
 import { Link } from "react-router-dom";
 import { LogoLockup } from "./LogoMark";
 import footerBg from "@/assets/footer-bg.webp";
+import { useDiasAbiertos, rangoDiasCorto } from "@/lib/diasAbiertos";
+import { useMediodiaActivo } from "@/hooks/useMediodia";
 
-const FooterV2 = () => (
+const FooterV2 = () => {
+  // Días abiertos y visibilidad de Mediodías: los dos salen del dashboard.
+  const dias = useDiasAbiertos();
+  const mediodiaActivo = useMediodiaActivo();
+  const diasNoche = rangoDiasCorto(dias.noche) || "Mar–Sáb";
+  const explorar = [
+    { label: "Umami del Sur", href: "/#umami" },
+    { label: "Pacífico y Patagonia", href: "/#pacifico" },
+    { label: "Pasta Nikkei", href: "/#pasta-nikkei" },
+    { label: "Omakase", href: "/omakase" },
+    { label: "Kiku Libre", href: "/sushi-libre" },
+    ...(mediodiaActivo ? [{ label: "Mediodías", href: "/mediodias" }] : []),
+    { label: "Carta", href: "/carta" },
+  ];
+  return (
   <footer className="relative overflow-hidden px-6 md:px-14 pt-24 pb-10 border-t border-v2-champagne/10 v2-bg-base">
     {/* Fondo: fachada del local con neones */}
     <div className="absolute inset-0" aria-hidden="true">
@@ -53,7 +69,7 @@ const FooterV2 = () => (
               +54 9 341 276-4562
             </a>
           </li>
-          <li>Mar–Sáb · 20:00–01:00</li>
+          <li>{diasNoche} · 20:00–01:00</li>
         </ul>
         <Link
           to="/trabaja-con-nosotros"
@@ -63,14 +79,7 @@ const FooterV2 = () => (
         </Link>
       </div>
 
-      <FooterCol title="Explorar" items={[
-        { label: "Umami del Sur", href: "/#umami" },
-        { label: "Pacífico y Patagonia", href: "/#pacifico" },
-        { label: "Pasta Nikkei", href: "/#pasta-nikkei" },
-        { label: "Omakase", href: "/omakase" },
-        { label: "Kiku Libre", href: "/sushi-libre" },
-        { label: "Carta", href: "/carta" },
-      ]} />
+      <FooterCol title="Explorar" items={explorar} />
 
       <FooterCol title="Síguenos" items={[
         { label: "Instagram", href: "https://www.instagram.com/kikusushi.rosario", external: true },
@@ -84,7 +93,8 @@ const FooterV2 = () => (
       <span className="font-jp text-v2-champagne/55">いただきます</span>
     </div>
   </footer>
-);
+  );
+};
 
 interface ColItem {
   label: string;

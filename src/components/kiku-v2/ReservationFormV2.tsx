@@ -105,13 +105,21 @@ const IDS_FIJAS = new Set(FIJAS.map((f) => f.id));
 
 const DIAS_CORTOS = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
 
-// [2] → "Martes" · [2,3] → "mar y mié" · [2,3,4] → "mar, mié, jue" · [] → "Según disponibilidad"
+// [2] → "Martes" · [6,3] → "mié, sáb" · [2,3,4,5,6] → "Martes a sábado"
+// · [1,2,3,4,5,6] → "Lunes a sábado" · [] → "Según disponibilidad"
 export const diasToLabel = (dias: number[]): string => {
   if (!dias || dias.length === 0) return "Según disponibilidad";
   const uno = ["Domingos", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábados"];
+  const largo = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
   const orden = [1, 2, 3, 4, 5, 6, 0];
   const ord = orden.filter((d) => dias.includes(d));
   if (ord.length === 1) return uno[ord[0]];
+  // Tramo consecutivo de 3 o más días (lun→dom): "Martes a sábado".
+  const consecutivo = ord.length >= 3 && ord.every((d, i) => i === 0 || orden.indexOf(d) === orden.indexOf(ord[i - 1]) + 1);
+  if (consecutivo) {
+    const ini = largo[ord[0]];
+    return `${ini.charAt(0).toUpperCase()}${ini.slice(1)} a ${largo[ord[ord.length - 1]]}`;
+  }
   return ord.map((d) => DIAS_CORTOS[d]).join(", ");
 };
 
@@ -789,10 +797,18 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
       }
     : null;
   const isMediodiaExp = tipo === "kiku_mediodia";
+  // "Carta abierta" se ofrece todos los días con turno noche: los que se
+  // marcan en Configuración → Reservas (si abren los lunes, aparece el lunes).
+  const diasNoche = diasCfg
+    ? Object.entries(diasCfg).filter(([, v]) => v.noche).map(([k]) => Number(k))
+    : [];
+  const cartaAbierta: Experiencia = diasNoche.length
+    ? { ...experiencias[0], dias: diasNoche, diasLabel: diasToLabel(diasNoche) }
+    : experiencias[0];
   // Lista final de tarjetas: la de mediodía va segunda, después de carta abierta.
   const experienciasTodo: Experiencia[] = cardMediodia
-    ? [experiencias[0], cardMediodia, ...experiencias.slice(1)]
-    : experiencias;
+    ? [cartaAbierta, cardMediodia, ...experiencias.slice(1)]
+    : [cartaAbierta, ...experiencias.slice(1)];
 
   // Horarios candidatos para una fecha: según las franjas habilitadas ese día.
   const horariosDelDia = (iso: string): string[] =>

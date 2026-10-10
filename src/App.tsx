@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound.tsx";
 import Pedidos from "./pages/Pedidos.tsx";
 import Carta from "./pages/Carta.tsx";
 import SushiLibre from "./pages/SushiLibre.tsx";
+import Mediodias from "./pages/Mediodias.tsx";
 import Omakase from "./pages/Omakase.tsx";
 import TrabajaConNosotros from "./pages/TrabajaConNosotros.tsx";
 import Reservar from "./pages/Reservar.tsx";
@@ -55,6 +56,8 @@ const App = () => (
           <Route path="/pedidos" element={<Pedidos />} />
           <Route path="/carta" element={<Carta />} />
           <Route path="/sushi-libre" element={<SushiLibre />} />
+          <Route path="/mediodias" element={<Mediodias />} />
+          <Route path="/mediodia" element={<Mediodias />} />
           <Route path="/omakase" element={<Omakase />} />
           <Route path="/trabaja-con-nosotros" element={<TrabajaConNosotros />} />
           <Route path="/reservar" element={<Reservar />} />
