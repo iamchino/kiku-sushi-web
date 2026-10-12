@@ -15,29 +15,40 @@ export const DIAS_NOCHE_FALLBACK = [2, 3, 4, 5, 6];
 export const DIAS_MEDIODIA_FALLBACK: number[] = [];
 
 export interface DiasAbiertos {
-  /** Días con turno noche (0=Dom..6=Sáb). */
+  /** Días con turno noche en el salón (reservas, horario del footer). */
   noche: number[];
   /** Días con turno mediodía. */
   mediodia: number[];
+  /**
+   * Días en que se toman pedidos online (delivery y take away). Es
+   * independiente de `noche`: el lunes abre el salón pero no hay delivery.
+   */
+  pedidos: number[];
 }
 
 export interface ReservasDiaRow {
   dow: number;
   mediodia: boolean | null;
   noche: boolean | null;
+  /** Puede faltar si la base todavía no tiene la columna: se asume = noche. */
+  pedidos?: boolean | null;
 }
 
 /** Filas de reservas_dias → listas de días por franja. Sin filas → fallback. */
 export const parseReservasDias = (rows: ReservasDiaRow[] | null | undefined): DiasAbiertos => {
   if (!Array.isArray(rows) || rows.length === 0) {
-    return { noche: [...DIAS_NOCHE_FALLBACK], mediodia: [...DIAS_MEDIODIA_FALLBACK] };
+    return { noche: [...DIAS_NOCHE_FALLBACK], mediodia: [...DIAS_MEDIODIA_FALLBACK], pedidos: [...DIAS_NOCHE_FALLBACK] };
   }
-  const noche = rows.filter((r) => r.noche).map((r) => Number(r.dow));
-  const mediodia = rows.filter((r) => r.mediodia).map((r) => Number(r.dow));
-  return {
-    noche: noche.length ? noche.sort() : [...DIAS_NOCHE_FALLBACK],
-    mediodia: mediodia.sort(),
-  };
+  const noche = rows.filter((r) => r.noche).map((r) => Number(r.dow)).sort();
+  const mediodia = rows.filter((r) => r.mediodia).map((r) => Number(r.dow)).sort();
+  const nocheFinal = noche.length ? noche : [...DIAS_NOCHE_FALLBACK];
+  // Sin la columna (base vieja) → pedidos = noche. Con la columna, lo que diga,
+  // aunque sea ningún día (eso es una decisión, no un error).
+  const tieneColumna = rows.some((r) => r.pedidos !== undefined && r.pedidos !== null);
+  const pedidos = tieneColumna
+    ? rows.filter((r) => r.pedidos).map((r) => Number(r.dow)).sort()
+    : [...nocheFinal];
+  return { noche: nocheFinal, mediodia, pedidos };
 };
 
 // Orden humano de la semana: lunes primero, domingo último.
@@ -89,13 +100,13 @@ export const rangoDiasLargo = (dias: number[], capitalizar = false): string => {
 
 /**
  * Mensaje de "cerrado" para los pedidos online, armado con los días reales.
- * Los días que abre el local toman pedidos de 19:30 a 00:00; viernes y
- * sábado hasta la 01:00.
+ * Los días con pedidos se toman de 19:30 a 00:00; viernes y sábado hasta la
+ * 01:00.
  */
-export const mensajeCerradoPedidos = (dow: number, diasNoche: number[]): string => {
-  if (!diasNoche.includes(dow)) return `Hoy (${LARGOS[dow]}) estamos cerrados.`;
-  const cortos = diasNoche.filter((d) => d !== 5 && d !== 6);
-  const largos = diasNoche.filter((d) => d === 5 || d === 6);
+export const mensajeCerradoPedidos = (dow: number, diasPedidos: number[]): string => {
+  if (!diasPedidos.includes(dow)) return `Hoy (${LARGOS[dow]}) no tomamos pedidos online.`;
+  const cortos = diasPedidos.filter((d) => d !== 5 && d !== 6);
+  const largos = diasPedidos.filter((d) => d === 5 || d === 6);
   const partes: string[] = [];
   if (cortos.length) partes.push(`${rangoDiasLargo(cortos)} de 19:30 a 00:00`);
   if (largos.length) partes.push(`${rangoDiasLargo(largos)} de 19:30 a 01:00`);
@@ -111,11 +122,23 @@ export function useDiasAbiertos(): DiasAbiertos & { cargado: boolean } {
     let alive = true;
     supabase
       .from("reservas_dias")
-      .select("dow,mediodia,noche")
+      .select("dow,mediodia,noche,pedidos")
       .then(({ data, error }) => {
         if (!alive) return;
-        if (!error && Array.isArray(data)) setDias(parseReservasDias(data as ReservasDiaRow[]));
-        setCargado(true);
+        if (!error && Array.isArray(data)) {
+          setDias(parseReservasDias(data as ReservasDiaRow[]));
+          setCargado(true);
+          return;
+        }
+        // Base sin la columna `pedidos` todavía: pedimos sin ella.
+        supabase
+          .from("reservas_dias")
+          .select("dow,mediodia,noche")
+          .then(({ data: d2, error: e2 }) => {
+            if (!alive) return;
+            if (!e2 && Array.isArray(d2)) setDias(parseReservasDias(d2 as ReservasDiaRow[]));
+            setCargado(true);
+          });
       });
     return () => { alive = false; };
   }, []);

@@ -14,7 +14,7 @@ const formatPrice = (s: string) => `$${parsePrice(s).toLocaleString("es-AR")}`;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // ─── Horario de atención de pedidos (hora Argentina) ───
-//   Los días que abre el local (reservas_dias, dashboard): 19:30 → 00:00
+//   Los días con pedidos online (reservas_dias.pedidos, dashboard): 19:30 → 00:00
 //   Viernes y sábado: 19:30 → 01:00 (esa madrugada cae en sábado y domingo)
 // Los demás días: cerrado (salvo la madrugada 00:00–01:00 de sáb y dom).
 // Se calcula siempre en hora de Argentina, sin importar la zona del dispositivo.
@@ -38,10 +38,10 @@ const aperturaMin = (fecha: string, mode: OrderMode, especiales: AperturasEspeci
     ? especiales[fecha]
     : 19 * 60 + 30;
 
-// Días en que se toman pedidos = días en que el local abre de noche. Salen de
-// reservas_dias (Configuración → Reservas en el dashboard); si la base no
-// responde, martes a sábado. Viernes y sábado la noche se extiende hasta la
-// 01:00 (la madrugada del día siguiente).
+// Días en que se toman pedidos: reservas_dias.pedidos (Configuración →
+// Reservas en el dashboard, columna "Pedidos"); si la base no responde,
+// martes a sábado. Viernes y sábado la noche se extiende hasta la 01:00 (la
+// madrugada del día siguiente).
 
 const kikuAbierto = (mode: OrderMode, especiales: AperturasEspeciales, diasNoche: number[]): { abierto: boolean; motivo: string } => {
   const arg = new Date(
@@ -167,9 +167,11 @@ const Pedidos = () => {
     return () => { vivo = false; };
   }, []);
 
-  // Días en que abre el local (los mismos del form de reservas y del footer).
+  // Días en que se toman pedidos online (Configuración → Reservas, columna
+  // "Pedidos"). Es aparte de los días del salón: el lunes se reserva pero no
+  // hay delivery ni take away.
   const diasAbiertos = useDiasAbiertos();
-  const diasNoche = diasAbiertos.noche;
+  const diasNoche = diasAbiertos.pedidos;
 
   // Estado de apertura del local (depende del modo, de los horarios especiales
   // y de los días abiertos). Se refresca cada 30s y al cambiar cualquiera.

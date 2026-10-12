@@ -16,9 +16,9 @@ import { useDiasAbiertos, rangoDiasCorto } from "@/lib/diasAbiertos";
  */
 const Pedir = () => {
   useLenisScroll();
-  // Días en que se toman pedidos: los que abre el local (Configuración → Reservas).
+  // Días en que se toman pedidos online (Configuración → Reservas, columna "Pedidos").
   const dias = useDiasAbiertos();
-  const diasPedidos = rangoDiasCorto(dias.noche) || "Mar–Sáb";
+  const diasPedidos = rangoDiasCorto(dias.pedidos) || "Mar–Sáb";
 
   useEffect(() => {
     document.body.classList.add("v2-root");

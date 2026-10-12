@@ -19,10 +19,20 @@ describe("parseReservasDias", () => {
     { dow: 5, mediodia: false, noche: true },
     { dow: 6, mediodia: true, noche: true },
   ];
-  it("separa noche y mediodía", () => {
+  it("separa noche y mediodía; sin columna pedidos, pedidos = noche", () => {
     const d = parseReservasDias(filas);
     expect(d.noche).toEqual([1, 2, 3, 4, 5, 6]);
     expect(d.mediodia).toEqual([3, 6]);
+    expect(d.pedidos).toEqual([1, 2, 3, 4, 5, 6]);
+  });
+  it("con columna pedidos: el lunes abre el salón pero no toma pedidos", () => {
+    const d = parseReservasDias(filas.map((f) => ({ ...f, pedidos: f.noche && f.dow !== 1 })));
+    expect(d.noche).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(d.pedidos).toEqual([2, 3, 4, 5, 6]);
+  });
+  it("con columna pedidos en todo false, es una decisión: ningún día", () => {
+    const d = parseReservasDias(filas.map((f) => ({ ...f, pedidos: false })));
+    expect(d.pedidos).toEqual([]);
   });
   it("sin filas → fallback martes a sábado", () => {
     expect(parseReservasDias(null).noche).toEqual(DIAS_NOCHE_FALLBACK);
@@ -55,8 +65,8 @@ describe("rangoDiasCorto / rangoDiasLargo", () => {
 });
 
 describe("mensajeCerrado (pedidos online)", () => {
-  it("día que no abre", () => {
-    expect(mensajeCerradoPedidos(1, [2, 3, 4, 5, 6])).toBe("Hoy (lunes) estamos cerrados.");
+  it("día sin pedidos online (aunque el salón abra)", () => {
+    expect(mensajeCerradoPedidos(1, [2, 3, 4, 5, 6])).toBe("Hoy (lunes) no tomamos pedidos online.");
   });
   it("día que abre pero todavía no es la hora: arma los horarios con los días reales", () => {
     expect(mensajeCerradoPedidos(2, [2, 3, 4, 5, 6])).toBe(
