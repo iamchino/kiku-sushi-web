@@ -8,6 +8,7 @@ import { motion, AnimatePresence, useInView } from "framer-motion";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { hoyArgentinaISO, sumarDiasISO, turnoReservable } from "@/lib/horaArgentina";
 import { useLibreConfig, formatPesos as fmtPesos } from "@/hooks/useLibreConfig";
 import { useOmakasePrecio, formatPesos } from "@/hooks/useOmakasePrecio";
 
@@ -244,11 +245,13 @@ const CHIP_TAP = "active:scale-[0.97]";
 
 // ─── Strip horizontal de fechas (próximos N días + Otra fecha) ────────────
 const ChipsFecha = ({
-  value, onChange, minDate, allowedWeekdays,
+  value, onChange, minDate, maxDate, allowedWeekdays,
 }: {
   value: string;
   onChange: (d: string) => void;
   minDate: string;
+  /** Última fecha reservable ('YYYY-MM-DD'). */
+  maxDate?: string;
   allowedWeekdays: number[];
 }) => {
   const hiddenInputRef = useRef<HTMLInputElement>(null);
@@ -262,7 +265,8 @@ const ChipsFecha = ({
     const d = new Date(baseDate);
     d.setDate(baseDate.getDate() + i);
     if (!allowedWeekdays.includes(d.getDay())) continue;
-    const iso = d.toISOString().split("T")[0];
+    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    if (maxDate && iso > maxDate) break;
     dias.push({
       iso,
       semana: d.toLocaleDateString("es-AR", { weekday: "short" }).replace(".", "").toUpperCase(),
@@ -436,9 +440,14 @@ const ChipsFecha = ({
         type="date"
         value={value}
         min={minDate}
+        max={maxDate}
         onChange={(e) => {
           const v = e.target.value;
           if (!v) return;
+          if (maxDate && v > maxDate) {
+            toast.error("Por la web se puede reservar hasta esa fecha; para más adelante escribinos por WhatsApp");
+            return;
+          }
           if (!allowedWeekdays.includes(weekdayOf(v))) {
             toast.error("Ese día no está disponible para esta experiencia");
             return;
@@ -620,7 +629,18 @@ export const horariosDeFecha = (
 // ════════════════════════════════════════════════════════════════════════════
 
 const ReservationFormV2 = ({ hideHeader = false }: Props) => {
-  const today = new Date().toISOString().split("T")[0];
+  // "Hoy" en hora de Argentina (antes era UTC: desde las 21:00 no se podía
+  // reservar para hoy). Se refresca cada minuto para ocultar los turnos que
+  // van quedando atrás mientras el form está abierto.
+  const [ahora, setAhora] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setAhora(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+  const today = hoyArgentinaISO(ahora);
+  // Anticipación mínima (minutos) y máxima (días) para reservar por la web.
+  // Se editan en el dashboard (Configuración → Reservas). 0 = sin mínimo.
+  const [anticip, setAnticip] = useState<{ minMinutos: number; maxDias: number }>({ minMinutos: 0, maxDias: 30 });
   const omakasePrecio = useOmakasePrecio();
   const libreCfg = useLibreConfig();
 
@@ -705,7 +725,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
           .order("orden", { ascending: true }),
         supabase
           .from("reservas_config")
-          .select("mediodia_slots,noche_slots,orden_llegada_slots,menus_mediodia")
+          .select("mediodia_slots,noche_slots,orden_llegada_slots,menus_mediodia,anticipacion_min_minutos,anticipacion_max_dias")
           .eq("id", 1)
           .maybeSingle(),
         supabase.from("reservas_dias").select("dow,mediodia,noche"),
@@ -721,6 +741,11 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
       }
 
       if (!cfgRes.error && cfgRes.data) {
+        const a = cfgRes.data as { anticipacion_min_minutos?: number | null; anticipacion_max_dias?: number | null };
+        setAnticip({
+          minMinutos: Math.max(0, Number(a.anticipacion_min_minutos ?? 0) || 0),
+          maxDias: Math.max(1, Number(a.anticipacion_max_dias ?? 30) || 30),
+        });
         setCfg({
           mediodia: cfgRes.data.mediodia_slots || [],
           noche: cfgRes.data.noche_slots || [],
@@ -871,11 +896,18 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
   const omakaseBloqueado = isOmakase && slots.length > 0 && omakaseLibres < peopleInt;
 
   const horariosDisponibles = horariosDelDia(date)
+    // Turnos que ya pasaron o están demasiado cerca (anticipación mínima del dashboard).
+    .filter((t) => turnoReservable(date, t, anticip.minMinutos, ahora))
     .filter((t) => cupoLibreEnSlot(t) >= peopleInt)
     // Con la tarjeta Kiku Mediodía elegida, solo se ofrecen turnos de mediodía.
     .filter((t) => !isMediodiaExp || mediodiaSet.has(t));
 
   const sinCupoEnFecha = horariosDisponibles.length === 0;
+  // Hoy sin turnos porque ya pasaron todos (no por falta de lugar): no tiene
+  // sentido ofrecer lista de espera, mejor invitar a elegir otro día.
+  const turnosDeHoyYaPasaron = date === today && sinCupoEnFecha
+    && horariosDelDia(date).length > 0
+    && horariosDelDia(date).every((t) => !turnoReservable(date, t, anticip.minMinutos, ahora));
 
   // Auto-ajuste de hora si el slot actual ya no está disponible
   const horariosKey = horariosDisponibles.join("|");
@@ -1255,7 +1287,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
 
       <div>
         <SectionLabel icon={<Calendar className="w-3 h-3" />}>Fecha</SectionLabel>
-        <ChipsFecha value={date} onChange={setDate} minDate={today} allowedWeekdays={allowedWeekdays} />
+        <ChipsFecha value={date} onChange={setDate} minDate={today} maxDate={sumarDiasISO(today, anticip.maxDias)} allowedWeekdays={allowedWeekdays} />
       </div>
 
       <div>
@@ -1332,7 +1364,17 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
       </div>
 
       {/* Lista de espera: aparece cuando no hay cupo para la fecha/personas */}
-      {!loadingSlots && sinCupoEnFecha && (
+      {!loadingSlots && turnosDeHoyYaPasaron && (
+        <div className="border border-v2-champagne/25 bg-v2-bg/40 p-4 sm:p-5 flex items-start gap-2.5 text-[14px] v2-text-muted leading-relaxed">
+          <Info className="w-4 h-4 flex-shrink-0 mt-0.5 text-v2-champagne/80" />
+          <span>
+            Los turnos de hoy ya pasaron{anticip.minMinutos > 0 ? ` (se reserva con al menos ${anticip.minMinutos >= 60 ? `${Math.round(anticip.minMinutos / 60)} h` : `${anticip.minMinutos} min`} de anticipación)` : ""}.
+            Elegí otra fecha, o escribinos por WhatsApp si querés venir ahora.
+          </span>
+        </div>
+      )}
+
+      {!loadingSlots && sinCupoEnFecha && !turnosDeHoyYaPasaron && (
         <div className="border border-v2-accent/35 bg-v2-accent/[0.07] p-4 sm:p-5">
           {waitDone ? (
             <div className="flex items-start gap-2.5 text-[14px] v2-text">
