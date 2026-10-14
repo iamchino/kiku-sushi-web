@@ -430,7 +430,7 @@ const Pedidos = () => {
 
   if (!orderMode) {
     return (
-      <div className="v2-root min-h-screen overflow-x-hidden v2-bg-base">
+      <div className="v2-root v2-legible min-h-screen overflow-x-hidden v2-bg-base">
         <NavbarV2 />
         <section className="relative min-h-screen flex items-center justify-center pt-28 pb-16 px-6 md:px-14 overflow-hidden text-center">
           <div
@@ -438,7 +438,7 @@ const Pedidos = () => {
             style={{ background: "radial-gradient(ellipse at top, hsla(270, 50%, 50%, 0.12), transparent 60%)" }}
           />
           <div className="relative z-10 max-w-2xl w-full">
-            <span className="font-jp text-xs tracking-[0.4em] text-v2-champagne mb-4 block">— ご注文 —</span>
+            <span className="font-jp text-[14px] tracking-[0.4em] text-v2-champagne mb-4 block">— ご注文 —</span>
             <h1 className="font-display font-light text-5xl sm:text-7xl text-v2-text leading-none mb-4">
               Pedidos
             </h1>
@@ -455,9 +455,9 @@ const Pedidos = () => {
                   <Truck className="w-6 h-6 text-v2-champagne" />
                 </div>
                 <h3 className="font-display text-2xl text-v2-text mb-2">Delivery</h3>
-                <p className="text-sm v2-text-muted mb-1">Lo enviamos a tu domicilio</p>
-                <p className="text-xs text-v2-champagne">Costo de envío: desde ${costoEnvioBase.toLocaleString("es-AR")}</p>
-                <p className="text-[13px] v2-text-muted mt-0.5">Valor de envío sujeto a modificación según la distancia.</p>
+                <p className="text-[16px] v2-text-muted mb-1">Lo enviamos a tu domicilio</p>
+                <p className="text-[14px] text-v2-champagne">Costo de envío: desde ${costoEnvioBase.toLocaleString("es-AR")}</p>
+                <p className="text-[16px] v2-text-muted mt-0.5">Valor de envío sujeto a modificación según la distancia.</p>
               </button>
 
               <button
@@ -468,14 +468,14 @@ const Pedidos = () => {
                   <Store className="w-6 h-6 text-v2-champagne" />
                 </div>
                 <h3 className="font-display text-2xl text-v2-text mb-2">Retiro en local</h3>
-                <p className="text-sm v2-text-muted mb-1">Pasás a buscarlo al local</p>
-                <p className="text-xs text-v2-champagne">Sin costo de envío</p>
+                <p className="text-[16px] v2-text-muted mb-1">Pasás a buscarlo al local</p>
+                <p className="text-[14px] text-v2-champagne">Sin costo de envío</p>
               </button>
             </div>
 
             <Link
               to="/"
-              className="inline-flex items-center gap-2 text-[13px] uppercase tracking-[0.24em] v2-text-muted mt-10 hover:text-v2-champagne transition-colors"
+              className="inline-flex items-center gap-2 text-[16px] uppercase tracking-[0.1em] v2-text-muted mt-10 hover:text-v2-champagne transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" /> Volver al inicio
             </Link>
@@ -505,7 +505,7 @@ const Pedidos = () => {
     : categories;
 
   return (
-    <div className="v2-root min-h-screen overflow-x-hidden v2-bg-base">
+    <div className="v2-root v2-legible min-h-screen overflow-x-hidden v2-bg-base">
       <NavbarV2 />
 
       {/* Header bar */}
@@ -515,11 +515,11 @@ const Pedidos = () => {
             <div className="flex items-center gap-3">
               <Link
                 to="/pedir"
-                className="inline-flex items-center gap-1.5 v2-text-muted hover:text-v2-champagne transition-colors text-[13px] uppercase tracking-[0.24em]"
+                className="inline-flex items-center gap-1.5 v2-text-muted hover:text-v2-champagne transition-colors text-[16px] uppercase tracking-[0.1em]"
               >
                 <ArrowLeft className="w-3.5 h-3.5" /> Cambiar
               </Link>
-              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-v2-champagne/30 text-v2-champagne text-[12px] uppercase tracking-[0.24em]">
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-v2-champagne/30 text-v2-champagne text-[15px] uppercase tracking-[0.1em]">
                 {orderMode === "delivery" ? (
                   <><Truck className="w-3 h-3" /> Delivery</>
                 ) : (
@@ -539,7 +539,7 @@ const Pedidos = () => {
               placeholder="Buscar en el menú..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full v2-bg-card border border-v2-champagne/15 rounded-full pl-11 pr-4 py-3 text-sm text-v2-text placeholder:text-v2-text-dim outline-none focus:border-v2-champagne/50 transition-colors"
+              className="w-full v2-bg-card border border-v2-champagne/15 rounded-full pl-11 pr-4 py-3 text-[16px] text-v2-text placeholder:text-v2-text-dim outline-none focus:border-v2-champagne/50 transition-colors"
             />
           </div>
 
@@ -547,7 +547,7 @@ const Pedidos = () => {
           <div className="flex lg:hidden gap-2 mt-5 overflow-x-auto pb-2 scrollbar-hide">
             <button
               onClick={() => setActiveCategory(null)}
-              className={`shrink-0 px-4 py-2 rounded-full text-[13px] uppercase tracking-[0.18em] border transition-all ${
+              className={`shrink-0 px-4 py-2 rounded-full text-[16px] uppercase tracking-[0.08em] border transition-all ${
                 !activeCategory
                   ? "bg-v2-champagne text-v2-bg border-transparent"
                   : "border-v2-champagne/20 text-v2-text-muted hover:border-v2-champagne/50 hover:text-v2-text"
@@ -559,7 +559,7 @@ const Pedidos = () => {
               <button
                 key={cat.name}
                 onClick={() => setActiveCategory(cat.name === activeCategory ? null : cat.name)}
-                className={`shrink-0 px-4 py-2 rounded-full text-[13px] uppercase tracking-[0.18em] border transition-all whitespace-nowrap ${
+                className={`shrink-0 px-4 py-2 rounded-full text-[16px] uppercase tracking-[0.08em] border transition-all whitespace-nowrap ${
                   activeCategory === cat.name
                     ? "bg-v2-champagne text-v2-bg border-transparent"
                     : "border-v2-champagne/20 text-v2-text-muted hover:border-v2-champagne/50 hover:text-v2-text"
@@ -577,13 +577,13 @@ const Pedidos = () => {
         <div className="max-w-6xl mx-auto lg:grid lg:grid-cols-[220px_1fr] lg:gap-10 lg:items-start">
           {/* Sidebar de categorías (desktop) */}
           <aside className="hidden lg:block sticky top-28 self-start">
-            <p className="text-[12px] uppercase tracking-[0.24em] text-v2-champagne/70 mb-3 px-3">
+            <p className="text-[15px] uppercase tracking-[0.1em] text-v2-champagne/70 mb-3 px-3">
               Categorías
             </p>
             <nav className="flex flex-col gap-1">
               <button
                 onClick={() => setActiveCategory(null)}
-                className={`text-left px-3 py-2 rounded-lg text-sm transition-all ${
+                className={`text-left px-3 py-2 rounded-lg text-[16px] transition-all ${
                   !activeCategory
                     ? "bg-v2-champagne/15 text-v2-champagne"
                     : "text-v2-text-muted hover:text-v2-text hover:bg-v2-champagne/5"
@@ -595,14 +595,14 @@ const Pedidos = () => {
                 <button
                   key={cat.name}
                   onClick={() => setActiveCategory(cat.name === activeCategory ? null : cat.name)}
-                  className={`flex items-center justify-between gap-2 text-left px-3 py-2 rounded-lg text-sm transition-all ${
+                  className={`flex items-center justify-between gap-2 text-left px-3 py-2 rounded-lg text-[16px] transition-all ${
                     activeCategory === cat.name
                       ? "bg-v2-champagne/15 text-v2-champagne"
                       : "text-v2-text-muted hover:text-v2-text hover:bg-v2-champagne/5"
                   }`}
                 >
                   <span>{cat.name}</span>
-                  <span className="text-[12px] text-v2-text-dim shrink-0">{cat.products.length}</span>
+                  <span className="text-[15px] text-v2-text-dim shrink-0">{cat.products.length}</span>
                 </button>
               ))}
             </nav>
@@ -613,7 +613,7 @@ const Pedidos = () => {
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-4">
               <Loader2 className="w-8 h-8 text-v2-champagne animate-spin" />
-              <p className="v2-text-muted text-sm">Cargando menú...</p>
+              <p className="v2-text-muted text-[16px]">Cargando menú...</p>
             </div>
           ) : visibleCategories.length === 0 ? (
             <div className="text-center py-20">
@@ -627,7 +627,7 @@ const Pedidos = () => {
               <div className="mb-6">
                 <h2 className="font-display font-light text-3xl md:text-4xl text-v2-text">{cat.name}</h2>
                 {cat.subtitle && (
-                  <p className="text-xs uppercase tracking-[0.2em] text-v2-champagne/70 mt-1.5">{cat.subtitle}</p>
+                  <p className="text-[14px] uppercase tracking-[0.08em] text-v2-champagne/70 mt-1.5">{cat.subtitle}</p>
                 )}
               </div>
 
@@ -662,7 +662,7 @@ const Pedidos = () => {
                         )}
                         {product.sinTacc && (
                           <span
-                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border border-amber-400/40 text-amber-300 text-[11px] uppercase tracking-wider"
+                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border border-amber-400/40 text-amber-300 text-[14px] uppercase tracking-wider"
                             title="Sin TACC"
                             aria-label="Sin TACC"
                           >
@@ -681,7 +681,7 @@ const Pedidos = () => {
                       >
                         <Minus className="w-3 h-3" />
                       </button>
-                      <span className="text-sm font-semibold w-5 text-center text-v2-text">
+                      <span className="text-[16px] font-semibold w-5 text-center text-v2-text">
                         {inCart.quantity}
                       </span>
                       <button
@@ -694,7 +694,7 @@ const Pedidos = () => {
                   ) : (
                     <button
                       onClick={() => addToCart(product)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-v2-champagne/40 text-xs text-v2-champagne hover:bg-v2-champagne hover:text-v2-bg hover:border-transparent transition-all whitespace-nowrap"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-v2-champagne/40 text-[14px] text-v2-champagne hover:bg-v2-champagne hover:text-v2-bg hover:border-transparent transition-all whitespace-nowrap"
                     >
                       <Plus className="w-3 h-3" /> Agregar
                     </button>
@@ -705,13 +705,13 @@ const Pedidos = () => {
                     return (
                       <article
                         key={product.id}
-                        className="group relative col-span-full v2-bg-card border border-v2-champagne/12 rounded-xl px-5 py-4 hover:border-v2-champagne/40 transition-all duration-300 flex items-center gap-4"
+                        className="group relative col-span-full v2-bg-card border border-v2-champagne/12 rounded-xl px-5 py-4 hover:border-v2-champagne/40 transition-all duration-300 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4"
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-display text-lg text-v2-text">{product.name}</h3>
+                            <h3 className="font-display text-2xl text-v2-text leading-tight">{product.name}</h3>
                             {product.badge && (
-                              <span className="px-2 py-0.5 rounded-full border border-v2-champagne/30 text-v2-champagne text-[11px] uppercase tracking-widest font-semibold">
+                              <span className="px-2 py-0.5 rounded-full border border-v2-champagne/30 text-v2-champagne text-[14px] uppercase tracking-widest font-semibold">
                                 {product.badge}
                               </span>
                             )}
@@ -724,16 +724,18 @@ const Pedidos = () => {
                           )}
                           {product.highlight && (
                             <div className="mt-2 inline-block rounded-lg border border-v2-champagne/35 bg-v2-champagne/10 px-3 py-1.5">
-                              <p className="text-sm md:text-base font-medium text-v2-champagne leading-snug whitespace-pre-line">
+                              <p className="text-[16px] md:text-base font-medium text-v2-champagne leading-snug whitespace-pre-line">
                                 {product.highlight}
                               </p>
                             </div>
                           )}
                         </div>
-                        <span className="text-base font-display text-v2-champagne whitespace-nowrap shrink-0">
-                          {formatPrice(product.price)}
-                        </span>
-                        <div className="shrink-0">{qtyControls}</div>
+                        <div className="flex items-center justify-between gap-4 sm:contents">
+                          <span className="text-lg font-semibold text-v2-champagne whitespace-nowrap shrink-0">
+                            {formatPrice(product.price)}
+                          </span>
+                          <div className="shrink-0">{qtyControls}</div>
+                        </div>
                       </article>
                     );
                   }
@@ -760,7 +762,7 @@ const Pedidos = () => {
                         </button>
 
                         {product.badge && (
-                          <span className="absolute top-3 right-3 px-2.5 py-0.5 rounded-full border border-v2-champagne/30 text-v2-champagne text-[12px] uppercase tracking-wider font-semibold bg-v2-bg/60">
+                          <span className="absolute top-3 right-3 px-2.5 py-0.5 rounded-full border border-v2-champagne/30 text-v2-champagne text-[15px] uppercase tracking-wider font-semibold bg-v2-bg/60">
                             {product.badge}
                           </span>
                         )}
@@ -775,7 +777,7 @@ const Pedidos = () => {
 
                         {product.highlight && (
                           <div className="mb-4 rounded-lg border border-v2-champagne/35 bg-v2-champagne/10 px-3.5 py-2.5">
-                            <p className="text-sm md:text-base font-medium text-v2-champagne leading-snug whitespace-pre-line">
+                            <p className="text-[16px] md:text-base font-medium text-v2-champagne leading-snug whitespace-pre-line">
                               {product.highlight}
                             </p>
                           </div>
@@ -803,7 +805,7 @@ const Pedidos = () => {
       {cartCount > 0 && !cartOpen && (
         <button
           onClick={() => setCartOpen(true)}
-          className="md:hidden fixed bottom-4 left-4 right-4 z-50 bg-v2-champagne text-v2-bg text-center font-medium tracking-[0.2em] uppercase py-4 rounded-xl text-sm flex items-center justify-center gap-2 shadow-2xl"
+          className="md:hidden fixed bottom-4 left-4 right-4 z-50 bg-v2-champagne text-v2-bg text-center font-medium tracking-[0.08em] uppercase py-4 rounded-xl text-[16px] flex items-center justify-center gap-2 shadow-2xl"
         >
           <ShoppingBag className="w-4 h-4" />
           Ver pedido · {cartCount} {cartCount === 1 ? "item" : "items"}
@@ -850,23 +852,23 @@ const Pedidos = () => {
                         />
                       )}
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-display text-base text-v2-text truncate">{item.product.name}</h4>
-                        <p className="text-xs text-v2-champagne">{formatPrice(item.product.price)}</p>
+                        <h4 className="font-display text-xl text-v2-text leading-tight">{item.product.name}</h4>
+                        <p className="text-[16px] font-semibold text-v2-champagne">{formatPrice(item.product.price)}</p>
                         <div className="flex items-center gap-2 mt-2">
                           <button
                             onClick={() => updateQuantity(item.product.id, -1)}
-                            className="w-6 h-6 rounded-full border border-v2-champagne/25 flex items-center justify-center text-v2-text-muted hover:text-v2-text transition-colors"
+                            className="w-8 h-8 rounded-full border border-v2-champagne/40 flex items-center justify-center text-v2-text hover:border-v2-champagne transition-colors"
                           >
-                            <Minus className="w-3 h-3" />
+                            <Minus className="w-4 h-4" />
                           </button>
-                          <span className="text-sm font-semibold w-5 text-center text-v2-text">
+                          <span className="text-[16px] font-semibold w-5 text-center text-v2-text">
                             {item.quantity}
                           </span>
                           <button
                             onClick={() => addToCart(item.product)}
-                            className="w-6 h-6 rounded-full bg-v2-champagne flex items-center justify-center text-v2-bg hover:bg-v2-text transition-colors"
+                            className="w-8 h-8 rounded-full bg-v2-champagne flex items-center justify-center text-v2-bg hover:bg-v2-text transition-colors"
                           >
-                            <Plus className="w-3 h-3" />
+                            <Plus className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
@@ -875,7 +877,7 @@ const Pedidos = () => {
                         className="text-v2-text-dim hover:text-red-400 transition-colors mt-1"
                         aria-label={`Quitar ${item.product.name}`}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-5 h-5" />
                       </button>
                     </div>
                   ))}
@@ -885,17 +887,17 @@ const Pedidos = () => {
 
             {cart.length > 0 && (
               <div className="p-6 border-t border-v2-champagne/12">
-                <div className="flex items-center justify-between mb-2 text-sm">
+                <div className="flex items-center justify-between mb-2 text-[16px]">
                   <span className="v2-text-muted">Modo</span>
                   <span className="font-semibold text-v2-text">{orderMode === "delivery" ? "Delivery (+$3.500)" : "Retiro en local"}</span>
                 </div>
-                <div className="flex items-center justify-between mb-2 text-sm">
+                <div className="flex items-center justify-between mb-2 text-[16px]">
                   <span className="v2-text-muted">Subtotal</span>
                   <span className="font-semibold text-v2-text">${cart.reduce((s,i) => s + parsePrice(i.product.price)*i.quantity,0).toLocaleString("es-AR")}</span>
                 </div>
                 {orderMode === "delivery" && (
                   <>
-                    <div className="flex items-center justify-between mb-1 text-sm">
+                    <div className="flex items-center justify-between mb-1 text-[16px]">
                       <span className="v2-text-muted">
                         Envío{zonaTipo === "fuera" ? " · fuera de zona" : zonaTipo === "base" ? " · zona base" : ""}
                       </span>
@@ -903,20 +905,20 @@ const Pedidos = () => {
                         {zonaTipo === "fuera" ? "desde " : ""}${costoEnvio.toLocaleString("es-AR")}
                       </span>
                     </div>
-                    <p className="v2-text-muted text-[13px] leading-snug mb-2">
+                    <p className="v2-text-muted text-[16px] leading-snug mb-2">
                       {zonaTipo === "fuera"
                         ? "El monto final del envío lo confirma el encargado al cerrar el pedido."
                         : "El costo final depende de tu zona de envío (la elegís al confirmar)."}
                     </p>
                   </>
                 )}
-                <div className="flex items-center justify-between mb-5 text-sm font-bold">
+                <div className="flex items-center justify-between mb-5 text-[16px] font-bold">
                   <span className="text-v2-text">Total</span>
                   <span className="text-v2-champagne">{orderMode === "delivery" && zonaTipo === "fuera" ? "desde " : ""}${(cart.reduce((s,i) => s + parsePrice(i.product.price)*i.quantity,0) + (orderMode==="delivery"?costoEnvio:0)).toLocaleString("es-AR")}</span>
                 </div>
                 <button
                   onClick={() => { setCartOpen(false); setStep("checkout"); }}
-                  className="w-full inline-flex items-center justify-center gap-2 bg-v2-champagne text-v2-bg font-medium uppercase tracking-[0.2em] text-sm py-4 rounded-xl hover:bg-v2-text transition-colors"
+                  className="w-full inline-flex items-center justify-center gap-2 bg-v2-champagne text-v2-bg font-medium uppercase tracking-[0.08em] text-[16px] py-4 rounded-xl hover:bg-v2-text transition-colors"
                 >
                   Confirmar pedido <ChevronRight className="w-4 h-4" />
                 </button>
@@ -940,11 +942,11 @@ const Pedidos = () => {
             <form onSubmit={confirmarPedido} className="p-6 space-y-4 flex-1 overflow-y-auto overscroll-contain">
               {/* ¿Cuándo lo querés? */}
               <div>
-                <label className="text-xs v2-text-muted mb-1 block">¿Cuándo lo querés?</label>
+                <label className="text-[14px] v2-text-muted mb-1 block">¿Cuándo lo querés?</label>
                 <div className="grid grid-cols-2 gap-2">
                   <button type="button" disabled={!estadoLocal.abierto}
                     onClick={() => { setCuando("asap"); setErrorMsg(null); }}
-                    className={`rounded-xl px-3 py-2.5 text-sm border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                    className={`rounded-xl px-3 py-2.5 text-[16px] border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
                       cuando === "asap" && estadoLocal.abierto
                         ? "bg-v2-champagne text-v2-bg border-v2-champagne"
                         : "v2-bg-base text-v2-text border-v2-champagne/15"
@@ -953,7 +955,7 @@ const Pedidos = () => {
                   </button>
                   <button type="button"
                     onClick={() => { setCuando("programar"); setErrorMsg(null); }}
-                    className={`rounded-xl px-3 py-2.5 text-sm border transition-colors ${
+                    className={`rounded-xl px-3 py-2.5 text-[16px] border transition-colors ${
                       cuando === "programar" || !estadoLocal.abierto
                         ? "bg-v2-champagne text-v2-bg border-v2-champagne"
                         : "v2-bg-base text-v2-text border-v2-champagne/15"
@@ -962,13 +964,13 @@ const Pedidos = () => {
                   </button>
                 </div>
                 {!estadoLocal.abierto && (
-                  <p className="text-[13px] v2-text-dim mt-1.5">Ahora estamos cerrados — programá tu pedido.</p>
+                  <p className="text-[16px] v2-text-dim mt-1.5">Ahora estamos cerrados — programá tu pedido.</p>
                 )}
                 {(cuando === "programar" || !estadoLocal.abierto) && (
                   <div className="mt-2 space-y-2">
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-xs v2-text-muted mb-1 block">Día</label>
+                        <label className="text-[14px] v2-text-muted mb-1 block">Día</label>
                         <input
                           type="date"
                           value={programDate}
@@ -976,16 +978,16 @@ const Pedidos = () => {
                           max={dtLocalInput(new Date(Date.now() + 3 * 24 * 60 * 60000)).slice(0, 10)}
                           onClick={(e) => { try { (e.currentTarget as HTMLInputElement).showPicker?.(); } catch { /* navegador sin showPicker */ } }}
                           onChange={(e) => { setProgramDate(e.target.value); setProgramTime(""); setErrorMsg(null); }}
-                          className="w-full v2-bg-base border border-v2-champagne/15 rounded-xl px-4 py-3 text-sm text-v2-text outline-none focus:border-v2-champagne/50"
+                          className="w-full v2-bg-base border border-v2-champagne/15 rounded-xl px-4 py-3 text-[16px] text-v2-text outline-none focus:border-v2-champagne/50"
                         />
                       </div>
                       <div>
-                        <label className="text-xs v2-text-muted mb-1 block">Hora</label>
+                        <label className="text-[14px] v2-text-muted mb-1 block">Hora</label>
                         <select
                           value={programTime}
                           onChange={(e) => { setProgramTime(e.target.value); setErrorMsg(null); }}
                           disabled={!programDate}
-                          className="w-full v2-bg-base border border-v2-champagne/15 rounded-xl px-4 py-3 text-sm text-v2-text outline-none focus:border-v2-champagne/50 disabled:opacity-50"
+                          className="w-full v2-bg-base border border-v2-champagne/15 rounded-xl px-4 py-3 text-[16px] text-v2-text outline-none focus:border-v2-champagne/50 disabled:opacity-50"
                         >
                           <option value="">{programDate ? "Elegí la hora" : "Primero el día"}</option>
                           {slotsParaFecha(programDate, orderMode, especiales, diasNoche).map((h) => (
@@ -995,11 +997,11 @@ const Pedidos = () => {
                       </div>
                     </div>
                     {programDate && slotsParaFecha(programDate, orderMode, especiales, diasNoche).length === 0 && (
-                      <p className="text-[13px] text-red-400">
+                      <p className="text-[16px] text-red-400">
                         Ese día no tomamos pedidos — elegí otro ({rangoDiasLargo(diasNoche)}).
                       </p>
                     )}
-                    <p className="text-[13px] v2-text-dim">
+                    <p className="text-[16px] v2-text-dim">
                       Atención: Mar–Jue 19:30–00:00 · Vie–Sáb 19:30–01:00.
                       {notaRetiroHoy}
                     </p>
@@ -1008,21 +1010,21 @@ const Pedidos = () => {
               </div>
 
               <div>
-                <label className="text-xs v2-text-muted mb-1 block">Nombre completo *</label>
+                <label className="text-[14px] v2-text-muted mb-1 block">Nombre completo *</label>
                 <input value={nombre} onChange={e => setNombre(e.target.value)} required
-                  className="w-full v2-bg-base border border-v2-champagne/15 rounded-xl px-4 py-3 text-sm text-v2-text outline-none focus:border-v2-champagne/50"
+                  className="w-full v2-bg-base border border-v2-champagne/15 rounded-xl px-4 py-3 text-[16px] text-v2-text outline-none focus:border-v2-champagne/50"
                   placeholder="Tu nombre" />
               </div>
               <div>
-                <label className="text-xs v2-text-muted mb-1 block">Teléfono *</label>
+                <label className="text-[14px] v2-text-muted mb-1 block">Teléfono *</label>
                 <input value={telefono} onChange={e => setTelefono(e.target.value)} required type="tel"
-                  className="w-full v2-bg-base border border-v2-champagne/15 rounded-xl px-4 py-3 text-sm text-v2-text outline-none focus:border-v2-champagne/50"
+                  className="w-full v2-bg-base border border-v2-champagne/15 rounded-xl px-4 py-3 text-[16px] text-v2-text outline-none focus:border-v2-champagne/50"
                   placeholder="+54 9 341 000 0000" />
               </div>
               {orderMode === "delivery" && (
                 <div>
-                  <label className="text-xs v2-text-muted mb-1 block">Zona de envío *</label>
-                  <p className="text-[13px] text-white mb-2 leading-relaxed rounded-xl border border-v2-champagne/15 px-3 py-2">
+                  <label className="text-[14px] v2-text-muted mb-1 block">Zona de envío *</label>
+                  <p className="text-[16px] text-white mb-2 leading-relaxed rounded-xl border border-v2-champagne/15 px-3 py-2">
                     El costo de envío depende de tu zona: el precio base cubre
                     Pellegrini – Avellaneda – el Río; fuera de esa zona tiene recargo.
                     Elegí tu zona de envío:
@@ -1034,7 +1036,7 @@ const Pedidos = () => {
                     }`}>
                       <button type="button"
                         onClick={() => { setZonaTipo("base"); setErrorMsg(null); }}
-                        className="w-full flex items-center justify-between gap-2 px-4 py-3 text-sm text-left">
+                        className="w-full flex items-center justify-between gap-2 px-4 py-3 text-[16px] text-left">
                         <span className={zonaTipo === "base" ? "text-v2-text font-medium" : "text-v2-text"}>
                           {zonaTipo === "base" ? "● " : "○ "}Zona base · Pellegrini – Avellaneda – el Río
                         </span>
@@ -1044,9 +1046,9 @@ const Pedidos = () => {
                       </button>
                       {zonaTipo === "base" && (
                         <div className="px-4 pb-4">
-                          <label className="text-xs v2-text-muted mb-1 block">Dirección de entrega *</label>
+                          <label className="text-[14px] v2-text-muted mb-1 block">Dirección de entrega *</label>
                           <input value={direccion} onChange={e => setDireccion(e.target.value)} required
-                            className="w-full v2-bg-base border border-v2-champagne/15 rounded-xl px-4 py-3 text-sm text-v2-text outline-none focus:border-v2-champagne/50"
+                            className="w-full v2-bg-base border border-v2-champagne/15 rounded-xl px-4 py-3 text-[16px] text-v2-text outline-none focus:border-v2-champagne/50"
                             placeholder="Calle y número, piso/depto" />
                         </div>
                       )}
@@ -1057,7 +1059,7 @@ const Pedidos = () => {
                     }`}>
                       <button type="button"
                         onClick={() => { setZonaTipo("fuera"); setErrorMsg(null); }}
-                        className="w-full flex items-center justify-between gap-2 px-4 py-3 text-sm text-left">
+                        className="w-full flex items-center justify-between gap-2 px-4 py-3 text-[16px] text-left">
                         <span className={zonaTipo === "fuera" ? "text-v2-text font-medium" : "text-v2-text"}>
                           {zonaTipo === "fuera" ? "● " : "○ "}Fuera de zona
                         </span>
@@ -1067,11 +1069,11 @@ const Pedidos = () => {
                       </button>
                       {zonaTipo === "fuera" && (
                         <div className="px-4 pb-4 space-y-2">
-                          <label className="text-xs v2-text-muted mb-1 block">Dirección de entrega *</label>
+                          <label className="text-[14px] v2-text-muted mb-1 block">Dirección de entrega *</label>
                           <input value={direccion} onChange={e => setDireccion(e.target.value)} required
-                            className="w-full v2-bg-base border border-v2-champagne/15 rounded-xl px-4 py-3 text-sm text-v2-text outline-none focus:border-v2-champagne/50"
+                            className="w-full v2-bg-base border border-v2-champagne/15 rounded-xl px-4 py-3 text-[16px] text-v2-text outline-none focus:border-v2-champagne/50"
                             placeholder="Calle y número, localidad" />
-                          <p className="text-[13px] text-white leading-relaxed rounded-xl border border-v2-champagne/15 px-3 py-2">
+                          <p className="text-[16px] text-white leading-relaxed rounded-xl border border-v2-champagne/15 px-3 py-2">
                             Envíos fuera de zona: a partir de ${ENVIO_FUERA_DESDE.toLocaleString("es-AR")}.
                             El monto final del envío lo confirma el encargado al cerrar
                             el pedido — nos comunicaremos con vos.
@@ -1083,19 +1085,19 @@ const Pedidos = () => {
                 </div>
               )}
               <div>
-                <label className="text-xs v2-text-muted mb-1 block">Notas (opcional)</label>
+                <label className="text-[14px] v2-text-muted mb-1 block">Notas (opcional)</label>
                 <textarea value={notasExtra} onChange={e => setNotasExtra(e.target.value)} rows={2}
-                  className="w-full v2-bg-base border border-v2-champagne/15 rounded-xl px-4 py-3 text-sm text-v2-text outline-none focus:border-v2-champagne/50 resize-none"
+                  className="w-full v2-bg-base border border-v2-champagne/15 rounded-xl px-4 py-3 text-[16px] text-v2-text outline-none focus:border-v2-champagne/50 resize-none"
                   placeholder="Sin cebolla, sin tacc, etc." />
               </div>
               {errorMsg && (
-                <div className="rounded-xl bg-red-500/10 border border-red-500/30 px-4 py-3 text-xs text-red-400 break-all">
+                <div className="rounded-xl bg-red-500/10 border border-red-500/30 px-4 py-3 text-[14px] text-red-400 break-all">
                   ⚠️ {errorMsg}
                 </div>
               )}
               <button type="submit" disabled={enviando}
                 onClick={() => setErrorMsg(null)}
-                className="w-full inline-flex items-center justify-center gap-2 bg-v2-champagne text-v2-bg font-medium uppercase tracking-[0.2em] text-sm py-4 rounded-xl hover:bg-v2-text transition-colors disabled:opacity-60">
+                className="w-full inline-flex items-center justify-center gap-2 bg-v2-champagne text-v2-bg font-medium uppercase tracking-[0.08em] text-[16px] py-4 rounded-xl hover:bg-v2-text transition-colors disabled:opacity-60">
                 {enviando ? <Loader2 className="w-4 h-4 animate-spin" /> : "Enviar pedido"}
               </button>
             </form>
@@ -1111,13 +1113,13 @@ const Pedidos = () => {
               <CheckCircle2 className="w-10 h-10 text-green-400" />
             </div>
             <div>
-              <p className="font-jp text-v2-champagne text-sm tracking-widest mb-2">— ありがとう —</p>
+              <p className="font-jp text-v2-champagne text-[16px] tracking-widest mb-2">— ありがとう —</p>
               <h2 className="font-display text-4xl text-v2-text mb-2">¡Pedido recibido!</h2>
-              {pedidoNum && <p className="v2-text-muted text-sm">Pedido <span className="text-v2-champagne font-bold">#{pedidoNum}</span></p>}
-              <p className="v2-text-muted text-sm mt-2">Nos ponemos a prepararlo. Te contactamos a la brevedad al número que indicaste.</p>
+              {pedidoNum && <p className="v2-text-muted text-[16px]">Pedido <span className="text-v2-champagne font-bold">#{pedidoNum}</span></p>}
+              <p className="v2-text-muted text-[16px] mt-2">Nos ponemos a prepararlo. Te contactamos a la brevedad al número que indicaste.</p>
             </div>
             <button onClick={() => { setStep("catalog"); setOrderMode(null); }}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-v2-champagne/30 text-sm text-v2-text hover:border-v2-champagne/60 hover:text-v2-champagne transition-colors">
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-v2-champagne/30 text-[16px] text-v2-text hover:border-v2-champagne/60 hover:text-v2-champagne transition-colors">
               Volver al inicio
             </button>
           </div>
@@ -1153,7 +1155,7 @@ const Pedidos = () => {
 
             <div className="p-6">
               {zoomProduct.badge && (
-                <span className="inline-block mb-2 px-2.5 py-0.5 rounded-full border border-v2-champagne/30 text-v2-champagne text-[12px] uppercase tracking-wider font-semibold">
+                <span className="inline-block mb-2 px-2.5 py-0.5 rounded-full border border-v2-champagne/30 text-v2-champagne text-[15px] uppercase tracking-wider font-semibold">
                   {zoomProduct.badge}
                 </span>
               )}
@@ -1174,7 +1176,7 @@ const Pedidos = () => {
                 </span>
                 <button
                   onClick={() => { addToCart(zoomProduct); setZoomProduct(null); }}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-v2-champagne text-v2-bg text-xs font-medium uppercase tracking-[0.2em] hover:bg-v2-text transition-colors"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-v2-champagne text-v2-bg text-[14px] font-medium uppercase tracking-[0.08em] hover:bg-v2-text transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5" /> Agregar
                 </button>

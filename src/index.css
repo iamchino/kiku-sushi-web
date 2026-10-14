@@ -281,3 +281,34 @@ html.lenis, html.lenis body { height: auto; }
 /* Hide scrollbar when V2 root is active */
 .v2-root::-webkit-scrollbar { width: 0; }
 
+/* ── Formularios legibles (reservas y pedidos) ───────────────────────────────
+   La web usa Cormorant (serif fina) para todo; en un formulario, en el celu
+   y de noche, se lee mal. Dentro de .v2-legible todo el texto de uso pasa a
+   Inter, más grande y con más contraste. Los títulos (.font-display) siguen
+   en Cormorant para no romper la estética. */
+.v2-root .v2-legible,
+.v2-root .v2-legible input,
+.v2-root .v2-legible textarea,
+.v2-root .v2-legible select,
+.v2-root .v2-legible button {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-weight: 400;
+}
+.v2-root .v2-legible { font-size: 16px; line-height: 1.55; }
+.v2-root .v2-legible .font-display { font-family: 'Cormorant Garamond', serif; }
+.v2-root .v2-legible .v2-text-muted { color: #D6CEE0; }
+.v2-root .v2-legible .v2-text-dim { color: #B9AFC8; }
+.v2-root .v2-legible .text-v2-text\/80 { color: hsl(var(--v2-text)); }
+.v2-root .v2-legible input,
+.v2-root .v2-legible textarea,
+.v2-root .v2-legible select {
+  font-size: 16px;            /* 16px: iOS no hace zoom al enfocar */
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.07);
+}
+.v2-root .v2-legible input::placeholder,
+.v2-root .v2-legible textarea::placeholder { color: #9A90AC; opacity: 1; }
+.v2-root .v2-legible input:focus,
+.v2-root .v2-legible textarea:focus,
+.v2-root .v2-legible select:focus { background: rgba(255, 255, 255, 0.10); }
+.v2-root .v2-legible label { color: hsl(var(--v2-text)); }

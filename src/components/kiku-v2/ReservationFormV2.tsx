@@ -391,13 +391,13 @@ const ChipsFecha = ({
                 selected ? CHIP_SELECTED : CHIP_IDLE
               }`}
             >
-              <span className={`text-[11px] tracking-[0.22em] font-medium leading-none ${selected ? "opacity-80" : "opacity-65"}`}>
+              <span className={`text-[14px] tracking-[0.22em] font-medium leading-none ${selected ? "opacity-80" : "opacity-65"}`}>
                 {d.esHoy ? "HOY" : d.semana}
               </span>
               <span className="font-display text-[22px] leading-none mt-0.5">
                 {d.num}
               </span>
-              <span className={`text-[8.5px] tracking-[0.18em] leading-none mt-0.5 ${selected ? "opacity-80" : "opacity-55"}`}>
+              <span className={`text-[8.5px] tracking-[0.08em] leading-none mt-0.5 ${selected ? "opacity-80" : "opacity-55"}`}>
                 {d.mes}
               </span>
             </button>
@@ -411,13 +411,13 @@ const ChipsFecha = ({
             onClick={abrirPicker}
             className={`${CHIP_BASE} ${CHIP_TAP} flex-shrink-0 snap-start flex-col gap-0.5 w-[62px] h-[74px] ${CHIP_SELECTED}`}
           >
-            <span className="text-[11px] tracking-[0.22em] font-medium leading-none opacity-80">
+            <span className="text-[14px] tracking-[0.22em] font-medium leading-none opacity-80">
               {customFecha.toLocaleDateString("es-AR", { weekday: "short" }).replace(".", "").toUpperCase()}
             </span>
             <span className="font-display text-[22px] leading-none mt-0.5">
               {customFecha.getDate()}
             </span>
-            <span className="text-[8.5px] tracking-[0.18em] leading-none mt-0.5 opacity-80">
+            <span className="text-[8.5px] tracking-[0.08em] leading-none mt-0.5 opacity-80">
               {customFecha.toLocaleDateString("es-AR", { month: "short" }).replace(".", "").toUpperCase()}
             </span>
           </button>
@@ -429,7 +429,7 @@ const ChipsFecha = ({
           className={`${CHIP_BASE} ${CHIP_TAP} ${CHIP_IDLE} flex-shrink-0 snap-start flex-col gap-1 w-[62px] h-[74px]`}
         >
           <Plus className="w-3.5 h-3.5 text-v2-champagne" strokeWidth={2.5} />
-          <span className="text-[8.5px] tracking-[0.18em] leading-none opacity-75">
+          <span className="text-[8.5px] tracking-[0.08em] leading-none opacity-75">
             OTRA<br/>FECHA
           </span>
         </button>
@@ -476,7 +476,7 @@ const ChipsHora = ({
     return (
       <div className="text-center py-7 border border-v2-champagne/15 bg-v2-bg/30">
         <p className="text-base v2-text leading-relaxed">Sin cupos para esa fecha</p>
-        <p className="text-[13px] v2-text-muted mt-1">Probá con otra fecha</p>
+        <p className="text-[16px] v2-text-muted mt-1">Probá con otra fecha</p>
       </div>
     );
   }
@@ -488,14 +488,14 @@ const ChipsHora = ({
     return (
       <div className="space-y-4">
         <div>
-          <p className="text-[13px] tracking-[0.3em] uppercase text-v2-champagne mb-2">
+          <p className="text-[16px] tracking-[0.12em] uppercase text-v2-champagne mb-2">
             ☀ Mediodía
           </p>
           <ChipsHora value={value} onChange={onChange} horarios={deMediodia} ordenSet={ordenSet} />
         </div>
         {deNoche.length > 0 && (
           <div>
-            <p className="text-[13px] tracking-[0.3em] uppercase text-v2-champagne mb-2">
+            <p className="text-[16px] tracking-[0.12em] uppercase text-v2-champagne mb-2">
               ☾ Noche
             </p>
             <ChipsHora value={value} onChange={onChange} horarios={deNoche} ordenSet={ordenSet} />
@@ -515,15 +515,15 @@ const ChipsHora = ({
             key={t}
             type="button"
             onClick={() => onChange(t)}
-            className={`${CHIP_BASE} ${CHIP_TAP} flex-col gap-0.5 h-[60px] ${
+            className={`${CHIP_BASE} ${CHIP_TAP} flex-col gap-0.5 h-[64px] ${
               selected ? CHIP_SELECTED : CHIP_IDLE
             }`}
           >
             <span className="text-[17px] font-medium tracking-wide leading-none">{t}</span>
             {esOrden && (
               <span
-                className={`text-[12px] tracking-[0.18em] uppercase leading-none mt-1 ${
-                  selected ? "opacity-75" : "opacity-55"
+                className={`text-[12px] tracking-[0.04em] uppercase leading-none mt-1 whitespace-nowrap ${
+                  selected ? "opacity-80" : "opacity-70"
                 }`}
               >
                 por llegada
@@ -579,17 +579,17 @@ const SectionLabel = ({
   hint?: React.ReactNode;
 }) => (
   <div className="flex items-center justify-between mb-3">
-    <div className="flex items-center gap-2 text-[13px] tracking-[0.3em] uppercase v2-text-muted">
+    <div className="flex items-center gap-2 text-[16px] tracking-[0.12em] uppercase v2-text-muted">
       <span className="text-v2-champagne">{icon}</span>
       {children}
     </div>
-    {hint && <span className="text-[13px] tracking-[0.2em] uppercase v2-text-dim">{hint}</span>}
+    {hint && <span className="text-[16px] tracking-[0.08em] uppercase v2-text-dim">{hint}</span>}
   </div>
 );
 
 // ─── Pill read-only para el resumen del paso 3 ────────────────────────────
 const SummaryPill = ({ icon, label }: { icon: React.ReactNode; label: string }) => (
-  <span className="inline-flex items-center gap-1.5 text-[13px] tracking-wide px-2.5 py-1.5 border border-v2-champagne/25 bg-v2-bg/50 text-v2-text">
+  <span className="inline-flex items-center gap-1.5 text-[16px] tracking-wide px-2.5 py-1.5 border border-v2-champagne/25 bg-v2-bg/50 text-v2-text">
     <span className="text-v2-champagne">{icon}</span>
     {label}
   </span>
@@ -1153,7 +1153,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
   const renderAvisoConfirmacion = () => {
     // Servicio de mesa: aplica únicamente a la carta de salón
     const avisoCubiertos = tipo === "carta_abierta" && (
-      <div className="mt-2.5 flex items-start gap-2.5 px-3.5 py-3 border border-v2-champagne/20 bg-v2-bg/50 text-[13px] v2-text-muted leading-relaxed">
+      <div className="mt-2.5 flex items-start gap-2.5 px-3.5 py-3 border border-v2-champagne/20 bg-v2-bg/50 text-[16px] v2-text-muted leading-relaxed">
         <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-v2-champagne" />
         <span>
           Solo a la carta se agrega un{" "}
@@ -1165,7 +1165,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
     if (requiereSeña) {
       return (
         <>
-          <div className="mt-5 flex items-start gap-2.5 px-3.5 py-3 border border-v2-accent/40 bg-v2-accent/10 text-[13px] v2-text leading-relaxed">
+          <div className="mt-5 flex items-start gap-2.5 px-3.5 py-3 border border-v2-accent/40 bg-v2-accent/10 text-[16px] v2-text leading-relaxed">
             <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-v2-accent" />
             <span>
               Te bloqueamos la mesa al enviar. Coordinamos la{" "}
@@ -1179,7 +1179,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
     }
     return (
       <>
-        <div className="mt-5 flex items-start gap-2.5 px-3.5 py-3 border border-v2-champagne/20 bg-v2-bg/50 text-[13px] v2-text-muted leading-relaxed">
+        <div className="mt-5 flex items-start gap-2.5 px-3.5 py-3 border border-v2-champagne/20 bg-v2-bg/50 text-[16px] v2-text-muted leading-relaxed">
           <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-v2-champagne" />
           <span>
             Los menús con precio fijo se aseguran con una{" "}
@@ -1235,7 +1235,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
               </span>
 
               <div className="flex-1 min-w-0">
-                <p className="font-jp text-[13px] tracking-[0.3em] text-v2-champagne/80 mb-1">
+                <p className="font-jp text-[16px] tracking-[0.12em] text-v2-champagne/80 mb-1">
                   {exp.overline}
                 </p>
                 <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -1243,15 +1243,15 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
                     {exp.label}
                   </h4>
                   {badge && (
-                    <span className="text-[11px] tracking-[0.18em] uppercase px-1.5 py-0.5 bg-v2-champagne/15 text-v2-champagne border border-v2-champagne/30">
+                    <span className="text-[14px] tracking-[0.08em] uppercase px-1.5 py-0.5 bg-v2-champagne/15 text-v2-champagne border border-v2-champagne/30">
                       {badge}
                     </span>
                   )}
                 </div>
-                <p className="text-[14px] v2-text-muted leading-relaxed">
+                <p className="text-[16px] v2-text-muted leading-relaxed">
                   {exp.description}
                 </p>
-                <p className="mt-2 inline-flex items-center gap-1.5 text-[13px] tracking-[0.12em] uppercase text-v2-champagne/75">
+                <p className="mt-2 inline-flex items-center gap-1.5 text-[16px] tracking-[0.12em] uppercase text-v2-champagne/75">
                   <Calendar className="w-3 h-3" /> {exp.diasLabel}
                 </p>
               </div>
@@ -1267,7 +1267,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
     <div className="space-y-7">
       {/* Aviso si la barra de omakase no tiene lugar para este grupo */}
       {omakaseBloqueado && (
-        <div className="flex items-start gap-2.5 px-3 py-2.5 border border-v2-accent/40 bg-v2-accent/10 text-[13px] v2-text">
+        <div className="flex items-start gap-2.5 px-3 py-2.5 border border-v2-accent/40 bg-v2-accent/10 text-[16px] v2-text">
           <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-v2-accent" />
           <span>
             {omakaseLibres > 0 ? (
@@ -1299,7 +1299,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
         </SectionLabel>
         <ChipsHora value={time} onChange={setTime} horarios={horariosDisponibles} ordenSet={ordenLlegadaSet} mediodiaSet={mediodiaSet} />
         {!sinCupoEnFecha && ordenLlegadaSet.has(time) && (
-          <div className="mt-3 flex items-start gap-2 text-[13px] v2-text-muted leading-relaxed">
+          <div className="mt-3 flex items-start gap-2 text-[16px] v2-text-muted leading-relaxed">
             <Info className="w-3 h-3 flex-shrink-0 mt-0.5 text-v2-champagne/70" />
             <span>
               A partir de las 22:30 te tomamos la reserva pero te atendemos por{" "}
@@ -1327,7 +1327,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
                       : "border-v2-champagne/20 bg-v2-bg/40 hover:border-v2-champagne/45"
                   }`}
                 >
-                  <p className={`text-[13px] tracking-[0.14em] font-semibold ${sel ? "text-v2-champagne" : "v2-text"}`}>
+                  <p className={`text-[16px] tracking-[0.14em] font-semibold ${sel ? "text-v2-champagne" : "v2-text"}`}>
                     {m.nombre}
                   </p>
                   {m.precio !== null && (
@@ -1337,7 +1337,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
                   )}
                   <ul className="mt-2 space-y-1">
                     {m.detalle.map((d, i) => (
-                      <li key={i} className="text-[13px] v2-text-muted leading-relaxed">
+                      <li key={i} className="text-[16px] v2-text-muted leading-relaxed">
                         {d}
                       </li>
                     ))}
@@ -1346,7 +1346,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
               );
             })}
           </div>
-          <p className="text-[13px] v2-text-muted mt-2 leading-relaxed">
+          <p className="text-[16px] v2-text-muted mt-2 leading-relaxed">
             El menú elegido queda anotado en tu reserva. Si preferís decidir en el
             local, elegí &quot;Carta habitual&quot;.
           </p>
@@ -1365,7 +1365,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
 
       {/* Lista de espera: aparece cuando no hay cupo para la fecha/personas */}
       {!loadingSlots && turnosDeHoyYaPasaron && (
-        <div className="border border-v2-champagne/25 bg-v2-bg/40 p-4 sm:p-5 flex items-start gap-2.5 text-[14px] v2-text-muted leading-relaxed">
+        <div className="border border-v2-champagne/25 bg-v2-bg/40 p-4 sm:p-5 flex items-start gap-2.5 text-[16px] v2-text-muted leading-relaxed">
           <Info className="w-4 h-4 flex-shrink-0 mt-0.5 text-v2-champagne/80" />
           <span>
             Los turnos de hoy ya pasaron{anticip.minMinutos > 0 ? ` (se reserva con al menos ${anticip.minMinutos >= 60 ? `${Math.round(anticip.minMinutos / 60)} h` : `${anticip.minMinutos} min`} de anticipación)` : ""}.
@@ -1377,7 +1377,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
       {!loadingSlots && sinCupoEnFecha && !turnosDeHoyYaPasaron && (
         <div className="border border-v2-accent/35 bg-v2-accent/[0.07] p-4 sm:p-5">
           {waitDone ? (
-            <div className="flex items-start gap-2.5 text-[14px] v2-text">
+            <div className="flex items-start gap-2.5 text-[16px] v2-text">
               <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5 text-v2-accent" />
               <span>
                 <strong>¡Listo, te anotamos!</strong> Si se libera un lugar para el{" "}
@@ -1393,7 +1393,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
                   <p className="text-[15px] font-medium v2-text leading-snug">
                     {isOmakase ? "Barra de omakase completa para esa fecha" : "Esa fecha está completa"}
                   </p>
-                  <p className="text-[13px] v2-text-muted leading-relaxed mt-0.5">
+                  <p className="text-[16px] v2-text-muted leading-relaxed mt-0.5">
                     Dejanos tus datos y te anotamos en la lista de espera. Si se libera un lugar para
                     esa fecha, te contactamos por WhatsApp.
                   </p>
@@ -1488,9 +1488,9 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
           onChange={(e) => setAceptaMarketing(e.target.checked)}
           className="mt-0.5 h-4 w-4 flex-shrink-0 accent-v2-champagne cursor-pointer"
         />
-        <span className="text-[14px] v2-text-muted leading-relaxed">
+        <span className="text-[16px] v2-text-muted leading-relaxed">
           Quiero recibir <strong className="text-v2-text">promos y novedades</strong> de Kiku.
-          <span className="block text-[13px] v2-text-dim mt-0.5">
+          <span className="block text-[16px] v2-text-dim mt-0.5">
             Usamos tu email y, si lo cargás, tu cumpleaños solo para enviarte beneficios. Podés darte de baja cuando quieras.
           </span>
         </span>
@@ -1548,7 +1548,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
     <button
       type="submit"
       disabled={submitting}
-      className="bg-v2-champagne text-v2-bg font-semibold tracking-[0.28em] uppercase text-[13px] px-7 py-3.5 hover:bg-v2-text hover:-translate-y-px transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98]"
+      className="bg-v2-champagne text-v2-bg font-semibold tracking-[0.28em] uppercase text-[16px] px-7 py-3.5 hover:bg-v2-text hover:-translate-y-px transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98]"
     >
       {submitting ? (
         <><Loader2 className="w-4 h-4 animate-spin" /> Registrando</>
@@ -1563,7 +1563,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
     <button
       type="button"
       onClick={onClick}
-      className="w-full bg-v2-champagne text-v2-bg font-semibold tracking-[0.28em] uppercase text-[13px] px-6 py-3.5 hover:bg-v2-text hover:-translate-y-px transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
+      className="w-full bg-v2-champagne text-v2-bg font-semibold tracking-[0.28em] uppercase text-[16px] px-6 py-3.5 hover:bg-v2-text hover:-translate-y-px transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
     >
       Continuar <ArrowRight className="w-4 h-4" />
     </button>
@@ -1575,7 +1575,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="text-[13px] tracking-[0.28em] uppercase v2-text-muted hover:text-v2-champagne transition-colors flex items-center gap-2 self-start disabled:opacity-50"
+      className="text-[16px] tracking-[0.28em] uppercase v2-text-muted hover:text-v2-champagne transition-colors flex items-center gap-2 self-start disabled:opacity-50"
     >
       <ArrowLeft className="w-4 h-4" /> Atrás
     </button>
@@ -1586,7 +1586,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
     <section
       ref={ref}
       id="reservar"
-      className={`${hideHeader ? "py-10 md:py-14" : "py-24 md:py-44"} px-4 md:px-14 ${hideHeader ? "" : "border-t border-v2-champagne/10"} relative overflow-hidden text-center`}
+      className={`v2-legible ${hideHeader ? "py-10 md:py-14" : "py-24 md:py-44"} px-4 md:px-14 ${hideHeader ? "" : "border-t border-v2-champagne/10"} relative overflow-hidden text-center`}
     >
       <div
         className="absolute inset-0 pointer-events-none"
@@ -1611,7 +1611,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
               initial={{ opacity: 0 }}
               animate={inView ? { opacity: 1 } : {}}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="font-jp text-sm tracking-[0.4em] text-v2-champagne mb-5 block text-center"
+              className="font-jp text-[16px] tracking-[0.4em] text-v2-champagne mb-5 block text-center"
             >
               — ご予約 —
             </motion.span>
@@ -1634,12 +1634,12 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
           initial={{ opacity: 0 }}
           animate={inView ? { opacity: 1 } : {}}
           transition={{ duration: 0.8, delay: hideHeader ? 0 : 0.45 }}
-          className="flex items-center justify-center gap-3 mb-7 text-[13px] tracking-[0.3em] uppercase"
+          className="flex items-center justify-center gap-2 sm:gap-3 mb-7 text-[14px] sm:text-[16px] tracking-[0.06em] sm:tracking-[0.12em] uppercase"
         >
           <StepDot active={step >= 1} done={step > 1} label="Experiencia" />
-          <span className="w-6 h-px bg-v2-champagne/20" />
+          <span className="w-4 sm:w-6 h-px bg-v2-champagne/20" />
           <StepDot active={step >= 2} done={step > 2} label="Fecha" />
-          <span className="w-6 h-px bg-v2-champagne/20" />
+          <span className="w-4 sm:w-6 h-px bg-v2-champagne/20" />
           <StepDot active={step >= 3} done={false} label="Datos" />
         </motion.div>
 
@@ -1679,11 +1679,11 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
               >
                 <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
-                  <div className="text-[13px] tracking-[0.3em] uppercase v2-text-muted flex items-center gap-2.5">
+                  <div className="text-[16px] tracking-[0.12em] uppercase v2-text-muted flex items-center gap-2.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-v2-accent animate-pulse-glow" />
                     Elegí cuándo querés venir
                   </div>
-                  <div className="text-[13px] tracking-[0.2em] uppercase v2-text-dim">
+                  <div className="text-[16px] tracking-[0.08em] uppercase v2-text-dim">
                     {tipoLabel}
                   </div>
                 </div>
@@ -1714,14 +1714,14 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
                 </SectionLabel>
                 {renderClientFields()}
 
-                <p className="text-[13px] v2-text-muted mt-5 flex items-start gap-2 leading-relaxed">
+                <p className="text-[16px] v2-text-muted mt-5 flex items-start gap-2 leading-relaxed">
                   <span className="w-1.5 h-1.5 rounded-full bg-v2-accent animate-pulse-glow mt-1.5 flex-shrink-0" />
                   <span>
                     Mesa <strong className="text-v2-text">confirmada</strong> al enviar · seguimos por WhatsApp.
                   </span>
                 </p>
 
-                <p className="text-[13px] v2-text-muted mt-3 leading-relaxed rounded-lg border border-v2-champagne/15 bg-v2-champagne/[0.03] px-3 py-2.5">
+                <p className="text-[16px] v2-text-muted mt-3 leading-relaxed rounded-lg border border-v2-champagne/15 bg-v2-champagne/[0.03] px-3 py-2.5">
                   Las reservas son <strong className="text-v2-text">no reembolsables</strong>. En caso de
                   inconvenientes, podrá solicitarse un cambio de fecha sujeto a disponibilidad y previa
                   evaluación de la organización.
@@ -1744,7 +1744,7 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
 const StepDot = ({
   active, done, label,
 }: { active: boolean; done: boolean; label: string }) => (
-  <span className={`flex items-center gap-2 ${active ? "text-v2-champagne" : "v2-text-dim"}`}>
+  <span className={`flex items-center gap-1.5 sm:gap-2 whitespace-nowrap ${active ? "text-v2-champagne" : "v2-text-dim"}`}>
     <span
       className={`w-2 h-2 rounded-full transition-colors ${
         done ? "bg-v2-accent" : active ? "bg-v2-champagne" : "bg-v2-text-dim/40"
@@ -1768,13 +1768,13 @@ const Field = ({
       full ? "md:col-span-2" : ""
     }`}
   >
-    <span className="text-[11px] uppercase tracking-[0.3em] v2-text-dim flex items-center gap-1.5">
+    <span className="text-[14px] uppercase tracking-[0.12em] v2-text-dim flex items-center gap-1.5">
       <span className="text-v2-accent">{icon}</span>
       {label}
     </span>
     {children}
     {hint && (
-      <span className="text-[13px] v2-text-dim/80 mt-1">{hint}</span>
+      <span className="text-[16px] v2-text-dim/80 mt-1">{hint}</span>
     )}
   </label>
 );
