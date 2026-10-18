@@ -94,7 +94,7 @@ const SushiLibre = () => {
             transition={{ duration: 1, delay: 0.35 }}
             className="text-lg md:text-xl v2-text-muted max-w-2xl mx-auto mb-10 font-light"
           >
-            Sushi ilimitado. Repetí todas las rondas que quieras.
+            Sushi + vino ilimitado. Repetí las veces que quieras: rondas de diez piezas de sushi omakase + vino.
           </motion.p>
 
           {/* Price */}
@@ -107,7 +107,7 @@ const SushiLibre = () => {
           >
             <p className="font-display text-4xl md:text-5xl text-v2-champagne mb-2">{formatPesos(cfg.libre_precio)}</p>
             <p className="text-[12px] v2-text-muted uppercase tracking-[0.3em]">
-              por persona · no incluye bebida
+              por persona · incluye vino blanco o tinto
             </p>
             <p className="text-[13px] v2-text-dim mt-2.5">
               {cfg.libre_pago_nota}
@@ -142,17 +142,22 @@ const SushiLibre = () => {
             </h2>
           </Reveal>
 
-          <div className="grid md:grid-cols-2 gap-6 md:gap-8 max-w-3xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-6 md:gap-8 max-w-5xl mx-auto">
             {[
               {
                 step: "01",
-                title: "Rondas de 10 piezas",
-                desc: "Variedades Kiku, Fusión y Exotic. Repetí todas las veces que quieras.",
+                title: "Rondas de 10 piezas + copa de vino",
+                desc: "Sushi omakase, vino blanco o tinto: repetí todas las veces que quieras.",
               },
               {
                 step: "02",
+                title: "Copa de vino",
+                desc: "Podés sumarle a tu sushi copas de vino blanco o tinto ilimitado.",
+              },
+              {
+                step: "03",
                 title: "Sin límites",
-                desc: "Podés pedir otra ronda cuando termines la anterior. No hay tope de rondas.",
+                desc: "Podés repetir otra ronda de sushi u otra copa cuando termines la anterior. No hay tope.",
               },
             ].map((s, i) => (
               <Reveal key={s.step} delay={i * 0.12}>
@@ -165,67 +170,6 @@ const SushiLibre = () => {
                   </span>
                   <h3 className="font-display text-2xl mb-3 relative">{s.title}</h3>
                   <p className="text-sm v2-text-muted leading-[1.8] relative">{s.desc}</p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Varieties ── */}
-      <section className="py-24 md:py-32 px-6 md:px-14 relative border-t border-v2-champagne/10">
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              "radial-gradient(ellipse at 80% 30%, hsla(270, 50%, 50%, 0.08), transparent 55%)",
-          }}
-        />
-        <div className="max-w-4xl mx-auto relative">
-          <Reveal className="text-center mb-14">
-            <span className="font-jp text-xs tracking-[0.45em] text-v2-champagne block mb-5">
-              — 種類 —
-            </span>
-            <h2
-              className="font-display font-light leading-[0.95] tracking-[-0.02em]"
-              style={{ fontSize: "clamp(34px, 4.5vw, 60px)" }}
-            >
-              Las <span className="font-normal text-v2-champagne">variedades</span>
-            </h2>
-            <p className="v2-text-muted mt-4 text-sm">
-              Cada ronda se sirve de a 10 piezas.
-            </p>
-          </Reveal>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                name: "Kiku",
-                rolls: ["Ebi Roll", "Philadelphia Roll", "Ahumado Roll", "New York Roll"],
-              },
-              {
-                name: "Fusión",
-                rolls: ["Sake Roll", "Tartar Sake Roll", "Guacamole Roll", "Ebi Roll", "Spicy Roll"],
-              },
-              {
-                name: "Exotic",
-                rolls: ["Phila Nipón Roll", "Fancy Roll", "Ebi Mango Roll", "Niguiri Thai"],
-              },
-            ].map((v, i) => (
-              <Reveal key={v.name} delay={i * 0.12}>
-                <div
-                  className="v2-bg-card border border-v2-champagne/12 p-8 hover:border-v2-champagne/30 transition-colors duration-500 text-center h-full"
-                  style={{ borderRadius: "20px" }}
-                >
-                  <h3 className="font-display text-3xl mb-6 text-v2-champagne">{v.name}</h3>
-                  <ul className="space-y-3">
-                    {v.rolls.map((r) => (
-                      <li key={r} className="text-sm v2-text-muted flex items-center justify-center gap-2.5">
-                        <span className="w-1 h-1 rounded-full bg-v2-champagne/60 shrink-0" />
-                        {r}
-                      </li>
-                    ))}
-                  </ul>
                 </div>
               </Reveal>
             ))}
@@ -259,6 +203,12 @@ const SushiLibre = () => {
               {
                 icon: Info,
                 iconClass: "text-v2-champagne",
+                title: "El precio incluye sushi + vino",
+                desc: "Vino blanco o tinto, ilimitado. En caso de no beber alcohol se puede cambiar por una jarra perfumada.",
+              },
+              {
+                icon: Info,
+                iconClass: "text-v2-champagne",
                 title: "Rondas ilimitadas",
                 desc: "Podés repetir todas las veces que quieras, siempre que la ronda anterior haya sido consumida en su totalidad.",
               },
@@ -272,7 +222,7 @@ const SushiLibre = () => {
                 icon: AlertTriangle,
                 iconClass: "text-yellow-400/80",
                 title: "Restricciones alimenticias",
-                desc: "Si tenés alguna restricción alimenticia, la carta del salón está disponible para consumo. No se pueden modificar las variedades de sushi del libre.",
+                desc: "Si tenés alguna restricción alimenticia, la carta del salón está disponible para consumo. No se pueden modificar las piezas de sushi del libre.",
               },
               {
                 icon: Accessibility,

@@ -84,9 +84,9 @@ const KikuLibreShowcase = () => {
           transition={{ duration: 1, delay: 0.35 }}
           className="text-base leading-[1.85] v2-text-muted max-w-xl mb-12"
         >
-          Sushi ilimitado. Repetí todas las rondas que quieras: rondas de diez
-          piezas de las variedades Kiku, Fusión y Exotic. No incluye bebida,
-          sashimis ni nigiris.
+          Sushi + vino ilimitado. Repetí las veces que quieras: rondas de diez
+          piezas de sushi omakase + vino blanco o tinto. No incluye sashimis
+          ni nigiris.
         </motion.p>
 
         <motion.div

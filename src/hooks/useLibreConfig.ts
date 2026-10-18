@@ -7,7 +7,7 @@ import { formatPesos } from "@/hooks/useOmakasePrecio";
 // Estos defaults son los valores vigentes al momento de crear el sistema:
 // si la base no responde (o la migración no corrió), la web muestra esto.
 export const LIBRE_DEFAULTS = {
-  libre_precio: 53500,
+  libre_precio: 60000,
   libre_sena: 20000,
   libre_multa_pieza: 1000,
   libre_pago_nota: "Efectivo o transferencia · Otro medio de pago consultar",
