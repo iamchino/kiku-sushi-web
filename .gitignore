@@ -42,3 +42,7 @@ vite.config.*.timestamp-*
 *.tmp
 *.bak
 *.orig
+
+# Parches de Claude: se aplican con `git am` y se borran. Nunca se commitean.
+*.patch
+.fuse_hidden*
