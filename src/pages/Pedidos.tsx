@@ -1100,6 +1100,11 @@ const Pedidos = () => {
                 className="w-full inline-flex items-center justify-center gap-2 bg-v2-champagne text-v2-bg font-medium uppercase tracking-[0.08em] text-[16px] py-4 rounded-xl hover:bg-v2-text transition-colors disabled:opacity-60">
                 {enviando ? <Loader2 className="w-4 h-4 animate-spin" /> : "Enviar pedido"}
               </button>
+              <p className="text-[12px] leading-relaxed v2-text-dim">
+                Al enviar aceptás nuestra{" "}
+                <Link to="/privacidad" target="_blank" rel="noopener noreferrer" className="text-v2-champagne hover:underline">política de privacidad</Link>:
+                usamos tus datos solo para preparar y entregar el pedido (Ley 25.326).
+              </p>
             </form>
           </div>
         </div>

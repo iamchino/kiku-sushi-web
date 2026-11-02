@@ -15,6 +15,7 @@ import Omakase from "./pages/Omakase.tsx";
 import TrabajaConNosotros from "./pages/TrabajaConNosotros.tsx";
 import Reservar from "./pages/Reservar.tsx";
 import Pedir from "./pages/Pedir.tsx";
+import Privacidad from "./pages/Privacidad.tsx";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,7 @@ const App = () => (
           <Route path="/trabaja-con-nosotros" element={<TrabajaConNosotros />} />
           <Route path="/reservar" element={<Reservar />} />
           <Route path="/pedir" element={<Pedir />} />
+          <Route path="/privacidad" element={<Privacidad />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

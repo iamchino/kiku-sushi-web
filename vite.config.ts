@@ -13,6 +13,8 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+  // Hardening: sin console.log / console.debug en el build de producción.
+  esbuild: { pure: ["console.log", "console.debug"] },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

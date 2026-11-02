@@ -89,7 +89,10 @@ const FooterV2 = () => {
     </div>
 
     <div className="relative z-10 max-w-[1440px] mx-auto mt-8 flex flex-wrap justify-between items-center gap-3 text-[13px] v2-text-dim">
-      <span>© {new Date().getFullYear()} Kiku Sushi · Todos los derechos reservados</span>
+      <span>
+        © {new Date().getFullYear()} Kiku Sushi · Todos los derechos reservados ·{" "}
+        <Link to="/privacidad" className="hover:text-v2-champagne transition-colors">Privacidad</Link>
+      </span>
       <span className="font-jp text-v2-champagne/55">いただきます</span>
     </div>
   </footer>

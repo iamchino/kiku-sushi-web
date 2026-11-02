@@ -5,7 +5,7 @@ import {
   Sparkles, AlertTriangle, Info, Plus, ChevronLeft, ChevronRight, Gift, Hourglass,
 } from "lucide-react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { hoyArgentinaISO, sumarDiasISO, turnoReservable } from "@/lib/horaArgentina";
@@ -1545,17 +1545,25 @@ const ReservationFormV2 = ({ hideHeader = false }: Props) => {
 
   // Botón submit (re-usado en wizard y singlePage)
   const submitButton = (
-    <button
-      type="submit"
-      disabled={submitting}
-      className="bg-v2-champagne text-v2-bg font-semibold tracking-[0.28em] uppercase text-[16px] px-7 py-3.5 hover:bg-v2-text hover:-translate-y-px transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98]"
-    >
-      {submitting ? (
-        <><Loader2 className="w-4 h-4 animate-spin" /> Registrando</>
-      ) : (
-        <>Confirmar reserva <CheckCircle2 className="w-4 h-4" /></>
-      )}
-    </button>
+    <div className="flex flex-col gap-2">
+      <button
+        type="submit"
+        disabled={submitting}
+        className="bg-v2-champagne text-v2-bg font-semibold tracking-[0.28em] uppercase text-[16px] px-7 py-3.5 hover:bg-v2-text hover:-translate-y-px transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98]"
+      >
+        {submitting ? (
+          <><Loader2 className="w-4 h-4 animate-spin" /> Registrando</>
+        ) : (
+          <>Confirmar reserva <CheckCircle2 className="w-4 h-4" /></>
+        )}
+      </button>
+      {/* Aviso de tratamiento de datos (Ley 25.326, art. 6) */}
+      <p className="text-[12px] leading-relaxed v2-text-dim">
+        Al confirmar aceptás nuestra{" "}
+        <Link to="/privacidad" target="_blank" rel="noopener noreferrer" className="text-v2-champagne hover:underline">política de privacidad</Link>:
+        usamos tus datos solo para gestionar la reserva.
+      </p>
+    </div>
   );
 
   // Botón continuar full-width (wizard mobile)
