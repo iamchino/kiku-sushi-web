@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import NavbarV2 from "@/components/kiku-v2/NavbarV2";
 import { fallbackData, fetchCatalogFromSheet, type CatalogProduct, type CatalogCategory } from "@/data/catalog";
 import { supabase } from "@/lib/supabase";
-import { DIAS_NOCHE_FALLBACK, useDiasAbiertos, rangoDiasLargo, mensajeCerradoPedidos } from "@/lib/diasAbiertos";
+import { DIAS_NOCHE_FALLBACK, useDiasAbiertos, rangoDiasLargo, rangoDiasCorto, mensajeCerradoPedidos } from "@/lib/diasAbiertos";
 
 // Parsea precios en formato argentino: "$3.500" → 3500
 const parsePrice = (s: string) => parseInt(s.replace(/[$. ]/g, ''), 10) || 0;
@@ -42,6 +42,18 @@ const aperturaMin = (fecha: string, mode: OrderMode, especiales: AperturasEspeci
 // Reservas en el dashboard, columna "Pedidos"); si la base no responde,
 // martes a sábado. Viernes y sábado la noche se extiende hasta la 01:00 (la
 // madrugada del día siguiente).
+
+// "Lun–Jue 19:30–00:00 · Vie–Sáb 19:30–01:00", armado con los días reales
+// del dashboard (antes estaba escrito a mano y decía Mar–Jue aunque el lunes
+// estuviera prendido).
+const textoAtencion = (dias: number[]): string => {
+  const cortos = dias.filter((d) => d !== 5 && d !== 6);
+  const largos = dias.filter((d) => d === 5 || d === 6);
+  const partes: string[] = [];
+  if (cortos.length) partes.push(`${rangoDiasCorto(cortos)} 19:30–00:00`);
+  if (largos.length) partes.push(`${rangoDiasCorto(largos)} 19:30–01:00`);
+  return partes.join(" · ") || "consultar";
+};
 
 const kikuAbierto = (mode: OrderMode, especiales: AperturasEspeciales, diasNoche: number[]): { abierto: boolean; motivo: string } => {
   const arg = new Date(
@@ -1002,7 +1014,7 @@ const Pedidos = () => {
                       </p>
                     )}
                     <p className="text-[16px] v2-text-dim">
-                      Atención: Mar–Jue 19:30–00:00 · Vie–Sáb 19:30–01:00.
+                      Atención: {textoAtencion(diasNoche)}.
                       {notaRetiroHoy}
                     </p>
                   </div>
